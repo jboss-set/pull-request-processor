@@ -13,17 +13,10 @@ import java.util.Properties;
 class Util {
 
     static Properties loadProperties() throws IOException {
-        final String propsFilePath = System.getProperty("processor.properties.file");
-
-        File propsFile;
-        if (propsFilePath != null) {
-            propsFile = new File(propsFilePath);
-        } else {
-            propsFile = new File(new File("."), "processor.properties");
-        }
+        final String propsFilePath = System.getProperty("processor.properties.file", "./processor.properties");
 
         final Properties props = new Properties();
-        props.load(new FileReader(propsFile));
+        props.load(new FileReader(new File(propsFilePath)));
         return props;
     }
 

@@ -36,6 +36,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
+ * This prints out PRs to be merged.
+ *
  * @author <a href="mailto:cdewolf@redhat.com">Carlo de Wolf</a>
  * @author <a href="mailto:istudens@redhat.com">Ivo Studensky</a>
  */
@@ -103,7 +105,8 @@ public class Processor {
             // check comments
             final IssueService issueService = new IssueService(client);
             final List<Comment> comments = issueService.getComments(repository, pullRequest.getNumber());
-            for (final Comment comment : comments) {
+            if (comments.size() > 1) {
+                Comment comment  = comments.get(comments.size() - 1);
                 System.err.println("comment.getUser().getLogin(): " + comment.getUser().getLogin());
                 System.err.println("comment.getBody(): " + comment.getBody());
 
