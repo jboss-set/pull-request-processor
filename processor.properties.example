@@ -1,0 +1,11 @@
+# Github Organization
+# github.organization=jbossas
+
+# Github Repository (without the .git)
+# github.repo=jboss-eap
+
+# Github Authentication Info
+# github.token=<Generate one using the Token API>
+
+# Base ref of desired PRs
+# github.base.ref=6.x
