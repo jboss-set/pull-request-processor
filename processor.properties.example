@@ -5,7 +5,21 @@
 # github.repo=jboss-eap
 
 # Github Authentication Info
+# github.login=my-github-project-user
 # github.token=<Generate one using the Token API>
 
-# Base ref of desired PRs
-# github.base.ref=6.x
+# Github Branch (base ref) of desired PRs
+# github.branch=6.x
+
+# The server running the jenkins web interface, used for REST requests
+# jenkins.host=my-server.my-copmany.com
+# jenkins.port=8080
+
+# The name of the specially configured job
+# jenkins.job.name=my-pull-processor-job
+
+# The Jenkins API Token / Password
+# jenkins.job.token=supersecret
+
+# Job URL prefix to refer to in comments
+# jenkins.publish.url=http://my-server.my-company.com/jenkins/job

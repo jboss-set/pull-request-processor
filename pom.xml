@@ -4,21 +4,22 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>pull-request-processor</groupId>
-    <artifactId>pull-request-processor</artifactId>
+    <groupId>pull-processor</groupId>
+    <artifactId>pull-processor</artifactId>
     <version>1.0-SNAPSHOT</version>
-
-    <properties>
-        <maven.compiler.target>1.6</maven.compiler.target>
-        <maven.compiler.source>1.6</maven.compiler.source>
-    </properties>
 
     <dependencies>
         <dependency>
-          <groupId>org.eclipse.mylyn.github</groupId>
-          <artifactId>org.eclipse.egit.github.core</artifactId>
-          <version>2.1.2</version>
+            <groupId>org.jboss</groupId>
+            <artifactId>jboss-dmr</artifactId>
+            <version>1.1.1.Final</version>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.mylyn.github</groupId>
+            <artifactId>org.eclipse.egit.github.core</artifactId>
+            <version>2.1.2</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -29,7 +30,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                           <mainClass>pullrequests.Processor</mainClass>
+                           <mainClass>org.jboss.pull.processor.Processor</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -48,6 +49,23 @@
                 </executions>
             </plugin>
         </plugins>
+
     </build>
 
+    <repositories>
+        <repository>
+            <id>jboss-public-repository-group</id>
+            <name>JBoss Public Repository Group</name>
+            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+            <layout>default</layout>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>never</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
 </project>
