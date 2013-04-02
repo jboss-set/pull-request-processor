@@ -37,30 +37,6 @@ import java.util.Properties;
  * @author Jason T. Greene
  */
 class Util {
-    static final File BASE_DIR;
-
-    static {
-        String home = System.getProperty("user.home");
-        if (home != null) {
-            BASE_DIR = new File(new File(home), ".pull-processor");
-            BASE_DIR.mkdirs();
-        } else {
-            BASE_DIR = new File(".");
-        }
-    }
-
-    static void dumpInputStream(InputStream stream) {
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(stream));
-        String line;
-        try {
-            while ((line = bufferedReader.readLine()) != null) {
-                System.out.println(line);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
 
     static void safeClose(Closeable closeable) {
         if (closeable != null) try {
@@ -82,8 +58,9 @@ class Util {
     }
 
     static Properties loadProperties() throws IOException {
+        String propsFileUserPath = System.getProperty("processor.properties.file", "./processor.properties");
         Properties props = new Properties();
-        props.load(new FileReader(new File(BASE_DIR, "processor.properties")));
+        props.load(new FileReader(new File(propsFileUserPath)));
         return props;
     }
 
