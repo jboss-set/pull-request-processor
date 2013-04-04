@@ -94,7 +94,7 @@ public class Processor {
             PUBLISH_JOB_URL = Util.require(props, "jenkins.publish.url");
             JENKINS_JOB_NAME = Util.require(props, "jenkins.job.name");
             JENKINS_JOB_TOKEN = Util.require(props, "jenkins.job.token");
-            BASE_URL = "http://" + BASE_HOST + ":" + BASE_PORT + "/jenkins";
+            BASE_URL = "http://" + BASE_HOST + ":" + BASE_PORT + "/";
             BASE_JOB_URL = BASE_URL + "/job";
             COMMENT_PRIVATE_LINK = "Private: " + PUBLISH_JOB_URL + "/" + JENKINS_JOB_NAME + "/";
 
