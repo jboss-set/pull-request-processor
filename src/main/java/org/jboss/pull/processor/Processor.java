@@ -52,9 +52,9 @@ import org.eclipse.egit.github.core.service.PullRequestService;
  */
 public class Processor {
 
-    private static final Pattern MERGE = Pattern.compile(".*merge\\W+this\\W+please.*", Pattern.CASE_INSENSITIVE);
-    private static final Pattern PENDING = Pattern.compile(".*Build.*merging.*has\\W+been\\W+triggered.*", Pattern.CASE_INSENSITIVE);
-    private static final Pattern RUNNING = Pattern.compile(".*Build.*merging.*has\\W+been\\W+started.*", Pattern.CASE_INSENSITIVE);
+    private static final Pattern MERGE = Pattern.compile(".*merge\\W+this\\W+please.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    private static final Pattern PENDING = Pattern.compile(".*Build.*merging.*has\\W+been\\W+triggered.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    private static final Pattern RUNNING = Pattern.compile(".*Build.*merging.*has\\W+been\\W+started.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
     private static String GITHUB_ORGANIZATION;
     private static String GITHUB_REPO;
@@ -126,20 +126,20 @@ public class Processor {
         for (PullRequest pullRequest : pullRequests) {
             if (pullRequest.getHead().getSha() == null) {
                 System.err.printf("Could not get sha1 for pull %d\n", pullRequest.getNumber());
-                return;
+                continue;
             }
 
             if (! GITHUB_BRANCH.equals(pullRequest.getBase().getRef())) {
-                return;
+                continue;
             }
 
             if (! pullRequest.isMergeable()) {
-                return;
+                continue;
             }
 
             final List<Comment> comments = issueService.getComments(repository, pullRequest.getNumber());
             if (comments.size() == 0) {
-                return;
+                continue;
             }
 
             System.out.printf("number: %d login: %s sha1: %s\n", pullRequest.getNumber(), pullRequest.getUser().getLogin(), pullRequest.getHead().getSha());
@@ -158,16 +158,20 @@ public class Processor {
         }
 
         // trigger new merge job if the last one is finished
-        JenkinsBuild build = JenkinsBuild.findLastBuild(BASE_URL, JENKINS_JOB_NAME);
-        if (build.getStatus() != null) {
-            // build finished, trigger a new one
-            triggerJob(pullsToMerge);
+        if (! pullsToMerge.isEmpty()) {
+            long cur = System.currentTimeMillis();
+            JenkinsBuild build = JenkinsBuild.findLastBuild(BASE_URL, JENKINS_JOB_NAME);
+            System.out.println("\tTime to find build: " + (System.currentTimeMillis() - cur));
+            if (build == null || build.getStatus() != null) {
+                // build finished, trigger a new one
+                triggerJob(pullsToMerge);
+            }
         }
 
         // check the pending pulls and eventually update their state if they have been already started on Hudson
         for (PullRequest pendingPull : pullsPending) {
             long cur = System.currentTimeMillis();
-            build = JenkinsBuild.findBuild(BASE_URL, JENKINS_JOB_NAME, Util.map("sha1", pendingPull.getHead().getSha(), "branch", GITHUB_BRANCH));
+            JenkinsBuild build = JenkinsBuild.findBuild(BASE_URL, JENKINS_JOB_NAME, Util.map("sha1", pendingPull.getHead().getSha(), "branch", GITHUB_BRANCH));
             System.out.println("\tTime to find build: " + (System.currentTimeMillis() - cur));
             if (build != null) {
                 // build in progress
@@ -178,12 +182,11 @@ public class Processor {
         // check the running pulls and eventually update their state according to the result of the Hudson build if it is finished
         for (PullRequest runningPull : pullsRunning) {
             long cur = System.currentTimeMillis();
-            build = JenkinsBuild.findBuild(BASE_URL, JENKINS_JOB_NAME, Util.map("sha1", runningPull.getHead().getSha(), "branch", GITHUB_BRANCH));
+            JenkinsBuild build = JenkinsBuild.findBuild(BASE_URL, JENKINS_JOB_NAME, Util.map("sha1", runningPull.getHead().getSha(), "branch", GITHUB_BRANCH));
             System.out.println("\tTime to find build: " + (System.currentTimeMillis() - cur));
             if (build != null && build.getStatus() != null) {
                 // build finished
                 notifyBuildCompleted(runningPull.getHead().getSha(), GITHUB_BRANCH, runningPull.getNumber(), build.getBuild(), build.getStatus());
-                //TODO update bugzilla state?
             }
         }
 
@@ -197,11 +200,17 @@ public class Processor {
     }
 
     private static void notifyBuildCompleted(String sha1, String branch, int pull, int buildNumber, String status) {
-        String comment = "Build " + buildNumber + " merging " + sha1 + " to branch " + branch + " has been finished with outcome " + status + ":\\n";
-        comment += COMMENT_PRIVATE_LINK + buildNumber + "\\n";
+        String comment = "Build " + buildNumber + " merging " + sha1 + " to branch " + branch + " has been finished with outcome " + status + ":\n";
+        comment += COMMENT_PRIVATE_LINK + buildNumber + "\n";
 
+        String githubStatus = convertJenkinsStatus(status);
         postComment(pull, comment);
-        postStatus(buildNumber, convertJenkinsStatus(status), sha1);
+        postStatus(buildNumber, githubStatus, sha1);
+        //TODO update bugzilla state?
+
+        if ("success".equals(githubStatus)) {
+            //TODO close the pull request
+        }
     }
 
     private static String convertJenkinsStatus(String status) {
@@ -215,16 +224,16 @@ public class Processor {
     }
 
     private static void notifyBuildRunning(String sha, String branch,  int pull, int buildNumber) {
-        String comment = "Build " + buildNumber + " merging " + sha + " to branch " + branch + " has been started:\\n";
-        comment += COMMENT_PRIVATE_LINK + buildNumber + "\\n";
+        String comment = "Build " + buildNumber + " merging " + sha + " to branch " + branch + " has been started:\n";
+        comment += COMMENT_PRIVATE_LINK + buildNumber + "\n";
 
         postComment(pull, comment);
         postStatus(buildNumber, "pending", sha);
     }
 
     private static void notifyBuildTriggered(String sha, String branch, int pull) {
-        String comment = "Build merging " + sha + " to branch " + branch +  " has been triggered:\\n";
-        comment += COMMENT_PRIVATE_LINK +"\\n";
+        String comment = "Build merging " + sha + " to branch " + branch +  " has been triggered:\n";
+        comment += COMMENT_PRIVATE_LINK +"\n";
 
         postComment(pull, comment);
     }
