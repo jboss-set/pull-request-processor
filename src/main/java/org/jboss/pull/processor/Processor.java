@@ -133,9 +133,9 @@ public class Processor {
                 continue;
             }
 
-            if (! pullRequest.isMergeable()) {
-                continue;
-            }
+//            if (! pullRequest.isMergeable()) {
+//                continue;
+//            }
 
             final List<Comment> comments = issueService.getComments(repository, pullRequest.getNumber());
             if (comments.size() == 0) {
