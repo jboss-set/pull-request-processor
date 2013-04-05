@@ -14,6 +14,7 @@
 # The server running the jenkins web interface, used for REST requests
 # jenkins.host=my-server.my-copmany.com
 # jenkins.port=8080
+# jenkins.uri=/jenkins
 
 # The name of the specially configured job
 # jenkins.job.name=my-pull-processor-job

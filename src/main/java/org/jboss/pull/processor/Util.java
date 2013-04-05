@@ -76,4 +76,10 @@ class Util {
         return (String) props.get(name);
 
     }
+
+    static String get(Properties props, String name, String defaultValue) {
+        String value = (String) props.get(name);
+        return (value == null) ? defaultValue : value;
+
+    }
 }

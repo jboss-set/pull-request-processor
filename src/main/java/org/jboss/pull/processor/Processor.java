@@ -64,6 +64,7 @@ public class Processor {
 
     private static String BASE_HOST;
     private static String BASE_PORT;
+    private static String BASE_URI;
 
     private static String BASE_URL;
     private static String BASE_JOB_URL;
@@ -87,14 +88,15 @@ public class Processor {
             GITHUB_REPO = Util.require(props, "github.repo");
             GITHUB_LOGIN = Util.require(props, "github.login");
             GITHUB_TOKEN = Util.get(props, "github.token");
-            GITHUB_BRANCH = Util.get(props, "github.branch");
+            GITHUB_BRANCH = Util.require(props, "github.branch");
 
             BASE_HOST = Util.require(props, "jenkins.host");
             BASE_PORT = Util.require(props, "jenkins.port");
+            BASE_URI = Util.get(props, "jenkins.uri", "");
             PUBLISH_JOB_URL = Util.require(props, "jenkins.publish.url");
             JENKINS_JOB_NAME = Util.require(props, "jenkins.job.name");
             JENKINS_JOB_TOKEN = Util.require(props, "jenkins.job.token");
-            BASE_URL = "http://" + BASE_HOST + ":" + BASE_PORT + "/";
+            BASE_URL = "http://" + BASE_HOST + ":" + BASE_PORT + BASE_URI;
             BASE_JOB_URL = BASE_URL + "/job";
             COMMENT_PRIVATE_LINK = "Private: " + PUBLISH_JOB_URL + "/" + JENKINS_JOB_NAME + "/";
 
