@@ -31,6 +31,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.egit.github.core.Comment;
@@ -188,7 +189,7 @@ public class Processor {
             System.out.println("\tTime to find build: " + (System.currentTimeMillis() - cur));
             if (build != null && build.getStatus() != null) {
                 // build finished
-                notifyBuildCompleted(runningPull.getHead().getSha(), GITHUB_BRANCH, runningPull.getNumber(), build.getBuild(), build.getStatus());
+                notifyBuildCompleted(runningPull, GITHUB_BRANCH, build.getBuild(), build.getStatus());
             }
         }
 
@@ -201,7 +202,9 @@ public class Processor {
         return dateFormat.format(date);
     }
 
-    private static void notifyBuildCompleted(String sha1, String branch, int pull, int buildNumber, String status) {
+    private static void notifyBuildCompleted(PullRequest runningPull, String branch, int buildNumber, String status) {
+        String sha1 = runningPull.getHead().getSha();
+        int pull = runningPull.getNumber();
         String comment = "Build " + buildNumber + " merging " + sha1 + " to branch " + branch + " has been finished with outcome " + status + ":\n";
         comment += COMMENT_PRIVATE_LINK + buildNumber + "\n";
 
@@ -209,6 +212,17 @@ public class Processor {
         postComment(pull, comment);
         postStatus(buildNumber, githubStatus, sha1);
         //TODO update bugzilla state?
+        if (githubStatus.equals("success")) {
+            String description = runningPull.getBody();
+            String bugzillaId = null;
+            Matcher matcher = Bugzilla.BUGZILLAIDPATTERN.matcher(description);
+            while (matcher.find()) {
+                bugzillaId = matcher.group(1);
+            }
+            //This will change bugzilla status, comment this out at the moment
+//            if (bugzillaId != null)
+//                Bugzilla.updateBugzillaStatus(bugzillaId, Bug.Status.MODIFIED);
+        }
 
         if ("success".equals(githubStatus)) {
             //TODO close the pull request
