@@ -2,7 +2,8 @@
 # github.organization=jbossas
 
 # Github Repository (without the .git)
-# github.repo=jboss-eap
+# github.eap.repo=jboss-eap
+# github.as.repo=jboss-eap
 
 # Github Authentication Info
 # github.login=my-github-project-user
@@ -28,3 +29,5 @@
 # Bugzilla required properties
 # bugzilla.login=your-email@redhat.com
 # bugzilla.password=your-password
+
+# eap.version.flag=jboss‑eap‑6.1.0

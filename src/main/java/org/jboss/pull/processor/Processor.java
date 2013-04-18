@@ -21,7 +21,6 @@
  */
 package org.jboss.pull.processor;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DateFormat;
@@ -29,20 +28,13 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.egit.github.core.Comment;
-import org.eclipse.egit.github.core.CommitStatus;
-import org.eclipse.egit.github.core.IRepositoryIdProvider;
 import org.eclipse.egit.github.core.PullRequest;
-import org.eclipse.egit.github.core.RepositoryId;
-import org.eclipse.egit.github.core.client.GitHubClient;
-import org.eclipse.egit.github.core.service.CommitService;
-import org.eclipse.egit.github.core.service.IssueService;
-import org.eclipse.egit.github.core.service.PullRequestService;
+import org.jboss.pull.shared.PullHelper;
+import org.jboss.pull.shared.Util;
 
 
 /**
@@ -53,224 +45,246 @@ import org.eclipse.egit.github.core.service.PullRequestService;
  */
 public class Processor {
 
-    private static final Pattern MERGE = Pattern.compile(".*merge\\W+this\\W+please.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern PENDING = Pattern.compile(".*Build.*merging.*has\\W+been\\W+triggered.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern RUNNING = Pattern.compile(".*Build.*merging.*has\\W+been\\W+started.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    private static final Pattern MERGE    = Pattern.compile(".*merge\\W+this\\W+please.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    private static final Pattern REVIEWED = Pattern.compile(".*review\\W+ok.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    private static final Pattern PENDING  = Pattern.compile(".*Build.*merging.*has\\W+been\\W+triggered.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    private static final Pattern RUNNING  = Pattern.compile(".*Build.*merging.*has\\W+been\\W+started.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
-    private static String GITHUB_ORGANIZATION;
-    private static String GITHUB_REPO;
-    private static String GITHUB_LOGIN;
-    private static String GITHUB_TOKEN;
-    private static String GITHUB_BRANCH;
+    /** how many PRs can be merged in one batch */
+    private static final int MERGE_BATCH_LIMIT = 50;
 
-    private static String BASE_HOST;
-    private static String BASE_PORT;
-    private static String BASE_URI;
+    private String BASE_HOST;
+    private String BASE_PORT;
+    private String BASE_URI;
 
-    private static String BASE_URL;
-    private static String BASE_JOB_URL;
-    private static String PUBLISH_JOB_URL;
-    private static String JENKINS_JOB_TOKEN;
-    private static String JENKINS_JOB_NAME;
-    private static String COMMENT_PRIVATE_LINK;
+    private String BASE_URL;
+    private String BASE_JOB_URL;
+    private String PUBLISH_JOB_URL;
+    private String JENKINS_JOB_TOKEN;
 
-    private static GitHubClient client;
-    private static IRepositoryIdProvider repository;
-    private static CommitService commitService;
-    private static IssueService issueService;
-    private static PullRequestService pullRequestService;
+    private String JENKINS_JOB_NAME;
+    private String COMMENT_PRIVATE_LINK;
 
-    static {
-        Properties props;
-        try {
-            props = Util.loadProperties();
+    private boolean DRY_RUN;
 
-            GITHUB_ORGANIZATION = Util.require(props, "github.organization");
-            GITHUB_REPO = Util.require(props, "github.repo");
-            GITHUB_LOGIN = Util.require(props, "github.login");
-            GITHUB_TOKEN = Util.get(props, "github.token");
-            GITHUB_BRANCH = Util.require(props, "github.branch");
-
-            BASE_HOST = Util.require(props, "jenkins.host");
-            BASE_PORT = Util.require(props, "jenkins.port");
-            BASE_URI = Util.get(props, "jenkins.uri", "");
-            PUBLISH_JOB_URL = Util.require(props, "jenkins.publish.url");
-            JENKINS_JOB_NAME = Util.require(props, "jenkins.job.name");
-            JENKINS_JOB_TOKEN = Util.require(props, "jenkins.job.token");
-            BASE_URL = "http://" + BASE_HOST + ":" + BASE_PORT + BASE_URI;
-            BASE_JOB_URL = BASE_URL + "/job";
-            COMMENT_PRIVATE_LINK = "Private: " + PUBLISH_JOB_URL + "/" + JENKINS_JOB_NAME + "/";
-
-            // initialize client and services
-            client = new GitHubClient();
-            if (GITHUB_TOKEN != null && GITHUB_TOKEN.length() > 0)
-                client.setOAuth2Token(GITHUB_TOKEN);
-            repository = RepositoryId.create(GITHUB_ORGANIZATION, GITHUB_REPO);
-            commitService = new CommitService(client);
-            issueService = new IssueService(client);
-            pullRequestService = new PullRequestService(client);
-
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-            System.exit(1);
-        }
-    }
-
+    private PullHelper helper;
 
     public static void main(String[] args) throws Exception {
+        try {
+            Processor processor = new Processor();
+            processor.run();
+            System.exit(0);
+        } catch (Exception e) {
+            System.err.println(e);
+            e.printStackTrace(System.err);
+        }
+        System.exit(1);
+    }
+
+
+    public void Processor() throws Exception {
+        helper = new PullHelper("processor.properties.file", "./processor.properties");
+
+        BASE_HOST = Util.require(helper.getProps(), "jenkins.host");
+        BASE_PORT = Util.require(helper.getProps(), "jenkins.port");
+        BASE_URI = Util.get(helper.getProps(), "jenkins.uri", "");
+        PUBLISH_JOB_URL = Util.require(helper.getProps(), "jenkins.publish.url");
+        JENKINS_JOB_NAME = Util.require(helper.getProps(), "jenkins.job.name");
+        JENKINS_JOB_TOKEN = Util.require(helper.getProps(), "jenkins.job.token");
+        BASE_URL = "http://" + BASE_HOST + ":" + BASE_PORT + BASE_URI;
+        BASE_JOB_URL = BASE_URL + "/job";
+        COMMENT_PRIVATE_LINK = "Private: " + PUBLISH_JOB_URL + "/" + JENKINS_JOB_NAME + "/";
+
+        // system property "dry-run=true"
+        DRY_RUN = Boolean.getBoolean("dry-run");
+    }
+
+
+    public void run() throws Exception {
         System.out.println("Starting at: " + getTime());
+        try {
 
-        final List<PullRequest> pullRequests = pullRequestService.getPullRequests(repository, "open");
-
-        final Set<PullRequest> pullsToMerge = new LinkedHashSet<PullRequest>();
-        final Set<PullRequest> pullsPending = new LinkedHashSet<PullRequest>();
-        final Set<PullRequest> pullsRunning = new LinkedHashSet<PullRequest>();
-
-        for (PullRequest pullRequest : pullRequests) {
-            if (pullRequest.getHead().getSha() == null) {
-                System.err.printf("Could not get sha1 for pull %d\n", pullRequest.getNumber());
-                continue;
+            // check the status of the merge job
+            JenkinsBuild lastBuild = JenkinsBuild.findLastBuild(BASE_URL, JENKINS_JOB_NAME);
+            if (lastBuild != null && lastBuild.getStatus() == null) {
+                // build is in progress at present, so nothing to do
+                System.out.println("Hudson job is still running.");
+                return;
             }
 
-            if (! GITHUB_BRANCH.equals(pullRequest.getBase().getRef())) {
-                continue;
-            }
+            final List<PullRequest> pullRequests = helper.getPullRequestService().getPullRequests(helper.getRepositoryEAP(), "open");
 
-//            if (! pullRequest.isMergeable()) {
-//                continue;
-//            }
+            final Set<PullRequest> pullsToMerge = new LinkedHashSet<PullRequest>();
+            final Set<PullRequest> pullsPending = new LinkedHashSet<PullRequest>();
+            final Set<PullRequest> pullsRunning = new LinkedHashSet<PullRequest>();
 
-            final List<Comment> comments = issueService.getComments(repository, pullRequest.getNumber());
-            if (comments.size() == 0) {
-                continue;
-            }
+            for (PullRequest pullRequest : pullRequests) {
+                if (pullRequest.getHead().getSha() == null) {
+                    System.err.printf("Could not get sha1 for pull %d\n", pullRequest.getNumber());
+                    continue;
+                }
 
-            System.out.printf("number: %d login: %s sha1: %s\n", pullRequest.getNumber(), pullRequest.getUser().getLogin(), pullRequest.getHead().getSha());
+                if (! helper.getGithubBranch().equals(pullRequest.getBase().getRef())) {
+                    continue;
+                }
 
-            Comment lastComment  = comments.get(comments.size() - 1);
+                if (! pullRequest.isMergeable()) {
+                    continue;
+                }
 
-            if (MERGE.matcher(lastComment.getBody()).matches()) {
-                pullsToMerge.add(pullRequest);
-            } else if (GITHUB_LOGIN.equals(lastComment.getUser().getLogin())) {
-                if (PENDING.matcher(lastComment.getBody()).matches()) {
+                final List<Comment> comments = helper.getIssueService().getComments(helper.getRepositoryEAP(), pullRequest.getNumber());
+                if (comments.size() == 0) {
+                    continue;
+                }
+
+                System.out.printf("number: %d login: %s sha1: %s\n", pullRequest.getNumber(), pullRequest.getUser().getLogin(), pullRequest.getHead().getSha());
+
+                boolean trigger = false;
+                boolean running = false;
+                boolean pending = false;
+                for (Comment comment : comments) {
+                    if (helper.getGithubLogin().equals(comment.getUser().getLogin())) {
+                        if (PENDING.matcher(comment.getBody()).matches()) {
+                            trigger = false;
+                            running = false;
+                            pending = true;
+                            continue;
+                        }
+
+                        if (RUNNING.matcher(comment.getBody()).matches()) {
+                            trigger = false;
+                            running = true;
+                            pending = false;
+                            continue;
+                        }
+                    }
+
+                    if (REVIEWED.matcher(comment.getBody()).matches()) {
+                        //TODO what if the pull req has been changed since this? i.e. it has a different sha
+                        // either compare time of this comment with time of the issue?
+                        // or the further comments - there should be some comment about new commit
+                        trigger = true;
+                        running = false;
+                        pending = false;
+                        continue;
+                    }
+                }
+
+                if (pending) {
                     pullsPending.add(pullRequest);
-                } else if (RUNNING.matcher(lastComment.getBody()).matches()) {
+                } else if (running) {
                     pullsRunning.add(pullRequest);
+                } else if (trigger) {
+                    // check other conditions, i.e. upstream pull request and bugzilla
+                    if (helper.isMergeable(pullRequest)) {
+                        pullsToMerge.add(pullRequest);
+                    }
+                } else {
+                    Comment lastComment = comments.get(comments.size() - 1);
+                    if (MERGE.matcher(lastComment.getBody()).matches()) {
+                        // TODO check the user login who did this comment
+                        pullsToMerge.add(pullRequest);
+                    }
+                }
+
+            }
+
+            // check the pending pulls and eventually update their state if they have been already started on Hudson
+            for (PullRequest pendingPull : pullsPending) {
+                JenkinsBuild build = JenkinsBuild.findBuild(BASE_URL, JENKINS_JOB_NAME, Util.map("sha1", pendingPull.getHead().getSha(), "branch", helper.getGithubBranch()));
+                if (build != null) {
+                    // build in progress
+                    notifyBuildRunning(pendingPull, helper.getGithubBranch(), build.getBuild());
                 }
             }
-        }
 
-        // trigger new merge job if the last one is finished
-        if (! pullsToMerge.isEmpty()) {
-            long cur = System.currentTimeMillis();
-            JenkinsBuild build = JenkinsBuild.findLastBuild(BASE_URL, JENKINS_JOB_NAME);
-            System.out.println("\tTime to find build: " + (System.currentTimeMillis() - cur));
-            if (build == null || build.getStatus() != null) {
-                // build finished, trigger a new one
-                triggerJob(pullsToMerge);
+            // check the running pulls and eventually update their state according to the result of the Hudson build if it is finished
+            for (PullRequest runningPull : pullsRunning) {
+                JenkinsBuild build = JenkinsBuild.findBuild(BASE_URL, JENKINS_JOB_NAME, Util.map("sha1", runningPull.getHead().getSha(), "branch", helper.getGithubBranch()));
+                if (build != null && build.getStatus() != null) {
+                    // build finished
+                    notifyBuildCompleted(runningPull, helper.getGithubBranch(), build.getBuild(), build.getStatus());
+                }
             }
-        }
 
-        // check the pending pulls and eventually update their state if they have been already started on Hudson
-        for (PullRequest pendingPull : pullsPending) {
-            long cur = System.currentTimeMillis();
-            JenkinsBuild build = JenkinsBuild.findBuild(BASE_URL, JENKINS_JOB_NAME, Util.map("sha1", pendingPull.getHead().getSha(), "branch", GITHUB_BRANCH));
-            System.out.println("\tTime to find build: " + (System.currentTimeMillis() - cur));
-            if (build != null) {
-                // build in progress
-                notifyBuildRunning(pendingPull.getHead().getSha(), GITHUB_BRANCH, pendingPull.getNumber(), build.getBuild());
+            // trigger new merge job if the last one is finished
+            if (! pullsToMerge.isEmpty()) {
+                if (lastBuild == null || lastBuild.getStatus() != null) {   // should always be true here
+                    // build finished, trigger a new one
+                    triggerJob(pullsToMerge);
+                }
             }
-        }
 
-        // check the running pulls and eventually update their state according to the result of the Hudson build if it is finished
-        for (PullRequest runningPull : pullsRunning) {
-            long cur = System.currentTimeMillis();
-            JenkinsBuild build = JenkinsBuild.findBuild(BASE_URL, JENKINS_JOB_NAME, Util.map("sha1", runningPull.getHead().getSha(), "branch", GITHUB_BRANCH));
-            System.out.println("\tTime to find build: " + (System.currentTimeMillis() - cur));
-            if (build != null && build.getStatus() != null) {
-                // build finished
-                notifyBuildCompleted(runningPull, GITHUB_BRANCH, build.getBuild(), build.getStatus());
-            }
+        } finally {
+            System.out.println("Completed at: " + getTime());
         }
-
-        System.out.println("Completed at: " + getTime());
     }
 
-    private static String getTime() {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        Date date = new Date();
-        return dateFormat.format(date);
-    }
-
-    private static void notifyBuildCompleted(PullRequest runningPull, String branch, int buildNumber, String status) {
-        String sha1 = runningPull.getHead().getSha();
-        int pull = runningPull.getNumber();
-        String comment = "Build " + buildNumber + " merging " + sha1 + " to branch " + branch + " has been finished with outcome " + status + ":\n";
+    private void notifyBuildCompleted(PullRequest pull, String branch, int buildNumber, String status) {
+        String comment = "Build " + buildNumber + " merging " + pull.getHead().getSha() + " to branch " + branch + " has been finished with outcome " + status + ":\n";
         comment += COMMENT_PRIVATE_LINK + buildNumber + "\n";
 
         String githubStatus = convertJenkinsStatus(status);
         postComment(pull, comment);
-        postStatus(buildNumber, githubStatus, sha1);
-        //TODO update bugzilla state?
-        if (githubStatus.equals("success")) {
-            String description = runningPull.getBody();
-            Integer bugzillaId = null;
-            Matcher matcher = Bugzilla.BUGZILLAIDPATTERN.matcher(description);
-            while (matcher.find()) {
-                bugzillaId = Integer.parseInt(matcher.group(1));
+        postStatus(pull, buildNumber, githubStatus);
+
+        if (! DRY_RUN && "success".equals(githubStatus)) {
+            postComment(pull, "Merged!");
+            // update bugzilla state
+            try {
+                helper.updateBugzillaStatus(pull, PullHelper.STATUS_MODIFIED);
+            } catch (Exception e) {
+                System.err.printf("Update of status of bugzilla related to pull %d failed.\n", pull.getNumber());
             }
-            // This will change bugzilla status, comment this out at the moment
-//            if (bugzillaId != null)
-//                Bugzilla.updateBugzillaStatus(bugzillaId, Bug.Status.MODIFIED);
         }
 
-        if ("success".equals(githubStatus)) {
-            //TODO close the pull request
-        }
     }
 
-    private static String convertJenkinsStatus(String status) {
+    private String convertJenkinsStatus(String status) {
         if (status.equalsIgnoreCase("UNSTABLE") || status.equalsIgnoreCase("FAILURE")) {
             return "failure";
         } else if (status.equalsIgnoreCase("SUCCESS")) {
             return "success";
         }
-
         return "error";
     }
 
-    private static void notifyBuildRunning(String sha, String branch,  int pull, int buildNumber) {
-        String comment = "Build " + buildNumber + " merging " + sha + " to branch " + branch + " has been started:\n";
+    private void notifyBuildRunning(PullRequest pull, String branch, int buildNumber) {
+        String comment = "Build " + buildNumber + " merging " + pull.getHead().getSha() + " to branch " + branch + " has been started:\n";
         comment += COMMENT_PRIVATE_LINK + buildNumber + "\n";
 
         postComment(pull, comment);
-        postStatus(buildNumber, "pending", sha);
+        postStatus(pull, buildNumber, "pending");
     }
 
-    private static void notifyBuildTriggered(String sha, String branch, int pull) {
-        String comment = "Build merging " + sha + " to branch " + branch +  " has been triggered:\n";
+    private void notifyBuildTriggered(PullRequest pull, String branch) {
+        String comment = "Build merging " + pull.getHead().getSha() + " to branch " + branch +  " has been triggered:\n";
         comment += COMMENT_PRIVATE_LINK +"\n";
 
         postComment(pull, comment);
     }
 
-    private static void triggerJob(Set<PullRequest> pullsToMerge) {
+    private void triggerJob(Set<PullRequest> pullsToMerge) {
         HttpURLConnection urlConnection = null;
         try {
             StringBuilder sha1s = new StringBuilder();
             StringBuilder pulls = new StringBuilder();
             String delim = "";
+            int count = 0;
             for (PullRequest pull : pullsToMerge) {
                 sha1s.append(delim).append(pull.getHead().getSha());
                 pulls.append(delim).append(Integer.toString(pull.getNumber()));
                 delim = " ";
+                if (++count > MERGE_BATCH_LIMIT) {
+                    break;
+                }
             }
-            URL url = new URL(BASE_JOB_URL + "/" + JENKINS_JOB_NAME + "/buildWithParameters?token=" + JENKINS_JOB_TOKEN + "&pull=" + pulls.toString() +"&sha1=" + sha1s.toString() + "&branch=" + GITHUB_BRANCH);
+            URL url = new URL(BASE_JOB_URL + "/" + JENKINS_JOB_NAME + "/buildWithParameters?token=" + JENKINS_JOB_TOKEN + "&pull=" + pulls.toString() +"&sha1=" + sha1s.toString() + "&branch=" + helper.getGithubBranch() + "&dryrun=" + DRY_RUN);
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.connect();
             if (urlConnection.getResponseCode() == 200) {
                 for (PullRequest pull : pullsToMerge) {
-                    notifyBuildTriggered(pull.getHead().getSha(), GITHUB_BRANCH, pull.getNumber());
+                    notifyBuildTriggered(pull, helper.getGithubBranch());
                 }
             } else {
                 System.err.println("Problem triggering build for pulls: " + pullsToMerge);
@@ -286,29 +300,31 @@ public class Processor {
         }
     }
 
-    private static void postStatus(int buildNumber, String status, String sha) {
-        System.out.println("Setting status: " + status + " on sha " + sha);
+    private void postStatus(PullRequest pull, int buildNumber, String status) {
+        System.out.println("Setting status: " + status + " on sha " + pull.getHead().getSha());
 
-        CommitStatus commitStatus = new CommitStatus();
-        String jobUrl = PUBLISH_JOB_URL;
-        commitStatus.setTargetUrl(jobUrl + "/" + JENKINS_JOB_NAME + "/" + buildNumber);
-        commitStatus.setState(status);
-
-        try {
-            commitService.createStatus(repository, sha, commitStatus);
-        } catch (Exception e) {
-            System.err.printf("Problem posting a status build for sha: %s\n", sha);
-            e.printStackTrace(System.err);
+        if (DRY_RUN) {
+            return;
         }
+
+        String targetUrl = PUBLISH_JOB_URL + "/" + JENKINS_JOB_NAME + "/" + buildNumber;
+        helper.postGithubStatus(pull, targetUrl, status);
     }
 
-    private static void postComment(int pullNumber, String comment) {
+    private void postComment(PullRequest pull, String comment) {
         System.out.println("Posting: " + comment);
-        try {
-            issueService.createComment(repository, pullNumber, comment);
-        } catch (IOException e) {
-            System.err.printf("Problem posting a comment build for pull: %d\n", pullNumber);
-            e.printStackTrace(System.err);
+
+        if (DRY_RUN) {
+            return;
         }
+
+        helper.postGithubComment(pull, comment);
     }
+
+    private String getTime() {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Date date = new Date();
+        return dateFormat.format(date);
+    }
+
 }
