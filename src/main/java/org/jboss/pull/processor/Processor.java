@@ -82,7 +82,7 @@ public class Processor {
     }
 
 
-    public void Processor() throws Exception {
+    public Processor() throws Exception {
         helper = new PullHelper("processor.properties.file", "./processor.properties");
 
         BASE_HOST = Util.require(helper.getProps(), "jenkins.host");
@@ -90,13 +90,13 @@ public class Processor {
         BASE_URI = Util.get(helper.getProps(), "jenkins.uri", "");
         PUBLISH_JOB_URL = Util.require(helper.getProps(), "jenkins.publish.url");
         JENKINS_JOB_NAME = Util.require(helper.getProps(), "jenkins.job.name");
-        JENKINS_JOB_TOKEN = Util.require(helper.getProps(), "jenkins.job.token");
+        JENKINS_JOB_TOKEN = Util.get(helper.getProps(), "jenkins.job.token");
         BASE_URL = "http://" + BASE_HOST + ":" + BASE_PORT + BASE_URI;
         BASE_JOB_URL = BASE_URL + "/job";
         COMMENT_PRIVATE_LINK = "Private: " + PUBLISH_JOB_URL + "/" + JENKINS_JOB_NAME + "/";
 
         // system property "dry-run=true"
-        DRY_RUN = Boolean.getBoolean("dry-run");
+        DRY_RUN = Boolean.getBoolean("dryrun");
     }
 
 
@@ -128,20 +128,17 @@ public class Processor {
                     continue;
                 }
 
-                if (! pullRequest.isMergeable()) {
-                    continue;
-                }
-
-                final List<Comment> comments = helper.getIssueService().getComments(helper.getRepositoryEAP(), pullRequest.getNumber());
-                if (comments.size() == 0) {
-                    continue;
-                }
+//                if (! pullRequest.isMergeable()) {
+//                    continue;
+//                }
 
                 System.out.printf("number: %d login: %s sha1: %s\n", pullRequest.getNumber(), pullRequest.getUser().getLogin(), pullRequest.getHead().getSha());
 
                 boolean trigger = false;
                 boolean running = false;
                 boolean pending = false;
+
+                final List<Comment> comments = helper.getIssueService().getComments(helper.getRepositoryEAP(), pullRequest.getNumber());
                 for (Comment comment : comments) {
                     if (helper.getGithubLogin().equals(comment.getUser().getLogin())) {
                         if (PENDING.matcher(comment.getBody()).matches()) {
@@ -160,12 +157,14 @@ public class Processor {
                     }
 
                     if (REVIEWED.matcher(comment.getBody()).matches()) {
-                        //TODO what if the pull req has been changed since this? i.e. it has a different sha
-                        // either compare time of this comment with time of the issue?
-                        // or the further comments - there should be some comment about new commit
-                        trigger = true;
-                        running = false;
-                        pending = false;
+                        System.out.println("issue updated at: " + getTime(pullRequest.getUpdatedAt()));
+                        System.out.println("issue reviewed at: " + getTime(comment.getCreatedAt()));
+                        if (pullRequest.getUpdatedAt().compareTo(comment.getCreatedAt()) <= 0) {
+                            // this UpdatedAt cannot be relevant to an update of commit as it takes every change
+                            trigger = true;
+                            running = false;
+                            pending = false;
+                        }
                         continue;
                     }
                 }
@@ -232,9 +231,10 @@ public class Processor {
             postComment(pull, "Merged!");
             // update bugzilla state
             try {
-                helper.updateBugzillaStatus(pull, PullHelper.STATUS_MODIFIED);
+                //helper.updateBugzillaStatus(pull, PullHelper.STATUS_MODIFIED);
             } catch (Exception e) {
                 System.err.printf("Update of status of bugzilla related to pull %d failed.\n", pull.getNumber());
+                // TODO what to do here? do retry it?
             }
         }
 
@@ -302,28 +302,22 @@ public class Processor {
 
     private void postStatus(PullRequest pull, int buildNumber, String status) {
         System.out.println("Setting status: " + status + " on sha " + pull.getHead().getSha());
-
-        if (DRY_RUN) {
-            return;
-        }
-
         String targetUrl = PUBLISH_JOB_URL + "/" + JENKINS_JOB_NAME + "/" + buildNumber;
         helper.postGithubStatus(pull, targetUrl, status);
     }
 
     private void postComment(PullRequest pull, String comment) {
         System.out.println("Posting: " + comment);
-
-        if (DRY_RUN) {
-            return;
-        }
-
         helper.postGithubComment(pull, comment);
     }
 
     private String getTime() {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         Date date = new Date();
+        return getTime(date);
+    }
+
+    private String getTime(Date date) {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         return dateFormat.format(date);
     }
 
