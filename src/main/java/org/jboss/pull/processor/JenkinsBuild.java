@@ -27,6 +27,7 @@ import java.net.URLConnection;
 import java.util.Map;
 
 import org.jboss.dmr.ModelNode;
+import org.jboss.pull.shared.Util;
 
 /**
  * @author <a href="mailto:istudens@redhat.com">Ivo Studensky</a>
