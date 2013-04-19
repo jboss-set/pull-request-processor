@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.PullRequest;
+import org.jboss.pull.shared.Bug;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.Util;
 
@@ -231,7 +232,7 @@ public class Processor {
             postComment(pull, "Merged!");
             // update bugzilla state
             try {
-                //helper.updateBugzillaStatus(pull, PullHelper.STATUS_MODIFIED);
+                helper.updateBugzillaStatus(pull, Bug.Status.MODIFIED);
             } catch (Exception e) {
                 System.err.printf("Update of status of bugzilla related to pull %d failed.\n", pull.getNumber());
                 // TODO what to do here? do retry it?
