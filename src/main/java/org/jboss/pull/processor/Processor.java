@@ -228,14 +228,17 @@ public class Processor {
         postComment(pull, comment);
         postStatus(pull, buildNumber, githubStatus);
 
-        if (! DRY_RUN && "success".equals(githubStatus)) {
+        if ("success".equals(githubStatus)) {
             postComment(pull, "Merged!");
+
             // update bugzilla state
-            try {
-                helper.updateBugzillaStatus(pull, Bug.Status.MODIFIED);
-            } catch (Exception e) {
-                System.err.printf("Update of status of bugzilla related to pull %d failed.\n", pull.getNumber());
-                // TODO what to do here? do retry it?
+            if (! DRY_RUN) {
+                try {
+                    helper.updateBugzillaStatus(pull, Bug.Status.MODIFIED);
+                } catch (Exception e) {
+                    System.err.printf("Update of status of bugzilla related to pull %d failed.\n", pull.getNumber());
+                    // TODO what to do here? do retry it?
+                }
             }
         }
 
@@ -304,12 +307,18 @@ public class Processor {
     private void postStatus(PullRequest pull, int buildNumber, String status) {
         System.out.println("Setting status: " + status + " on sha " + pull.getHead().getSha());
         String targetUrl = PUBLISH_JOB_URL + "/" + JENKINS_JOB_NAME + "/" + buildNumber;
-        helper.postGithubStatus(pull, targetUrl, status);
+
+        if (! DRY_RUN) {
+            helper.postGithubStatus(pull, targetUrl, status);
+        }
     }
 
     private void postComment(PullRequest pull, String comment) {
         System.out.println("Posting: " + comment);
-        helper.postGithubComment(pull, comment);
+
+        if (! DRY_RUN) {
+            helper.postGithubComment(pull, comment);
+        }
     }
 
     private String getTime() {
