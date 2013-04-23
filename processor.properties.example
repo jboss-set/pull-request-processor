@@ -3,7 +3,7 @@
 
 # Github Repository (without the .git)
 # github.eap.repo=jboss-eap
-# github.as.repo=jboss-eap
+# github.as.repo=jboss-as
 
 # Github Authentication Info
 # github.login=my-github-project-user
@@ -11,6 +11,9 @@
 
 # Github Branch (base ref) of desired PRs
 # github.branch=6.x
+
+# additional flag to check in Bugzilla
+# eap.version.flag=jboss-eap-6.1.0
 
 # The server running the jenkins web interface, used for REST requests
 # jenkins.host=my-server.my-copmany.com
@@ -30,4 +33,3 @@
 # bugzilla.login=your-email@redhat.com
 # bugzilla.password=your-password
 
-# eap.version.flag=jboss‑eap‑6.1.0
