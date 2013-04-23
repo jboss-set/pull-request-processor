@@ -50,6 +50,7 @@ public class Processor {
     private static final Pattern REVIEWED = Pattern.compile(".*review\\W+ok.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern PENDING  = Pattern.compile(".*Build.*merging.*has\\W+been\\W+triggered.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     private static final Pattern RUNNING  = Pattern.compile(".*Build.*merging.*has\\W+been\\W+started.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    private static final Pattern FINISHED = Pattern.compile(".*Build.*merging.*has\\W+been\\W+finished.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
     /** how many PRs can be merged in one batch */
     private static final int MERGE_BATCH_LIMIT = 50;
@@ -96,7 +97,7 @@ public class Processor {
         BASE_JOB_URL = BASE_URL + "/job";
         COMMENT_PRIVATE_LINK = "Private: " + PUBLISH_JOB_URL + "/" + JENKINS_JOB_NAME + "/";
 
-        // system property "dry-run=true"
+        // system property "dryrun=true"
         DRY_RUN = Boolean.getBoolean("dryrun");
     }
 
@@ -129,10 +130,6 @@ public class Processor {
                     continue;
                 }
 
-//                if (! pullRequest.isMergeable()) {
-//                    continue;
-//                }
-
                 System.out.printf("number: %d login: %s sha1: %s\n", pullRequest.getNumber(), pullRequest.getUser().getLogin(), pullRequest.getHead().getSha());
 
                 boolean trigger = false;
@@ -155,13 +152,20 @@ public class Processor {
                             pending = false;
                             continue;
                         }
+
+                        if (FINISHED.matcher(comment.getBody()).matches()) {
+                            trigger = false;
+                            running = false;
+                            pending = false;
+                            continue;
+                        }
                     }
 
                     if (REVIEWED.matcher(comment.getBody()).matches()) {
                         System.out.println("issue updated at: " + getTime(pullRequest.getUpdatedAt()));
                         System.out.println("issue reviewed at: " + getTime(comment.getCreatedAt()));
                         if (pullRequest.getUpdatedAt().compareTo(comment.getCreatedAt()) <= 0) {
-                            // this UpdatedAt cannot be relevant to an update of commit as it takes every change
+                            // this UpdatedAt doesn't have to be relevant to an update of commit as it takes every change
                             trigger = true;
                             running = false;
                             pending = false;
