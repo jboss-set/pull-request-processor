@@ -23,6 +23,7 @@ package org.jboss.pull.processor;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -53,7 +54,7 @@ public class Processor {
     private static final Pattern FINISHED = Pattern.compile(".*Build.*merging.*has\\W+been\\W+finished.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
     /** how many PRs can be merged in one batch */
-    private static final int MERGE_BATCH_LIMIT = 50;
+    private static final int MERGE_BATCH_LIMIT = 20;
 
     private String BASE_HOST;
     private String BASE_PORT;
@@ -99,6 +100,9 @@ public class Processor {
 
         // system property "dryrun=true"
         DRY_RUN = Boolean.getBoolean("dryrun");
+        if (DRY_RUN) {
+            System.out.println("Running in a dry run mode.");
+        }
     }
 
 
@@ -287,7 +291,7 @@ public class Processor {
                     break;
                 }
             }
-            URL url = new URL(BASE_JOB_URL + "/" + JENKINS_JOB_NAME + "/buildWithParameters?token=" + JENKINS_JOB_TOKEN + "&pull=" + pulls.toString() +"&sha1=" + sha1s.toString() + "&branch=" + helper.getGithubBranch() + "&dryrun=" + DRY_RUN);
+            URL url = new URL(BASE_JOB_URL + "/" + JENKINS_JOB_NAME + "/buildWithParameters?token=" + JENKINS_JOB_TOKEN + "&pull=" + URLEncoder.encode(pulls.toString(), "UTF-8") +"&sha1=" + URLEncoder.encode(sha1s.toString(), "UTF-8") + "&branch=" + URLEncoder.encode(helper.getGithubBranch(), "UTF-8") + "&dryrun=" + DRY_RUN);
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.connect();
             if (urlConnection.getResponseCode() == 200) {
@@ -295,7 +299,7 @@ public class Processor {
                     notifyBuildTriggered(pull, helper.getGithubBranch());
                 }
             } else {
-                System.err.println("Problem triggering build for pulls: " + pullsToMerge);
+                System.err.println("Problem triggering build for pulls: " + pullsToMerge + " response code: " + urlConnection.getResponseCode() + " - " + urlConnection.getResponseMessage());
             }
         } catch (Exception e) {
             throw new IllegalStateException(e);
