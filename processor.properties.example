@@ -1,19 +1,24 @@
-# Github Organization
+# ===== Github Repository configs
 # github.organization=jbossas
 
 # Github Repository (without the .git)
-# github.eap.repo=jboss-eap
-# github.as.repo=jboss-as
-
-# Github Authentication Info
-# github.login=my-github-project-user
-# github.token=<Generate one using the Token API>
+# github.repo=jboss-eap
 
 # Github Branch (base ref) of desired PRs
 # github.branch=6.x
 
 # additional flag to check in Bugzilla
-# eap.version.flag=jboss-eap-6.1.0
+# version.flag=jboss-eap-6.1.0
+
+# ===== Github Upstream Repository configs
+# github.organization.upstream=jbossas
+
+# Github Repository (without the .git)
+# github.repo.upstream=jboss-as
+
+# Github Authentication Info
+# github.login=my-github-project-user
+# github.token=<Generate one using the Token API>
 
 # The server running the jenkins web interface, used for REST requests
 # jenkins.host=my-server.my-copmany.com
