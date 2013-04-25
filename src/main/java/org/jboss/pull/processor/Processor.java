@@ -118,7 +118,7 @@ public class Processor {
                 return;
             }
 
-            final List<PullRequest> pullRequests = helper.getPullRequestService().getPullRequests(helper.getRepositoryEAP(), "open");
+            final List<PullRequest> pullRequests = helper.getPullRequestService().getPullRequests(helper.getRepository(), "open");
 
             final Set<PullRequest> pullsToMerge = new LinkedHashSet<PullRequest>();
             final Set<PullRequest> pullsPending = new LinkedHashSet<PullRequest>();
@@ -140,7 +140,7 @@ public class Processor {
                 boolean running = false;
                 boolean pending = false;
 
-                final List<Comment> comments = helper.getIssueService().getComments(helper.getRepositoryEAP(), pullRequest.getNumber());
+                final List<Comment> comments = helper.getIssueService().getComments(helper.getRepository(), pullRequest.getNumber());
                 for (Comment comment : comments) {
                     if (helper.getGithubLogin().equals(comment.getUser().getLogin())) {
                         if (PENDING.matcher(comment.getBody()).matches()) {
