@@ -40,7 +40,10 @@ import org.jboss.pull.shared.Util;
 
 
 /**
- * Stolen and derived from Jason's pull-player.
+ * Pull request processor derived from Jason's pull-player.
+ * It checks all the open PRs whether they are merge-able and schedule a merge job on Hudson for them.
+ * A merge-able PR must be approved by a comment "review ok" and must comply to org.jboss.pull.shared.PullHelper#isMergeable().
+ * It also checks the status of the latest merge job run on Hudson and post comments on github accordingly, etc.
  *
  * @author <a href="mailto:istudens@redhat.com">Ivo Studensky</a>
  * @author Jason T. Greene
@@ -244,8 +247,13 @@ public class Processor {
                 try {
                     helper.updateBugzillaStatus(pull, Bug.Status.MODIFIED);
                 } catch (Exception e) {
-                    System.err.printf("Update of status of bugzilla related to pull %d failed.\n", pull.getNumber());
-                    // TODO what to do here? do retry it?
+                    System.err.printf("Update of status of bugzilla related to pull %d failed because of: %s.\n", pull.getNumber(), e.getMessage());
+                    System.err.println("Retry...");
+                    try {
+                        helper.updateBugzillaStatus(pull, Bug.Status.MODIFIED);
+                    } catch (Exception ex) {
+                        System.err.printf("Update of status of bugzilla related to pull %d failed again because of: %s.\n", pull.getNumber(), ex.getMessage());
+                    }
                 }
             }
         }

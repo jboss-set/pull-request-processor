@@ -11,10 +11,10 @@
 # version.flag=jboss-eap-6.1.0
 
 # ===== Github Upstream Repository configs
-# github.organization.upstream=jbossas
+# github.organization.upstream=wildfly
 
 # Github Repository (without the .git)
-# github.repo.upstream=jboss-as
+# github.repo.upstream=wildfly
 
 # Github Authentication Info
 # github.login=my-github-project-user
