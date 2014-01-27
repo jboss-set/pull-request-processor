@@ -21,6 +21,7 @@
  */
 package org.jboss.pull.processor;
 
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -126,6 +127,7 @@ public class Processor {
             final Set<PullRequest> pullsToMerge = new LinkedHashSet<PullRequest>();
             final Set<PullRequest> pullsPending = new LinkedHashSet<PullRequest>();
             final Set<PullRequest> pullsRunning = new LinkedHashSet<PullRequest>();
+            final Set<PullRequest> pullsToComplain = new LinkedHashSet<PullRequest>();
 
             for (PullRequest pullRequest : pullRequests) {
                 if (pullRequest.getHead().getSha() == null) {
@@ -189,6 +191,8 @@ public class Processor {
                     // check other conditions, i.e. upstream pull request and bugzilla
                     if (helper.isMergeable(pullRequest)) {
                         pullsToMerge.add(pullRequest);
+                    } else {
+                        pullsToComplain.add(pullRequest);
                     }
                 } else {
                     Comment lastComment = comments.get(comments.size() - 1);
@@ -224,6 +228,11 @@ public class Processor {
                     // build finished, trigger a new one
                     triggerJob(pullsToMerge);
                 }
+            }
+
+            // complain about PRs which don't follow the rules
+            for (PullRequest pullToComplain : pullsToComplain) {
+                complain(pullToComplain);
             }
 
         } finally {
@@ -317,6 +326,24 @@ public class Processor {
                     urlConnection.disconnect();
             } catch (Throwable t) {
             }
+        }
+    }
+
+    private void complain(PullRequest pull) {
+        String comment = "This PR cannot be merged due to non-compliance with the rules of the relevant EAP version. Please fix/complete its description first.";
+
+        try {
+            final List<Comment> comments = helper.getIssueService().getComments(helper.getRepository(), pull.getNumber());
+            Comment lastComment = comments.get(comments.size() - 1);
+
+            if (lastComment.getBody().indexOf("cannot be merged due to non-compliance with the rules") == -1) {
+                if (! DRY_RUN) {
+                    postComment(pull, comment);
+//                    postStatus(pull, -1, "failure");
+                }
+            }
+        } catch (IOException e) {
+            System.err.printf("Could not get comments for pull %d due to %s\n", pull.getNumber(), e.getMessage());
         }
     }
 
