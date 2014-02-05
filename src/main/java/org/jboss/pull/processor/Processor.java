@@ -80,6 +80,8 @@ public class Processor {
     private final String targetBranch;
     private final PullHelper helper;
 
+    private final UserList adminList;
+
     public static void main(String[] argv) throws Exception {
         if (argv.length == 2) {
             try {
@@ -111,6 +113,8 @@ public class Processor {
         BASE_URL = "http://" + BASE_HOST + ":" + BASE_PORT + BASE_URI;
         BASE_JOB_URL = BASE_URL + "/job";
         COMMENT_PRIVATE_LINK = "Private: " + PUBLISH_JOB_URL + "/" + JENKINS_JOB_NAME + "/";
+
+        adminList = UserList.loadUserList(Util.require(helper.getProps(), "admin.list.file"));
 
         // system property "dryrun=true"
         DRY_RUN = Boolean.getBoolean("dryrun");
@@ -183,7 +187,8 @@ public class Processor {
                     if (REVIEWED.matcher(comment.getBody()).matches()) {
                         System.out.println("issue updated at: " + getTime(pullRequest.getUpdatedAt()));
                         System.out.println("issue reviewed at: " + getTime(comment.getCreatedAt()));
-                        if (pullRequest.getUpdatedAt().compareTo(comment.getCreatedAt()) <= 0) {
+                        if (pullRequest.getUpdatedAt().compareTo(comment.getCreatedAt()) <= 0
+                                && adminList.has(comment.getUser().getLogin())) {
                             // this UpdatedAt doesn't have to be relevant to an update of commit as it takes every change
                             trigger = true;
                             running = false;
@@ -207,8 +212,8 @@ public class Processor {
                     }
                 } else {
                     Comment lastComment = comments.get(comments.size() - 1);
-                    if (MERGE.matcher(lastComment.getBody()).matches()) {
-                        // TODO check the user login who did this comment
+                    if (MERGE.matcher(lastComment.getBody()).matches()
+                            && adminList.has(lastComment.getUser().getLogin())) {
                         pullsToMerge.add(pullRequest);
                     }
                 }
