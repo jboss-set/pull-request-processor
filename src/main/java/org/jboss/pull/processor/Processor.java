@@ -33,7 +33,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.PullRequest;
@@ -53,12 +52,6 @@ import org.jboss.pull.shared.spi.PullEvaluator;
  * @author Jason T. Greene
  */
 public class Processor {
-
-    private static final Pattern MERGE    = Pattern.compile(".*merge\\W+this\\W+please.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern REVIEWED = Pattern.compile(".*review\\W+ok.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern PENDING  = Pattern.compile(".*Build.*merging.*has\\W+been\\W+triggered.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern RUNNING  = Pattern.compile(".*Build.*merging.*has\\W+been\\W+started.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-    private static final Pattern FINISHED = Pattern.compile(".*Build.*merging.*has\\W+been\\W+finished.*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
     /** how many PRs can be merged in one batch */
     private static final int MERGE_BATCH_LIMIT = 20;
@@ -162,21 +155,21 @@ public class Processor {
                 final List<Comment> comments = helper.getIssueService().getComments(helper.getRepository(), pullRequest.getNumber());
                 for (Comment comment : comments) {
                     if (helper.getGithubLogin().equals(comment.getUser().getLogin())) {
-                        if (PENDING.matcher(comment.getBody()).matches()) {
+                        if (helper.isPendingMatched(comment)) {
                             trigger = false;
                             running = false;
                             pending = true;
                             continue;
                         }
 
-                        if (RUNNING.matcher(comment.getBody()).matches()) {
+                        if (helper.isRunningMatched(comment)) {
                             trigger = false;
                             running = true;
                             pending = false;
                             continue;
                         }
 
-                        if (FINISHED.matcher(comment.getBody()).matches()) {
+                        if (helper.isFinishedgMatched(comment)) {
                             trigger = false;
                             running = false;
                             pending = false;
@@ -184,7 +177,7 @@ public class Processor {
                         }
                     }
 
-                    if (REVIEWED.matcher(comment.getBody()).matches()) {
+                    if (helper.isReviewMatched(comment)) {
                         System.out.println("issue updated at: " + getTime(pullRequest.getUpdatedAt()));
                         System.out.println("issue reviewed at: " + getTime(comment.getCreatedAt()));
                         if (pullRequest.getUpdatedAt().compareTo(comment.getCreatedAt()) <= 0
@@ -212,8 +205,7 @@ public class Processor {
                     }
                 } else {
                     Comment lastComment = comments.get(comments.size() - 1);
-                    if (MERGE.matcher(lastComment.getBody()).matches()
-                            && adminList.has(lastComment.getUser().getLogin())) {
+                    if (helper.isMergeMatched(lastComment) && adminList.has(lastComment.getUser().getLogin())) {
                         pullsToMerge.add(pullRequest);
                     }
                 }
