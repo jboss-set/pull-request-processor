@@ -21,22 +21,16 @@
  */
 package org.jboss.pull.processor;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.egit.github.core.Comment;
 import org.eclipse.egit.github.core.PullRequest;
-import org.jboss.pull.shared.Bug;
+import org.jboss.pull.shared.ProcessorPullState;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.spi.PullEvaluator;
@@ -70,10 +64,9 @@ public class Processor {
 
     private final boolean DRY_RUN;
 
-    private final String targetBranch;
-    private final PullHelper helper;
+    private final String TARGET_BRANCH;
 
-    private final UserList adminList;
+    private final PullHelper helper;
 
     public static void main(String[] argv) throws Exception {
         if (argv.length == 2) {
@@ -95,7 +88,7 @@ public class Processor {
     public Processor(final String targetBranchProperty, final String jenkinsJobNameProperty) throws Exception {
         helper = new PullHelper("processor.properties.file", "./processor.properties");
 
-        targetBranch = Util.require(helper.getProps(), targetBranchProperty);
+        TARGET_BRANCH = Util.require(helper.getProps(), targetBranchProperty);
         JENKINS_JOB_NAME = Util.require(helper.getProps(), jenkinsJobNameProperty);
 
         BASE_HOST = Util.require(helper.getProps(), "jenkins.host");
@@ -107,8 +100,6 @@ public class Processor {
         BASE_JOB_URL = BASE_URL + "/job";
         COMMENT_PRIVATE_LINK = "Private: " + PUBLISH_JOB_URL + "/" + JENKINS_JOB_NAME + "/";
 
-        adminList = UserList.loadUserList(Util.require(helper.getProps(), "admin.list.file"));
-
         // system property "dryrun=true"
         DRY_RUN = Boolean.getBoolean("dryrun");
         if (DRY_RUN) {
@@ -118,23 +109,23 @@ public class Processor {
 
 
     public void run() throws Exception {
-        System.out.println("Starting at: " + getTime());
+        System.out.println("Starting at: " + Util.getTime());
         try {
 
             // check the status of the merge job
             JenkinsBuild lastBuild = JenkinsBuild.findLastBuild(BASE_URL, JENKINS_JOB_NAME);
             if (lastBuild != null && lastBuild.getStatus() == null) {
                 // build is in progress at present, so nothing to do
-                System.out.println("Hudson job is still running.");
+                System.out.printf("Hudson job %s is still running.\n", JENKINS_JOB_NAME);
                 return;
             }
 
-            final List<PullRequest> pullRequests = helper.getPullRequestService().getPullRequests(helper.getRepository(), "open");
+            final List<PullRequest> pullRequests = helper.getPullRequests("open");
 
             final Set<PullRequest> pullsToMerge = new LinkedHashSet<PullRequest>();
             final Set<PullRequest> pullsPending = new LinkedHashSet<PullRequest>();
             final Set<PullRequest> pullsRunning = new LinkedHashSet<PullRequest>();
-            final Map<PullRequest, List<String>> pullsToComplain = new LinkedHashMap<PullRequest, List<String>>();
+            final Set<PullRequest> pullsToComplain = new LinkedHashSet<PullRequest>();
 
             for (PullRequest pullRequest : pullRequests) {
                 if (pullRequest.getHead().getSha() == null) {
@@ -142,72 +133,31 @@ public class Processor {
                     continue;
                 }
 
-                if (! targetBranch.equals(pullRequest.getBase().getRef())) {
+                if (! TARGET_BRANCH.equals(pullRequest.getBase().getRef())) {
                     continue;
                 }
 
                 System.out.printf("number: %d login: %s sha1: %s\n", pullRequest.getNumber(), pullRequest.getUser().getLogin(), pullRequest.getHead().getSha());
 
-                boolean trigger = false;
-                boolean running = false;
-                boolean pending = false;
-
-                final List<Comment> comments = helper.getIssueService().getComments(helper.getRepository(), pullRequest.getNumber());
-                for (Comment comment : comments) {
-                    if (helper.getGithubLogin().equals(comment.getUser().getLogin())) {
-                        if (helper.isPendingMatched(comment)) {
-                            trigger = false;
-                            running = false;
-                            pending = true;
-                            continue;
-                        }
-
-                        if (helper.isRunningMatched(comment)) {
-                            trigger = false;
-                            running = true;
-                            pending = false;
-                            continue;
-                        }
-
-                        if (helper.isFinishedgMatched(comment)) {
-                            trigger = false;
-                            running = false;
-                            pending = false;
-                            continue;
-                        }
-                    }
-
-                    if (helper.isReviewMatched(comment)) {
-                        System.out.println("issue updated at: " + getTime(pullRequest.getUpdatedAt()));
-                        System.out.println("issue reviewed at: " + getTime(comment.getCreatedAt()));
-                        if (pullRequest.getUpdatedAt().compareTo(comment.getCreatedAt()) <= 0
-                                && adminList.has(comment.getUser().getLogin())) {
-                            // this UpdatedAt doesn't have to be relevant to an update of commit as it takes every change
-                            trigger = true;
-                            running = false;
-                            pending = false;
-                        }
-                        continue;
-                    }
-                }
-
-                if (pending) {
-                    pullsPending.add(pullRequest);
-                } else if (running) {
-                    pullsRunning.add(pullRequest);
-                } else if (trigger) {
-                    // check other conditions, i.e. upstream pull request and bugzilla
-                    final PullEvaluator.Result mergeable = helper.isMergeable(pullRequest);
-                    if (mergeable.isMergeable()) {
+                final ProcessorPullState pullRequestState = helper.checkPullRequestState(pullRequest);
+                System.out.printf("state: %s\n", pullRequestState);
+                switch (pullRequestState) {
+                    case PENDING:
+                        pullsPending.add(pullRequest);
+                        break;
+                    case RUNNING:
+                        pullsRunning.add(pullRequest);
+                        break;
+                    case INCOMPLETE:
+                        pullsToComplain.add(pullRequest);
+                        break;
+                    case MERGEABLE:
                         pullsToMerge.add(pullRequest);
-                    } else {
-                        pullsToComplain.put(pullRequest, mergeable.getDescription());
-                    }
-                } else {
-                    Comment lastComment = comments.get(comments.size() - 1);
-                    if (helper.isMergeMatched(lastComment) && adminList.has(lastComment.getUser().getLogin())) {
-                        pullsToMerge.add(pullRequest);
-                    }
+                        break;
+                    case NEW:
+                    case FINISHED:
+                    case ERROR:
+                        // nothing to do here
                 }
 
             }
@@ -221,7 +171,7 @@ public class Processor {
                 }
             }
 
-            // check the running pulls and eventually update their state according to the result of the Hudson build if it is finished
+            // check the running pulls and eventually update their state according to the result of the Hudson build (if it is finished)
             for (PullRequest runningPull : pullsRunning) {
                 JenkinsBuild build = JenkinsBuild.findBuild(BASE_URL, JENKINS_JOB_NAME, Util.map("sha1", runningPull.getHead().getSha(), "branch", runningPull.getBase().getRef()));
                 if (build != null && build.getStatus() != null) {
@@ -239,12 +189,14 @@ public class Processor {
             }
 
             // complain about PRs which don't follow the rules
-            for (Map.Entry<PullRequest, List<String>> pullToComplain : pullsToComplain.entrySet()) {
-                complain(pullToComplain.getKey(), pullToComplain.getValue());
+            for (PullRequest pullToComplain : pullsToComplain) {
+                // get details why it is incomplete
+                final PullEvaluator.Result mergeable = helper.getEvaluatorFacade().isMergeable(pullToComplain);      // FIXME hmm, we need to check this twice :(
+                complain(pullToComplain, mergeable.getDescription());
             }
 
         } finally {
-            System.out.println("Completed at: " + getTime());
+            System.out.println("Completed at: " + Util.getTime());
         }
     }
 
@@ -259,19 +211,9 @@ public class Processor {
         if ("success".equals(githubStatus)) {
             postComment(pull, "Merged!");
 
-            // update bugzilla state
+            // update bugzilla/jira state
             if (! DRY_RUN) {
-                try {
-                    helper.updateBugzillaStatus(pull, Bug.Status.MODIFIED);
-                } catch (Exception e) {
-                    System.err.printf("Update of status of bugzilla related to pull %d failed because of: %s.\n", pull.getNumber(), e.getMessage());
-                    System.err.println("Retry...");
-                    try {
-                        helper.updateBugzillaStatus(pull, Bug.Status.MODIFIED);
-                    } catch (Exception ex) {
-                        System.err.printf("Update of status of bugzilla related to pull %d failed again because of: %s.\n", pull.getNumber(), ex.getMessage());
-                    }
-                }
+                helper.getEvaluatorFacade().updateIssueAsMerged(pull);
             }
         }
 
@@ -311,7 +253,7 @@ public class Processor {
             for (PullRequest pull : pullsToMerge) {
                 sha1s.append(delim).append(pull.getHead().getSha());
                 pulls.append(delim).append(Integer.toString(pull.getNumber()));
-                if (! targetBranch.equals(pull.getBase().getRef())) {
+                if (! TARGET_BRANCH.equals(pull.getBase().getRef())) {
                     // this should never happen
                     throw new IllegalStateException("Base branch of a pull request is different to the configured target branch");
                 }
@@ -320,7 +262,7 @@ public class Processor {
                     break;
                 }
             }
-            URL url = new URL(BASE_JOB_URL + "/" + JENKINS_JOB_NAME + "/buildWithParameters?token=" + JENKINS_JOB_TOKEN + "&pull=" + URLEncoder.encode(pulls.toString(), "UTF-8") +"&sha1=" + URLEncoder.encode(sha1s.toString(), "UTF-8") + "&branch=" + URLEncoder.encode(targetBranch, "UTF-8") + "&dryrun=" + DRY_RUN);
+            URL url = new URL(BASE_JOB_URL + "/" + JENKINS_JOB_NAME + "/buildWithParameters?token=" + JENKINS_JOB_TOKEN + "&pull=" + URLEncoder.encode(pulls.toString(), "UTF-8") +"&sha1=" + URLEncoder.encode(sha1s.toString(), "UTF-8") + "&branch=" + URLEncoder.encode(TARGET_BRANCH, "UTF-8") + "&dryrun=" + DRY_RUN);
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.connect();
             if (urlConnection.getResponseCode() == 200) {
@@ -342,23 +284,24 @@ public class Processor {
     }
 
     private void complain(PullRequest pull, List<String> description) {
-        StringBuilder comment = new StringBuilder("This PR cannot be merged due to non-compliance with the rules of the relevant EAP version.\n");
+        final String pattern = "cannot be merged due to non-compliance with the rules";
+        final StringBuilder comment = new StringBuilder("This PR ").append(pattern).append(" of the relevant EAP version.\n");
         comment.append("details:\n");
         for (String detailDesc: description) {
             comment.append(detailDesc).append("\n");
         }
 
-        try {
-            final List<Comment> comments = helper.getIssueService().getComments(helper.getRepository(), pull.getNumber());
-            Comment lastComment = comments.get(comments.size() - 1);
+        boolean postIt = true;
 
-            if (lastComment.getBody().indexOf("cannot be merged due to non-compliance with the rules") == -1) {
-                postComment(pull, comment.toString());
-//                postStatus(pull, -1, "failure");
-            }
-        } catch (IOException e) {
-            System.err.printf("Could not get comments for pull %d due to %s\n", pull.getNumber(), e.getMessage());
+        final List<Comment> comments = helper.getPullRequestComments(pull.getNumber());
+        if (! comments.isEmpty()) {
+            final Comment lastComment = comments.get(comments.size() - 1);
+            if (lastComment.getBody().indexOf(pattern) != -1)
+                postIt = false;
         }
+
+        if (postIt)
+            postComment(pull, comment.toString());
     }
 
     private void postStatus(PullRequest pull, int buildNumber, String status) {
@@ -376,16 +319,6 @@ public class Processor {
         if (! DRY_RUN) {
             helper.postGithubComment(pull, comment);
         }
-    }
-
-    private String getTime() {
-        Date date = new Date();
-        return getTime(date);
-    }
-
-    private String getTime(Date date) {
-        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        return dateFormat.format(date);
     }
 
     private static String usage() {
