@@ -29,7 +29,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.egit.github.core.Comment;
+import org.eclipse.egit.github.core.IssueEvent;
+import org.eclipse.egit.github.core.Milestone;
 import org.eclipse.egit.github.core.PullRequest;
+import org.eclipse.egit.github.core.RepositoryId;
 import org.jboss.pull.shared.ProcessorPullState;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.Util;
@@ -127,8 +130,8 @@ public class Processor {
             final Set<PullRequest> pullsRunning = new LinkedHashSet<PullRequest>();
             final Set<PullRequest> pullsToComplain = new LinkedHashSet<PullRequest>();
 
-            for (PullRequest pullRequest : pullRequests) {
-                if (pullRequest.getHead().getSha() == null) {
+            for (PullRequest pullRequest : pullRequests) {            	
+            	if (pullRequest.getHead().getSha() == null) {
                     System.err.printf("Could not get sha1 for pull %d\n", pullRequest.getNumber());
                     continue;
                 }
@@ -136,9 +139,15 @@ public class Processor {
                 if (! TARGET_BRANCH.equals(pullRequest.getBase().getRef())) {
                     continue;
                 }
-
+               
                 System.out.printf("number: %d login: %s sha1: %s\n", pullRequest.getNumber(), pullRequest.getUser().getLogin(), pullRequest.getHead().getSha());
 
+            	// Check Milestone
+            	if(pullRequest.getMilestone() == null){
+            		pullRequest = setMilestone(pullRequest);
+            	}
+ 
+                
                 final ProcessorPullState pullRequestState = helper.checkPullRequestState(pullRequest);
                 System.out.printf("state: %s\n", pullRequestState);
                 switch (pullRequestState) {
@@ -320,7 +329,26 @@ public class Processor {
             helper.postGithubComment(pull, comment);
         }
     }
-
+    
+    private PullRequest setMilestone(PullRequest noMilestone){
+    	Milestone milestone = helper.findOrCreateMilestone(noMilestone.getBase().getRef());
+    	
+    	org.eclipse.egit.github.core.Issue issue = helper.getIssue(getIssueIdFromIssueURL(noMilestone.getIssueUrl()));
+    	
+    	issue.setMilestone(milestone);   	
+    	issue = helper.editIssue(issue);
+    	
+    	if(issue.getPullRequest() != null){
+    		return issue.getPullRequest();
+    	}else{
+    		return noMilestone;
+    	}
+    }
+    
+    private int getIssueIdFromIssueURL(String issueURL){
+		return Integer.valueOf(issueURL.substring(issueURL.lastIndexOf("/")+1));
+	}
+    
     private static String usage() {
         StringBuilder usage = new StringBuilder();
         usage.append("java -jar pull-processor-1.0-SNAPSHOT.jar <property name of the target branch on github> <property name of dedicated jenkins merge job>\n\n");
