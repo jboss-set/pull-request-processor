@@ -50,7 +50,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.jboss.pull.processor.Processor</mainClass>
+                            <mainClass>org.jboss.pull.processor.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
