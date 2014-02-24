@@ -34,14 +34,14 @@ public class ProcessorMerge extends Processor {
 
     public ProcessorMerge(final String targetBranchProperty, final String jenkinsJobNameProperty) throws Exception {
 
-        TARGET_BRANCH = Util.require(helper.getProps(), targetBranchProperty);
-        JENKINS_JOB_NAME = Util.require(helper.getProps(), jenkinsJobNameProperty);
+        TARGET_BRANCH = Util.require(helper.getProperties(), targetBranchProperty);
+        JENKINS_JOB_NAME = Util.require(helper.getProperties(), jenkinsJobNameProperty);
 
-        BASE_HOST = Util.require(helper.getProps(), "jenkins.host");
-        BASE_PORT = Util.require(helper.getProps(), "jenkins.port");
-        BASE_URI = Util.get(helper.getProps(), "jenkins.uri", "");
-        PUBLISH_JOB_URL = Util.require(helper.getProps(), "jenkins.publish.url");
-        JENKINS_JOB_TOKEN = Util.get(helper.getProps(), "jenkins.job.token");
+        BASE_HOST = Util.require(helper.getProperties(), "jenkins.host");
+        BASE_PORT = Util.require(helper.getProperties(), "jenkins.port");
+        BASE_URI = Util.get(helper.getProperties(), "jenkins.uri", "");
+        PUBLISH_JOB_URL = Util.require(helper.getProperties(), "jenkins.publish.url");
+        JENKINS_JOB_TOKEN = Util.get(helper.getProperties(), "jenkins.job.token");
         BASE_URL = "http://" + BASE_HOST + ":" + BASE_PORT + BASE_URI;
         BASE_JOB_URL = BASE_URL + "/job";
         COMMENT_PRIVATE_LINK = "Private: " + PUBLISH_JOB_URL + "/" + JENKINS_JOB_NAME + "/";
@@ -59,7 +59,7 @@ public class ProcessorMerge extends Processor {
                 return;
             }
 
-            final List<PullRequest> pullRequests = helper.getPullRequests("open");
+            final List<PullRequest> pullRequests = helper.getGHHelper().getPullRequests("open");
 
             final Set<PullRequest> pullsToMerge = new LinkedHashSet<PullRequest>();
             final Set<PullRequest> pullsPending = new LinkedHashSet<PullRequest>();
@@ -245,7 +245,7 @@ public class ProcessorMerge extends Processor {
 
         boolean postIt = true;
 
-        final List<Comment> comments = helper.getPullRequestComments(pull.getNumber());
+        final List<Comment> comments = helper.getGHHelper().getPullRequestComments(pull.getNumber());
         if (!comments.isEmpty()) {
             final Comment lastComment = comments.get(comments.size() - 1);
             if (lastComment.getBody().indexOf(pattern) != -1)
@@ -261,7 +261,7 @@ public class ProcessorMerge extends Processor {
         String targetUrl = PUBLISH_JOB_URL + "/" + JENKINS_JOB_NAME + "/" + buildNumber;
 
         if (!DRY_RUN) {
-            helper.postGithubStatus(pull, targetUrl, status);
+            helper.getGHHelper().postGithubStatus(pull, targetUrl, status);
         }
     }
 
