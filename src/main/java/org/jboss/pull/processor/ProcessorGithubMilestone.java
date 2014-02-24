@@ -15,7 +15,7 @@ public class ProcessorGithubMilestone extends Processor {
         System.out.println("Starting at: " + Util.getTime());
 
         try {
-            final List<PullRequest> pullRequests = helper.getPullRequests("open");
+            final List<PullRequest> pullRequests = helper.getGHHelper().getPullRequests("open");
 
             for (PullRequest pullRequest : pullRequests) {
                 if (pullRequest.getMilestone() == null) {
@@ -33,11 +33,11 @@ public class ProcessorGithubMilestone extends Processor {
 
         milestone = findOrCreateMilestone(noMilestone.getBase().getRef());
 
-        org.eclipse.egit.github.core.Issue issue = helper.getIssue(getIssueIdFromIssueURL(noMilestone.getIssueUrl()));
+        org.eclipse.egit.github.core.Issue issue = helper.getGHHelper().getIssue(getIssueIdFromIssueURL(noMilestone.getIssueUrl()));
 
         issue.setMilestone(milestone);
         if (!DRY_RUN) {
-            issue = helper.editIssue(issue);
+            issue = helper.getGHHelper().editIssue(issue);
         } else {
             System.out.println("DRYRUN: Edit issue with new milestone");
         }
@@ -47,7 +47,7 @@ public class ProcessorGithubMilestone extends Processor {
     }
 
     private Milestone findOrCreateMilestone(String title) {
-        List<Milestone> milestones = helper.getMilestones();
+        List<Milestone> milestones = helper.getGHHelper().getMilestones();
 
         for (Milestone milestone : milestones) {
             if (milestone.getTitle().equals(title)) {
@@ -56,7 +56,7 @@ public class ProcessorGithubMilestone extends Processor {
         }
         Milestone milestone = null;
         if (!DRY_RUN) {
-            milestone = helper.createMilestone(title);
+            milestone = helper.getGHHelper().createMilestone(title);
         } else {
             milestone = new Milestone().setTitle(title);
             System.out.println("DRYRUN: Creating Milestone: " + title);

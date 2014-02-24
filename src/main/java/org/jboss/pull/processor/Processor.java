@@ -53,7 +53,7 @@ public abstract class Processor {
         System.out.println("Posting '" + comment + "' to pullrequest '" + pull.getNumber() + "'");
 
         if (!DRY_RUN) {
-            helper.postGithubComment(pull, comment);
+            helper.getGHHelper().postGithubComment(pull, comment);
         }
     }
 
