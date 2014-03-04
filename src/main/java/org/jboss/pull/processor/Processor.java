@@ -21,8 +21,8 @@
  */
 package org.jboss.pull.processor;
 
-import org.eclipse.egit.github.core.PullRequest;
 import org.jboss.pull.shared.PullHelper;
+import org.jboss.pull.shared.connectors.RedhatPullRequest;
 
 /**
  * Pull request processor derived from Jason's pull-player. It checks all the open PRs whether they are merge-able and schedule
@@ -49,11 +49,11 @@ public abstract class Processor {
         }
     }
 
-    protected void postComment(PullRequest pull, String comment) {
-        System.out.println("Posting '" + comment + "' to pullrequest '" + pull.getNumber() + "'");
+    protected void postComment(RedhatPullRequest pullRequest, String comment) {
+        System.out.println("Posting '" + comment + "' to pullrequest '" + pullRequest.getNumber() + "'");
 
         if (!DRY_RUN) {
-            helper.getGHHelper().postGithubComment(pull, comment);
+            pullRequest.postGithubComment(comment);
         }
     }
 
