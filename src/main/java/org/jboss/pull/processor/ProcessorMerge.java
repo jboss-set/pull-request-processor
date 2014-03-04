@@ -245,7 +245,7 @@ public class ProcessorMerge extends Processor {
 
         boolean postIt = true;
 
-        final List<Comment> comments = helper.getGHHelper().getPullRequestComments(pull.getNumber());
+        final List<Comment> comments = helper.getGHHelper().getPullRequestComments(pull);
         if (!comments.isEmpty()) {
             final Comment lastComment = comments.get(comments.size() - 1);
             if (lastComment.getBody().indexOf(pattern) != -1)
