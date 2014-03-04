@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.egit.github.core.Comment;
-import org.eclipse.egit.github.core.PullRequest;
 import org.jboss.pull.shared.ProcessorPullState;
 import org.jboss.pull.shared.Util;
+import org.jboss.pull.shared.connectors.RedhatPullRequest;
 import org.jboss.pull.shared.spi.PullEvaluator;
 
 public class ProcessorMerge extends Processor {
@@ -59,25 +59,25 @@ public class ProcessorMerge extends Processor {
                 return;
             }
 
-            final List<PullRequest> pullRequests = helper.getGHHelper().getPullRequests("open");
+            final List<RedhatPullRequest> pullRequests = helper.getOpenPullRequests();
 
-            final Set<PullRequest> pullsToMerge = new LinkedHashSet<PullRequest>();
-            final Set<PullRequest> pullsPending = new LinkedHashSet<PullRequest>();
-            final Set<PullRequest> pullsRunning = new LinkedHashSet<PullRequest>();
-            final Set<PullRequest> pullsToComplain = new LinkedHashSet<PullRequest>();
+            final Set<RedhatPullRequest> pullsToMerge = new LinkedHashSet<RedhatPullRequest>();
+            final Set<RedhatPullRequest> pullsPending = new LinkedHashSet<RedhatPullRequest>();
+            final Set<RedhatPullRequest> pullsRunning = new LinkedHashSet<RedhatPullRequest>();
+            final Set<RedhatPullRequest> pullsToComplain = new LinkedHashSet<RedhatPullRequest>();
 
-            for (PullRequest pullRequest : pullRequests) {
-                if (pullRequest.getHead().getSha() == null) {
+            for (RedhatPullRequest pullRequest : pullRequests) {
+                if (pullRequest.getSourceBranchSha() == null) {
                     System.err.printf("Could not get sha1 for pull %d\n", pullRequest.getNumber());
                     continue;
                 }
 
-                if (!TARGET_BRANCH.equals(pullRequest.getBase().getRef())) {
+                if (!TARGET_BRANCH.equals(pullRequest.getTargetBranchTitle())) {
                     continue;
                 }
 
-                System.out.printf("number: %d login: %s sha1: %s\n", pullRequest.getNumber(), pullRequest.getUser().getLogin(),
-                        pullRequest.getHead().getSha());
+                System.out.printf("number: %d login: %s sha1: %s\n", pullRequest.getNumber(), pullRequest.getGithubUser()
+                        .getLogin(), pullRequest.getSourceBranchSha());
 
                 final ProcessorPullState pullRequestState = helper.checkPullRequestState(pullRequest);
                 System.out.printf("state: %s\n", pullRequestState);
@@ -103,9 +103,9 @@ public class ProcessorMerge extends Processor {
             }
 
             // check the pending pulls and eventually update their state if they have been already started on Hudson
-            for (PullRequest pendingPull : pullsPending) {
+            for (RedhatPullRequest pendingPull : pullsPending) {
                 JenkinsBuild build = JenkinsBuild.findBuild(BASE_URL, JENKINS_JOB_NAME,
-                        Util.map("sha1", pendingPull.getHead().getSha(), "branch", pendingPull.getBase().getRef()));
+                        Util.map("sha1", pendingPull.getSourceBranchSha(), "branch", pendingPull.getTargetBranchTitle()));
                 if (build != null) {
                     // build in progress
                     notifyBuildRunning(pendingPull, build.getBuild());
@@ -114,9 +114,9 @@ public class ProcessorMerge extends Processor {
 
             // check the running pulls and eventually update their state according to the result of the Hudson build (if it is
             // finished)
-            for (PullRequest runningPull : pullsRunning) {
+            for (RedhatPullRequest runningPull : pullsRunning) {
                 JenkinsBuild build = JenkinsBuild.findBuild(BASE_URL, JENKINS_JOB_NAME,
-                        Util.map("sha1", runningPull.getHead().getSha(), "branch", runningPull.getBase().getRef()));
+                        Util.map("sha1", runningPull.getSourceBranchSha(), "branch", runningPull.getTargetBranchTitle()));
                 if (build != null && build.getStatus() != null) {
                     // build finished
                     notifyBuildCompleted(runningPull, build.getBuild(), build.getStatus());
@@ -132,7 +132,7 @@ public class ProcessorMerge extends Processor {
             }
 
             // complain about PRs which don't follow the rules
-            for (PullRequest pullToComplain : pullsToComplain) {
+            for (RedhatPullRequest pullToComplain : pullsToComplain) {
                 // get details why it is incomplete
                 final PullEvaluator.Result mergeable = helper.getEvaluatorFacade().isMergeable(pullToComplain); // FIXME hmm, we
                                                                                                                 // need to check
@@ -144,9 +144,9 @@ public class ProcessorMerge extends Processor {
         }
     }
 
-    private void notifyBuildCompleted(PullRequest pull, int buildNumber, String status) {
-        String comment = "Build " + buildNumber + " merging " + pull.getHead().getSha() + " to branch "
-                + pull.getBase().getRef() + " has been finished with outcome " + status + ":\n";
+    private void notifyBuildCompleted(RedhatPullRequest pull, int buildNumber, String status) {
+        String comment = "Build " + buildNumber + " merging " + pull.getSourceBranchSha() + " to branch "
+                + pull.getTargetBranchTitle() + " has been finished with outcome " + status + ":\n";
         comment += COMMENT_PRIVATE_LINK + buildNumber + "\n";
 
         String githubStatus = convertJenkinsStatus(status);
@@ -173,34 +173,34 @@ public class ProcessorMerge extends Processor {
         return "error";
     }
 
-    private void notifyBuildRunning(PullRequest pull, int buildNumber) {
-        String comment = "Build " + buildNumber + " merging " + pull.getHead().getSha() + " to branch "
-                + pull.getBase().getRef() + " has been started:\n";
+    private void notifyBuildRunning(RedhatPullRequest pull, int buildNumber) {
+        String comment = "Build " + buildNumber + " merging " + pull.getSourceBranchSha() + " to branch "
+                + pull.getTargetBranchTitle() + " has been started:\n";
         comment += COMMENT_PRIVATE_LINK + buildNumber + "\n";
 
         postComment(pull, comment);
         postStatus(pull, buildNumber, "pending");
     }
 
-    private void notifyBuildTriggered(PullRequest pull) {
-        String comment = "Build merging " + pull.getHead().getSha() + " to branch " + pull.getBase().getRef()
+    private void notifyBuildTriggered(RedhatPullRequest pull) {
+        String comment = "Build merging " + pull.getSourceBranchSha() + " to branch " + pull.getTargetBranchTitle()
                 + " has been triggered:\n";
         comment += COMMENT_PRIVATE_LINK + "\n";
 
         postComment(pull, comment);
     }
 
-    private void triggerJob(Set<PullRequest> pullsToMerge) {
+    private void triggerJob(Set<RedhatPullRequest> pullsToMerge) {
         HttpURLConnection urlConnection = null;
         try {
             StringBuilder sha1s = new StringBuilder();
             StringBuilder pulls = new StringBuilder();
             String delim = "";
             int count = 0;
-            for (PullRequest pull : pullsToMerge) {
-                sha1s.append(delim).append(pull.getHead().getSha());
+            for (RedhatPullRequest pull : pullsToMerge) {
+                sha1s.append(delim).append(pull.getSourceBranchSha());
                 pulls.append(delim).append(Integer.toString(pull.getNumber()));
-                if (!TARGET_BRANCH.equals(pull.getBase().getRef())) {
+                if (!TARGET_BRANCH.equals(pull.getTargetBranchTitle())) {
                     // this should never happen
                     throw new IllegalStateException(
                             "Base branch of a pull request is different to the configured target branch");
@@ -217,7 +217,7 @@ public class ProcessorMerge extends Processor {
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.connect();
             if (urlConnection.getResponseCode() == 200) {
-                for (PullRequest pull : pullsToMerge) {
+                for (RedhatPullRequest pull : pullsToMerge) {
                     notifyBuildTriggered(pull);
                 }
             } else {
@@ -235,7 +235,7 @@ public class ProcessorMerge extends Processor {
         }
     }
 
-    private void complain(PullRequest pull, List<String> description) {
+    private void complain(RedhatPullRequest pullRequest, List<String> description) {
         final String pattern = "cannot be merged due to non-compliance with the rules";
         final StringBuilder comment = new StringBuilder("This PR ").append(pattern).append(" of the relevant EAP version.\n");
         comment.append("details:\n");
@@ -245,7 +245,7 @@ public class ProcessorMerge extends Processor {
 
         boolean postIt = true;
 
-        final List<Comment> comments = helper.getGHHelper().getPullRequestComments(pull);
+        final List<Comment> comments = pullRequest.getGithubComments();
         if (!comments.isEmpty()) {
             final Comment lastComment = comments.get(comments.size() - 1);
             if (lastComment.getBody().indexOf(pattern) != -1)
@@ -253,15 +253,15 @@ public class ProcessorMerge extends Processor {
         }
 
         if (postIt)
-            postComment(pull, comment.toString());
+            postComment(pullRequest, comment.toString());
     }
 
-    private void postStatus(PullRequest pull, int buildNumber, String status) {
-        System.out.println("Setting status: " + status + " on sha " + pull.getHead().getSha());
+    private void postStatus(RedhatPullRequest pull, int buildNumber, String status) {
+        System.out.println("Setting status: " + status + " on sha " + pull.getSourceBranchSha());
         String targetUrl = PUBLISH_JOB_URL + "/" + JENKINS_JOB_NAME + "/" + buildNumber;
 
         if (!DRY_RUN) {
-            helper.getGHHelper().postGithubStatus(pull, targetUrl, status);
+            pull.postGithubStatus(targetUrl, status);
         }
     }
 

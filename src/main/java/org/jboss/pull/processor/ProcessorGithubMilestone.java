@@ -3,8 +3,8 @@ package org.jboss.pull.processor;
 import java.util.List;
 
 import org.eclipse.egit.github.core.Milestone;
-import org.eclipse.egit.github.core.PullRequest;
 import org.jboss.pull.shared.Util;
+import org.jboss.pull.shared.connectors.RedhatPullRequest;
 
 public class ProcessorGithubMilestone extends Processor {
 
@@ -15,9 +15,9 @@ public class ProcessorGithubMilestone extends Processor {
         System.out.println("Starting at: " + Util.getTime());
 
         try {
-            final List<PullRequest> pullRequests = helper.getGHHelper().getPullRequests("open");
+            final List<RedhatPullRequest> pullRequests = helper.getOpenPullRequests();
 
-            for (PullRequest pullRequest : pullRequests) {
+            for (RedhatPullRequest pullRequest : pullRequests) {
                 if (pullRequest.getMilestone() == null) {
                     setMilestone(pullRequest);
                 }
@@ -27,27 +27,24 @@ public class ProcessorGithubMilestone extends Processor {
         }
     }
 
-    public void setMilestone(PullRequest noMilestone) {
+    public void setMilestone(RedhatPullRequest pullRequest) {
         // Set milestone on PullRequest
         Milestone milestone;
 
-        milestone = findOrCreateMilestone(noMilestone.getBase().getRef());
+        milestone = findOrCreateMilestone(pullRequest.getTargetBranchTitle());
 
-        org.eclipse.egit.github.core.Issue issue = helper.getGHHelper().getIssue(getIssueIdFromIssueURL(noMilestone.getIssueUrl()));
-
-        issue.setMilestone(milestone);
         if (!DRY_RUN) {
-            issue = helper.getGHHelper().editIssue(issue);
+            pullRequest.setMilestone(milestone);
         } else {
             System.out.println("DRYRUN: Edit issue with new milestone");
         }
         // Post a comment about it
-        postComment(noMilestone, "Milestone changed to '" + milestone.getTitle() + "'");
+        postComment(pullRequest, "Milestone changed to '" + milestone.getTitle() + "'");
 
     }
 
     private Milestone findOrCreateMilestone(String title) {
-        List<Milestone> milestones = helper.getGHHelper().getMilestones();
+        List<Milestone> milestones = helper.getGithubMilestones();
 
         for (Milestone milestone : milestones) {
             if (milestone.getTitle().equals(title)) {
@@ -56,7 +53,7 @@ public class ProcessorGithubMilestone extends Processor {
         }
         Milestone milestone = null;
         if (!DRY_RUN) {
-            milestone = helper.getGHHelper().createMilestone(title);
+            milestone = helper.createMilestone(title);
         } else {
             milestone = new Milestone().setTitle(title);
             System.out.println("DRYRUN: Creating Milestone: " + title);
