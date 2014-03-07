@@ -21,6 +21,10 @@
  */
 package org.jboss.pull.processor;
 
+import java.util.List;
+import java.util.regex.Pattern;
+
+import org.eclipse.egit.github.core.Comment;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
 
@@ -54,6 +58,29 @@ public abstract class Processor {
 
         if (!DRY_RUN) {
             pullRequest.postGithubComment(comment);
+        }
+    }
+
+    protected void complain(RedhatPullRequest pullRequest, List<String> description) {
+        if (!description.isEmpty()) {
+            final String pattern = "cannot be merged due to non-compliance with the rules";
+            final StringBuilder comment = new StringBuilder("This PR ").append(pattern).append(
+                    " of the relevant EAP version.\n");
+            comment.append("details:\n");
+            for (String detailDesc : description) {
+                comment.append(detailDesc).append("\n");
+            }
+
+            boolean postIt = true;
+
+            Comment lastComplaint = pullRequest.getLastMatchingGithubComment(Pattern.compile(pattern));
+            if (lastComplaint != null && Pattern.matches(comment.toString(), lastComplaint.getBody())) {
+                System.out.println("Complaint hasn't changed. Not posting.");
+                postIt = false;
+            }
+
+            if (postIt)
+                postComment(pullRequest, comment.toString());
         }
     }
 

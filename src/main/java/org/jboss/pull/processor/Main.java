@@ -32,6 +32,18 @@ public class Main {
             }
         }
 
+        // Run milestone processing
+        if (Boolean.getBoolean("complain")) {
+            try {
+                ProcessorComplainer processor = new ProcessorComplainer();
+                processor.run();
+                System.exit(0);
+            } catch (Exception e) {
+                System.err.println(e);
+                e.printStackTrace(System.err);
+            }
+        }
+
         System.err.println(usage());
         System.exit(1);
     }
