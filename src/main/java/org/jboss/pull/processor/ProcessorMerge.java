@@ -7,7 +7,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.egit.github.core.Comment;
 import org.jboss.pull.shared.ProcessorPullState;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
@@ -233,27 +232,6 @@ public class ProcessorMerge extends Processor {
             } catch (Throwable t) {
             }
         }
-    }
-
-    private void complain(RedhatPullRequest pullRequest, List<String> description) {
-        final String pattern = "cannot be merged due to non-compliance with the rules";
-        final StringBuilder comment = new StringBuilder("This PR ").append(pattern).append(" of the relevant EAP version.\n");
-        comment.append("details:\n");
-        for (String detailDesc : description) {
-            comment.append(detailDesc).append("\n");
-        }
-
-        boolean postIt = true;
-
-        final List<Comment> comments = pullRequest.getGithubComments();
-        if (!comments.isEmpty()) {
-            final Comment lastComment = comments.get(comments.size() - 1);
-            if (lastComment.getBody().indexOf(pattern) != -1)
-                postIt = false;
-        }
-
-        if (postIt)
-            postComment(pullRequest, comment.toString());
     }
 
     private void postStatus(RedhatPullRequest pull, int buildNumber, String status) {
