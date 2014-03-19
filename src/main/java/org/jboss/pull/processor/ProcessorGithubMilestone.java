@@ -27,7 +27,10 @@ public class ProcessorGithubMilestone extends Processor {
         }
     }
 
-    public void setMilestone(RedhatPullRequest pullRequest) {
+    private void setMilestone(RedhatPullRequest pullRequest) {
+        System.out.println("ProcessComplainer processing PullRequest: " + pullRequest.getNumber() + " on repository: "
+                + pullRequest.getOrganization() + "/" + pullRequest.getRepository());
+
         // Set milestone on PullRequest
         Milestone milestone;
 
@@ -60,10 +63,6 @@ public class ProcessorGithubMilestone extends Processor {
         }
 
         return milestone;
-    }
-
-    private int getIssueIdFromIssueURL(String issueURL) {
-        return Integer.valueOf(issueURL.substring(issueURL.lastIndexOf("/") + 1));
     }
 
 }
