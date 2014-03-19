@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
-import org.jboss.pull.shared.connectors.bugzilla.Bug;
 import org.jboss.pull.shared.spi.PullEvaluator.Result;
 
 public class ProcessorComplainer extends Processor {
@@ -33,18 +32,13 @@ public class ProcessorComplainer extends Processor {
                 + pullRequest.getOrganization() + "/" + pullRequest.getRepository());
 
         result = checkBugs(pullRequest, result);
-        if( pullRequest.isUpstreamRequired() ){
-            result = checkRelatedPullRequests(pullRequest, result);
-        }else{
-            System.out.println("Upstream not required");
-        }
+        result = checkRelatedPullRequests(pullRequest, result);
 
         complain(pullRequest, result.getDescription());
     }
 
     private Result checkBugs(RedhatPullRequest pullRequest, Result result) {
-        List<Bug> bugs = pullRequest.getBugs();
-        if (bugs.isEmpty() && pullRequest.isJiraInDescription()) {
+        if (!areBugLinksInDescription(pullRequest)) {
             System.out.println("Missing Bugzilla or JIRA link");
             result.setMergeable(false);
             result.addDescription("Missing Bugzilla or JIRA. Please add link to description");
@@ -52,15 +46,38 @@ public class ProcessorComplainer extends Processor {
         return result;
     }
 
+    /**
+     * Returns true if a BZ or JIRA link is in the description. However, the actual id is not validated.
+     * @param pullRequest
+     * @return
+     */
+    private boolean areBugLinksInDescription(RedhatPullRequest pullRequest) {
+        if (pullRequest.isBZInDescription() || pullRequest.isJiraInDescription()) {
+            return true;
+        }
+        return false;
+    }
+
     private Result checkRelatedPullRequests(RedhatPullRequest pullRequest, Result result) {
-        List<RedhatPullRequest> relatedPullRequests = pullRequest.getRelatedPullRequests();
-        if (relatedPullRequests.isEmpty()) {
-            System.out.println("Missing Upstream");
-            result.setMergeable(false);
-            result.addDescription("Missing Upstream. Please add link to description or indicate 'No upstream required'");
+        if (pullRequest.isUpstreamRequired()) {
+            if (!doRelatedPullRequestsExist(pullRequest)) {
+                System.out.println("Missing Upstream");
+                result.setMergeable(false);
+                result.addDescription("Missing Upstream. Please add link to description or indicate 'No upstream required'");
+            }
+        } else {
+            System.out.println("Upstream not required");
         }
         return result;
 
+    }
+
+    private boolean doRelatedPullRequestsExist(RedhatPullRequest pullRequest) {
+        List<RedhatPullRequest> relatedPullRequests = pullRequest.getRelatedPullRequests();
+        if (relatedPullRequests.isEmpty()) {
+            return false;
+        }
+        return true;
     }
 
 }
