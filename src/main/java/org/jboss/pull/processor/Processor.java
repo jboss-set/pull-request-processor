@@ -42,6 +42,9 @@ public abstract class Processor {
     protected final boolean DRY_RUN;
 
     protected final PullHelper helper;
+    public void setHelper(PullHelper helper){
+        helper = helper;
+    }
 
     public Processor() throws Exception {
         helper = new PullHelper("processor.properties.file", "./processor-eap-6.properties.example");
