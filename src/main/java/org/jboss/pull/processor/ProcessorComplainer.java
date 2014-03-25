@@ -22,14 +22,20 @@ public class ProcessorComplainer extends Processor {
             final List<RedhatPullRequest> pullRequests = helper.getOpenPullRequests();
 
             for (RedhatPullRequest pullRequest : pullRequests) {
-                processPullRequest(pullRequest);
+                Result result = processPullRequest(pullRequest);
+                
+                if (!result.isMergeable()) {
+                    complain(pullRequest, result.getDescription());
+                } else {
+                    System.out.println("No complaints");
+                }
             }
         } finally {
             System.out.println("Completed at: " + Util.getTime());
         }
     }
 
-    public void processPullRequest(RedhatPullRequest pullRequest) {
+    public Result processPullRequest(RedhatPullRequest pullRequest) {
         Result result = new Result(true);
 
         System.out.println("\nProcessComplainer processing PullRequest '" + pullRequest.getNumber() + "' on repository '"
@@ -114,11 +120,7 @@ public class ProcessorComplainer extends Processor {
             System.out.println("Upstream not required");
         }
 
-        if (!result.isMergeable()) {
-            complain(pullRequest, result.getDescription());
-        } else {
-            System.out.println("No complaints");
-        }
+        return result;
     }
 
     /**

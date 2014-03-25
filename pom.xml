@@ -25,6 +25,7 @@
         <org.jboss.jbossset.pull-shared.version>0.3-SNAPSHOT</org.jboss.jbossset.pull-shared.version>
         <checkstyle.plugin.version>2.11</checkstyle.plugin.version>
         <org.wildfly.wildfly.build.config.version>8.0.0.Final</org.wildfly.wildfly.build.config.version>
+        <testng.version>6.8.7</testng.version>
     </properties>
 
     <scm>
@@ -49,6 +50,13 @@
             <groupId>org.jboss.jbossset</groupId>
             <artifactId>pull-shared</artifactId>
             <version>${org.jboss.jbossset.pull-shared.version}</version>
+        </dependency>
+        <!-- Test dependencies -->
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>${testng.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
