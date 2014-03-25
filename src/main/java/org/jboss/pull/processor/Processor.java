@@ -54,7 +54,7 @@ public abstract class Processor {
     }
 
     protected void postComment(RedhatPullRequest pullRequest, String comment) {
-        System.out.println("Posting '" + comment + "' to pullrequest '" + pullRequest.getNumber() + "'");
+        System.out.println("Posting Github Comment:\n\'" + comment + "'");
 
         if (!DRY_RUN) {
             pullRequest.postGithubComment(comment);
@@ -63,12 +63,10 @@ public abstract class Processor {
 
     protected void complain(RedhatPullRequest pullRequest, List<String> description) {
         if (!description.isEmpty()) {
-            final String pattern = "cannot be merged due to non-compliance with the rules";
-            final StringBuilder comment = new StringBuilder("This PR ").append(pattern).append(
-                    " of the relevant EAP version.\n");
-            comment.append("details:\n");
+            final String pattern = "This PR cannot be merged. Please edit description or associated links.";
+            final StringBuilder comment = new StringBuilder(pattern + "\n");
             for (String detailDesc : description) {
-                comment.append(detailDesc).append("\n");
+                comment.append("- ").append(detailDesc).append("\n");
             }
 
             boolean postIt = true;
