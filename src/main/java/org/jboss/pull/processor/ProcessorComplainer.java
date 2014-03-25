@@ -41,7 +41,7 @@ public class ProcessorComplainer extends Processor {
         if (!areBugLinksInDescription(pullRequest)) {
             System.out.println("Missing Bugzilla or JIRA link");
             result.setMergeable(false);
-            result.addDescription("Missing Bugzilla or JIRA. Please add link to description");
+            result.addDescription("Missing Bugzilla/JIRA or Target Release/Fix Versions are incompatible. Please add link to description");
         }
         return result;
     }
