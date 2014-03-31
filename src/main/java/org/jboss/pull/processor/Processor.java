@@ -41,9 +41,9 @@ public abstract class Processor {
 
     protected final boolean DRY_RUN;
 
-    protected final PullHelper helper;
+    protected PullHelper helper;
     public void setHelper(PullHelper helper){
-        helper = helper;
+        this.helper = helper;
     }
 
     public Processor() throws Exception {
