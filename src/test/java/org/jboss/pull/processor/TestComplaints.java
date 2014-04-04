@@ -19,7 +19,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @Test
-public class TestProcessorComplainer {
+public class TestComplaints {
     
     private String DESCRIPTION_BUILDER = "Testing pattern matching. \n %s \n %s \n";
 
@@ -54,14 +54,14 @@ public class TestProcessorComplainer {
     public void testNoBug() throws Exception {
         RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER, "", ""));
 
-        ProcessorComplainer complainer = new ProcessorComplainer();
+        ProcessorEAP6 complainer = new ProcessorEAP6();
         PullHelper mockPullHelper = mock(PullHelper.class);
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
 
         AssertJUnit.assertFalse(result.isMergeable());
-        AssertJUnit.assertTrue(result.getDescription().contains(Messages.MISSING_BUG));
+        AssertJUnit.assertTrue(result.getDescription().contains(ComplaintMessages.MISSING_BUG));
     }
 
     @Test
@@ -69,28 +69,28 @@ public class TestProcessorComplainer {
         RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER,
                 "https://bugzilla.redhat.com/show_bug.cgi?id=1", ""));
 
-        ProcessorComplainer complainer = new ProcessorComplainer();
+        ProcessorEAP6 complainer = new ProcessorEAP6();
         PullHelper mockPullHelper = mock(PullHelper.class);
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
 
         AssertJUnit.assertFalse(result.isMergeable());
-        AssertJUnit.assertFalse(result.getDescription().contains(Messages.MISSING_BUG));
+        AssertJUnit.assertFalse(result.getDescription().contains(ComplaintMessages.MISSING_BUG));
     }
     
     @Test
     public void testNoUpstream() throws Exception {
         RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER, "", ""));
 
-        ProcessorComplainer complainer = new ProcessorComplainer();
+        ProcessorEAP6 complainer = new ProcessorEAP6();
         PullHelper mockPullHelper = mock(PullHelper.class);
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
 
         AssertJUnit.assertFalse(result.isMergeable());
-        AssertJUnit.assertTrue(result.getDescription().contains(Messages.MISSING_UPSTREAM));
+        AssertJUnit.assertTrue(result.getDescription().contains(ComplaintMessages.MISSING_UPSTREAM));
     }
 
     @Test
@@ -98,14 +98,14 @@ public class TestProcessorComplainer {
         RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER,
                 "https://github.com/uselessorg/jboss-eap/pull/3", ""));
 
-        ProcessorComplainer complainer = new ProcessorComplainer();
+        ProcessorEAP6 complainer = new ProcessorEAP6();
         PullHelper mockPullHelper = mock(PullHelper.class);
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
 
         AssertJUnit.assertFalse(result.isMergeable());
-        AssertJUnit.assertFalse(result.getDescription().contains(Messages.MISSING_UPSTREAM));
+        AssertJUnit.assertFalse(result.getDescription().contains(ComplaintMessages.MISSING_UPSTREAM));
     }
 
     @Test
@@ -114,14 +114,14 @@ public class TestProcessorComplainer {
 
         AssertJUnit.assertFalse(pullRequest.isUpstreamRequired());
 
-        ProcessorComplainer complainer = new ProcessorComplainer();
+        ProcessorEAP6 complainer = new ProcessorEAP6();
         PullHelper mockPullHelper = mock(PullHelper.class);
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
 
         AssertJUnit.assertFalse(result.isMergeable());
-        AssertJUnit.assertFalse(result.getDescription().contains(Messages.MISSING_UPSTREAM));
+        AssertJUnit.assertFalse(result.getDescription().contains(ComplaintMessages.MISSING_UPSTREAM));
     }
 
     @Test
@@ -129,14 +129,14 @@ public class TestProcessorComplainer {
         RedhatPullRequest pullRequest = setupPullRequest(
                 String.format(DESCRIPTION_BUILDER, "https://bugzilla.redhat.com/show_bug.cgi?id=1", ""), "6.1.x");
 
-        ProcessorComplainer complainer = new ProcessorComplainer();
+        ProcessorEAP6 complainer = new ProcessorEAP6();
         PullHelper mockPullHelper = mock(PullHelper.class);
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
 
         AssertJUnit.assertFalse(result.isMergeable());
-        AssertJUnit.assertTrue(result.getDescription().contains(Messages.NO_MATCHING_BUG));
+        AssertJUnit.assertTrue(result.getDescription().contains(ComplaintMessages.NO_MATCHING_BUG));
     }
 
     @Test
@@ -144,7 +144,7 @@ public class TestProcessorComplainer {
         RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER,
                 "https://bugzilla.redhat.com/show_bug.cgi?id=1", "https://bugzilla.redhat.com/show_bug.cgi?id=1"));
 
-        ProcessorComplainer complainer = new ProcessorComplainer();
+        ProcessorEAP6 complainer = new ProcessorEAP6();
         PullHelper mockPullHelper = mock(PullHelper.class);
         when(mockPullHelper.getBranches()).thenReturn(Arrays.asList(new String[] { "6.x", "6.1.x", "6.2.x" }));
         complainer.setHelper(mockPullHelper);
@@ -152,7 +152,7 @@ public class TestProcessorComplainer {
         Result result = complainer.processPullRequest(pullRequest);
 
         AssertJUnit.assertFalse(result.isMergeable());
-        AssertJUnit.assertTrue(result.getDescription().contains(Messages.MULTIPLE_MATCHING_BUGS));
+        AssertJUnit.assertTrue(result.getDescription().contains(ComplaintMessages.MULTIPLE_MATCHING_BUGS));
     }
 
     @Test
@@ -160,7 +160,7 @@ public class TestProcessorComplainer {
         RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER,
                 "https://bugzilla.redhat.com/show_bug.cgi?id=1", ""));
 
-        ProcessorComplainer complainer = new ProcessorComplainer();
+        ProcessorEAP6 complainer = new ProcessorEAP6();
         PullHelper mockPullHelper = mock(PullHelper.class);
         when(mockPullHelper.getBranches()).thenReturn(Arrays.asList(new String[] { "6.x", "6.1.x", "6.2.x" }));
         complainer.setHelper(mockPullHelper);
@@ -168,6 +168,6 @@ public class TestProcessorComplainer {
         Result result = complainer.processPullRequest(pullRequest);
 
         AssertJUnit.assertFalse(result.isMergeable());
-        AssertJUnit.assertTrue(result.getDescription().contains(Messages.getMultipleReleases("1")));
+        AssertJUnit.assertTrue(result.getDescription().contains(ComplaintMessages.getMultipleReleases("1")));
     }
 }

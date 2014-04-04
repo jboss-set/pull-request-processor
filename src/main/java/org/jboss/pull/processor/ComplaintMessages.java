@@ -1,8 +1,8 @@
 package org.jboss.pull.processor;
 
-public class Messages {
+public class ComplaintMessages {
 
-    public static Messages MESSAGES = new Messages();
+    public static ComplaintMessages MESSAGES = new ComplaintMessages();
 
     public static final String MISSING_BUG = "Missing Bugzilla or JIRA. Please add link to description";
 
