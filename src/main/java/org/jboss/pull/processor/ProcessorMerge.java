@@ -11,6 +11,7 @@ import org.jboss.pull.shared.ProcessorPullState;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
 import org.jboss.pull.shared.spi.PullEvaluator;
+import org.jboss.pull.shared.spi.PullEvaluator.Result;
 
 public class ProcessorMerge extends Processor {
 
@@ -241,6 +242,12 @@ public class ProcessorMerge extends Processor {
         if (!DRY_RUN) {
             pull.postGithubStatus(targetUrl, status);
         }
+    }
+
+    @Override
+    public Result processPullRequest(RedhatPullRequest pullRequest) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

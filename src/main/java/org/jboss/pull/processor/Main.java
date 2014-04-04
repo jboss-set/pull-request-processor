@@ -35,7 +35,7 @@ public class Main {
         // Run milestone processing
         if (Boolean.getBoolean("complain")) {
             try {
-                ProcessorComplainer processor = new ProcessorComplainer();
+                ProcessorEAP6 processor = new ProcessorEAP6();
                 processor.run();
                 System.exit(0);
             } catch (Exception e) {

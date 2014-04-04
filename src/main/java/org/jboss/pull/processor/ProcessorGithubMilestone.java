@@ -5,6 +5,7 @@ import java.util.List;
 import org.eclipse.egit.github.core.Milestone;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
+import org.jboss.pull.shared.spi.PullEvaluator.Result;
 
 public class ProcessorGithubMilestone extends Processor {
 
@@ -27,8 +28,14 @@ public class ProcessorGithubMilestone extends Processor {
         }
     }
 
+    @Override
+    public Result processPullRequest(RedhatPullRequest pullRequest) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
     private void setMilestone(RedhatPullRequest pullRequest) {
-        System.out.println("ProcessComplainer processing PullRequest: " + pullRequest.getNumber() + " on repository: "
+        System.out.println("ProcessMilestone processing PullRequest: " + pullRequest.getNumber() + " on repository: "
                 + pullRequest.getOrganization() + "/" + pullRequest.getRepository());
 
         // Set milestone on PullRequest

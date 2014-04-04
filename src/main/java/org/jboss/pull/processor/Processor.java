@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 import org.eclipse.egit.github.core.Comment;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
+import org.jboss.pull.shared.spi.PullEvaluator.Result;
 
 /**
  * Pull request processor derived from Jason's pull-player. It checks all the open PRs whether they are merge-able and schedule
@@ -42,7 +43,8 @@ public abstract class Processor {
     protected final boolean DRY_RUN;
 
     protected PullHelper helper;
-    public void setHelper(PullHelper helper){
+
+    public void setHelper(PullHelper helper) {
         this.helper = helper;
     }
 
@@ -55,6 +57,8 @@ public abstract class Processor {
             System.out.println("Running in a dry run mode.");
         }
     }
+
+    public abstract Result processPullRequest(RedhatPullRequest pullRequest);
 
     protected void postComment(RedhatPullRequest pullRequest, String comment) {
         System.out.println("Posting Github Comment:\n\'" + comment + "'");
