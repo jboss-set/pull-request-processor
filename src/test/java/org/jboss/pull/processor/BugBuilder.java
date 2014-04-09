@@ -41,4 +41,18 @@ public class BugBuilder {
         bugMap.put("target_release", new String[] { "6.3.0", "6.2.3" });
         return new Bug(bugMap);
     }
+    
+    public static Issue getMilestoneNotSetBug() {
+        HashMap<String, Object> bugMap = getEmptyBugMap();
+        bugMap.put("target_milestone", "---");
+        bugMap.put("target_release", new String[] { "6.3.0"});
+        return new Bug(bugMap);
+    }
+    
+    public static Issue getMilestoneSetBug() {
+        HashMap<String, Object> bugMap = getEmptyBugMap();
+        bugMap.put("target_milestone", "ER1");
+        bugMap.put("target_release", new String[] { "6.3.0"});
+        return new Bug(bugMap);
+    }
 }
