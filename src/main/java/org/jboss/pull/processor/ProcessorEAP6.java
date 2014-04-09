@@ -42,6 +42,11 @@ public class ProcessorEAP6 extends Processor {
 
         Result result = new Result(true);
 
+        if (pullRequest.getMilestone().getTitle().equals("on hold")) {
+            System.out.println("Github milestone 'on hold'. Do nothing.");
+            return result;
+        }
+
         result = bugComplaints(pullRequest, result);
 
         // Upstream checks
@@ -61,13 +66,13 @@ public class ProcessorEAP6 extends Processor {
 
     protected Result bugComplaints(RedhatPullRequest pullRequest, Result result) {
         // Check for a bug
-        if (!pullRequest.hasBZInDescription() && !pullRequest.hasJiraInDescription()) {
+        if (!pullRequest.hasBugLinkInDescription()) {
             return result.changeResult(false, ComplaintMessages.MISSING_BUG);
         }
 
         // Make sure it's from BZ
         // TODO: Remove when JIRA compatibility is implemented
-        if (!pullRequest.hasBZInDescription()) {
+        if (!pullRequest.hasBZLinkInDescription()) {
             System.out.println("JIRA link in description. Currently unable to handle.");
             return result;
         }
@@ -77,8 +82,11 @@ public class ProcessorEAP6 extends Processor {
         if (matches.isEmpty()) {
             return result.changeResult(false, ComplaintMessages.NO_MATCHING_BUG);
         } else if (matches.size() > 1) {
-            return result.changeResult(false, ComplaintMessages.MULTIPLE_MATCHING_BUGS);
+            return result;
         }
+        // else if (matches.size() > 1) {
+        // return result.changeResult(false, ComplaintMessages.MULTIPLE_MATCHING_BUGS);
+        // }
 
         Bug bug = (Bug) matches.get(0);
         System.out.println("Using bug id '" + bug.getNumber() + "' as matching bug.");
@@ -107,11 +115,11 @@ public class ProcessorEAP6 extends Processor {
         }
 
         // Establish if milestone can be changed
-        if ( pullRequest.getMilestone() == null ){
+        if (pullRequest.getMilestone() == null) {
             setMilestone(pullRequest, milestone);
-        } else if(pullRequest.getMilestone().getTitle().contains("x") && !milestone.getTitle().contains("x")){
+        } else if (pullRequest.getMilestone().getTitle().contains("x") && !milestone.getTitle().contains("x")) {
             setMilestone(pullRequest, milestone);
-        }else if (!pullRequest.getMilestone().getTitle().equals(milestoneTitle)) {
+        } else if (!pullRequest.getMilestone().getTitle().equals(milestoneTitle)) {
             return result.changeResult(false,
                     ComplaintMessages.getMilestoneDoesntMatch(pullRequest.getMilestone().getTitle(), milestoneTitle));
         } else {
