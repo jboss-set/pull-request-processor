@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.eclipse.egit.github.core.Comment;
-import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
 import org.jboss.pull.shared.spi.PullEvaluator.Result;
 
@@ -38,24 +37,9 @@ import org.jboss.pull.shared.spi.PullEvaluator.Result;
  * @author <a href="mailto:istudens@redhat.com">Ivo Studensky</a>
  * @author Jason T. Greene
  */
-public abstract class Processor {
-
-    protected final boolean DRY_RUN;
-
-    protected PullHelper helper;
-
-    public void setHelper(PullHelper helper) {
-        this.helper = helper;
-    }
+public abstract class Processor extends Common {
 
     public Processor() throws Exception {
-        helper = new PullHelper("processor.properties.file", "./processor-eap-6.properties.example");
-
-        // system property "dryrun=true"
-        DRY_RUN = Boolean.getBoolean("dryrun");
-        if (DRY_RUN) {
-            System.out.println("Running in a dry run mode.");
-        }
     }
 
     public abstract Result processPullRequest(RedhatPullRequest pullRequest);
