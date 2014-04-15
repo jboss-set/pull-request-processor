@@ -5,10 +5,11 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.eclipse.egit.github.core.Milestone;
+import org.jboss.pull.processor.rules.FlagRules;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
-import org.jboss.pull.shared.connectors.common.Issue;
 import org.jboss.pull.shared.connectors.bugzilla.Bug;
+import org.jboss.pull.shared.connectors.common.Issue;
 import org.jboss.pull.shared.spi.PullEvaluator.Result;
 
 public class ProcessorEAP6 extends Processor {
@@ -42,20 +43,50 @@ public class ProcessorEAP6 extends Processor {
 
         Result result = new Result(true);
 
-        if (pullRequest.getMilestone().getTitle().equals("on hold")) {
+        defaultConfiguration(pullRequest);
+
+        if (pullRequest.getMilestone() != null && pullRequest.getMilestone().getTitle().equals("on hold")) {
             System.out.println("Github milestone 'on hold'. Do nothing.");
             return result;
         }
 
         result = bugComplaints(pullRequest, result);
+        result = upstreamComplaints(pullRequest, result);
 
+        return result;
+    }
+
+    protected void defaultConfiguration(RedhatPullRequest pullRequest) {
+
+        String defaultTitle = pullRequest.getTargetBranchTitle();
+        addLabel(pullRequest, defaultTitle);
+
+        // Verify milestone is usable
+        Milestone milestone = findMilestone(defaultTitle);
+        if (!milestoneRule(milestone)) {
+            System.out.println("Default milestone: " + defaultTitle + " doesn't exist or is closed. This is wrong.");
+        }
+
+        // Establish if milestone can be changed
+        if (pullRequest.getMilestone() == null) {
+            setMilestone(pullRequest, milestone);
+        }
+    }
+
+    protected void setMilestone(RedhatPullRequest pullRequest, Milestone milestone) {
+        if (!DRY_RUN) {
+            pullRequest.setMilestone(milestone);
+        }
+        postComment(pullRequest, "Milestone changed to '" + milestone.getTitle() + "'");
+    }
+
+    protected Result upstreamComplaints(RedhatPullRequest pullRequest, Result result) {
         // Upstream checks
         if (pullRequest.isUpstreamRequired()) {
             if (pullRequest.hasRelatedPullRequestInDescription()) {
                 // Do related PR checks
             } else {
-                result.setMergeable(false);
-                result.addDescription(ComplaintMessages.MISSING_UPSTREAM);
+                return result.changeResult(false, Messages.MISSING_UPSTREAM);
             }
         } else {
             System.out.println("Upstream not required");
@@ -67,73 +98,76 @@ public class ProcessorEAP6 extends Processor {
     protected Result bugComplaints(RedhatPullRequest pullRequest, Result result) {
         // Check for a bug
         if (!pullRequest.hasBugLinkInDescription()) {
-            return result.changeResult(false, ComplaintMessages.MISSING_BUG);
+            return result.changeResult(false, Messages.MISSING_BUG);
         }
 
-        // Make sure it's from BZ
-        // TODO: Remove when JIRA compatibility is implemented
-        if (!pullRequest.hasBZLinkInDescription()) {
-            System.out.println("JIRA link in description. Currently unable to handle.");
+        // Multiple Valid Bugs
+        List<Bug> matches = getValidBugs(pullRequest);
+        if (matches.size() == 0) {
+            addLabel(pullRequest, Messages.CHECK_BUG_RELEASE);
+            removeLabel(pullRequest, Messages.CHECK_BUG_MILESTONE);
+            removeLabel(pullRequest, Messages.getNeedsAck("devel_ack"));
+            removeLabel(pullRequest, Messages.getNeedsAck("qa_ack"));
+            removeLabel(pullRequest, Messages.getNeedsAck("pm_ack"));
             return result;
         }
 
-        // Ensure only one bug has a valid target_release
-        List<Issue> matches = getValidBugs(pullRequest);
-        if (matches.isEmpty()) {
-            return result.changeResult(false, ComplaintMessages.NO_MATCHING_BUG);
-        } else if (matches.size() > 1) {
-            return result;
-        }
-        // else if (matches.size() > 1) {
-        // return result.changeResult(false, ComplaintMessages.MULTIPLE_MATCHING_BUGS);
-        // }
+        for (Bug bug : matches) {
+            System.out.println("Using bug id '" + bug.getNumber() + "' as matching bug.");
+            List<String> releases = new ArrayList<String>(bug.getFixVersions());
+            if (releases.size() != 1) {
+                addLabel(pullRequest, Messages.CHECK_BUG_RELEASE);
+            } else {
+                removeLabel(pullRequest, Messages.CHECK_BUG_RELEASE);
+            }
 
-        Bug bug = (Bug) matches.get(0);
-        System.out.println("Using bug id '" + bug.getNumber() + "' as matching bug.");
+            checkMilestone(pullRequest, bug, releases.get(0));
 
-        // Ensure only one target_release is set
-        List<String> releases = new ArrayList<String>(bug.getFixVersions());
-        if (releases.size() != 1) {
-            return result.changeResult(false, ComplaintMessages.getMultipleReleases(bug.getNumber()));
-        }
-
-        String release = releases.get(0);
-
-        // Bug target_milestone is set
-        String milestoneTitle = null;
-        if (isBugMilestoneSet(bug)) {
-            milestoneTitle = release + "." + bug.getTargetMilestone();
-        } else {
-            result.changeResult(false, ComplaintMessages.getMilestoneNotSet(bug.getNumber()));
-            milestoneTitle = pullRequest.getTargetBranchTitle();
-        }
-
-        // Verify milestone is usable
-        Milestone milestone = findMilestone(milestoneTitle);
-        if (!milestoneRule(milestone)) {
-            return result.changeResult(false, ComplaintMessages.getMilestoneNotExistOrClosed(milestoneTitle));
-        }
-
-        // Establish if milestone can be changed
-        if (pullRequest.getMilestone() == null) {
-            setMilestone(pullRequest, milestone);
-        } else if (pullRequest.getMilestone().getTitle().contains("x") && !milestone.getTitle().contains("x")) {
-            setMilestone(pullRequest, milestone);
-        } else if (!pullRequest.getMilestone().getTitle().equals(milestoneTitle)) {
-            return result.changeResult(false,
-                    ComplaintMessages.getMilestoneDoesntMatch(pullRequest.getMilestone().getTitle(), milestoneTitle));
-        } else {
-            System.out.println("Github milestone already matches bug milestone.");
+            try {
+                new FlagRules().processPullRequest(pullRequest, bug);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         return result;
     }
 
-    protected boolean milestoneRule(Milestone milestone) {
-        if (milestone == null || milestone.getState().equals("closed")) {
-            return false;
+    private void checkMilestone(RedhatPullRequest pullRequest, Bug bug, String release) {
+        // Bug target_milestone is set
+        String milestoneTitle = null;
+        if (isBugMilestoneSet(bug)) {
+            removeLabel(pullRequest, Messages.CHECK_BUG_MILESTONE);
+            milestoneTitle = release + "." + bug.getTargetMilestone();
+        } else {
+            addLabel(pullRequest, Messages.CHECK_BUG_MILESTONE);
+            return;
         }
-        return true;
+
+        // Verify milestone is usable
+        // If the milestone doesn't exist, or is closed, simply end.
+        // Use of specific milestones in Github is optional
+        Milestone milestone = findMilestone(milestoneTitle);
+        if (!milestoneRule(milestone)) {
+            return;
+        }
+
+        // Establish if milestone can be changed
+        if (pullRequest.getMilestone() == null || pullRequest.getMilestone().getTitle().contains("x")) {
+            setMilestone(pullRequest, milestone);
+        } else if (!pullRequest.getMilestone().getTitle().equals(milestoneTitle)) {
+            System.out.println("Github milestone doesn't match bug milestone.");
+        } else {
+            System.out.println("Github milestone already matches bug milestone.");
+        }
+    }
+
+    protected boolean isBugMilestoneSet(Bug bug) {
+        String milestone = bug.getTargetMilestone();
+        if (!milestone.equals("---") && !milestone.equals("Pending")) {
+            return true;
+        }
+        return false;
     }
 
     protected String getBranchRegex(RedhatPullRequest pullRequest) {
@@ -151,19 +185,23 @@ public class ProcessorEAP6 extends Processor {
         return branchRegex;
     }
 
-    protected List<Issue> getValidBugs(RedhatPullRequest pullRequest) {
+    protected List<Bug> getValidBugs(RedhatPullRequest pullRequest) {
         String branchRegex = getBranchRegex(pullRequest);
 
         if (branchRegex != null) {
             List<Issue> bugs = pullRequest.getIssues();
-            List<Issue> matches = new ArrayList<Issue>();
+            List<Bug> matches = new ArrayList<Bug>();
             for (Issue bug : bugs) {
-                List<String> releases = new ArrayList<String>(bug.getFixVersions());
-                for (String release : releases) {
-                    if (Pattern.compile(branchRegex).matcher(release).find()) {
-                        matches.add(bug);
+                // TODO: Remove when Jira is acceptable
+                if (bug instanceof Bug) {
+                    List<String> releases = new ArrayList<String>(bug.getFixVersions());
+                    for (String release : releases) {
+                        if (Pattern.compile(branchRegex).matcher(release).find()) {
+                            matches.add((Bug) bug);
+                        }
                     }
                 }
+
             }
             return matches;
         } else {
@@ -171,22 +209,14 @@ public class ProcessorEAP6 extends Processor {
                     + "' is unusable.");
         }
 
-        return new ArrayList<Issue>();
+        return new ArrayList<Bug>();
     }
 
-    protected boolean isBugMilestoneSet(Bug bug) {
-        String milestone = bug.getTargetMilestone();
-        if (!milestone.equals("---") && !milestone.equals("Pending")) {
-            return true;
+    protected boolean milestoneRule(Milestone milestone) {
+        if (milestone == null || milestone.getState().equals("closed")) {
+            return false;
         }
-        return false;
-    }
-
-    protected void setMilestone(RedhatPullRequest pullRequest, Milestone milestone) {
-        if (!DRY_RUN) {
-            pullRequest.setMilestone(milestone);
-        }
-        postComment(pullRequest, "Milestone changed to '" + milestone.getTitle() + "'");
+        return true;
     }
 
     /**

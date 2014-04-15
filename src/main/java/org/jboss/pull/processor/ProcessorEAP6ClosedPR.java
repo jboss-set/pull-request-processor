@@ -77,7 +77,7 @@ public class ProcessorEAP6ClosedPR extends ProcessorEAP6 {
 
     @Override
     protected void complain(RedhatPullRequest pullRequest, List<String> description) {
-        if (!description.contains(ComplaintMessages.MISSING_BUG)) {
+        if (!description.contains(Messages.MISSING_BUG)) {
             System.out.println("PullRequest " + pullRequest.getNumber() + " Description: " + description);
         }
     }
