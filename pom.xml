@@ -12,7 +12,7 @@
 
 	<groupId>org.jboss.jbossset</groupId>
 	<artifactId>pull-processor</artifactId>
-	<version>0.4-SNAPSHOT</version>
+	<version>0.3-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>Pull Processor</name>
 
@@ -39,16 +39,6 @@
 	</scm>
 
 	<dependencies>
-		<dependency>
-			<groupId>com.sun.jersey</groupId>
-			<artifactId>jersey-json</artifactId>
-			<version>1.5</version>
-		</dependency>
-		<dependency>
-			<groupId>com.atlassian.jira</groupId>
-			<artifactId>jira-rest-java-client</artifactId>
-			<version>1.0</version>
-		</dependency>
 		<dependency>
 			<groupId>org.jboss</groupId>
 			<artifactId>jboss-dmr</artifactId>
@@ -141,40 +131,5 @@
 			</plugins>
 		</pluginManagement>
 	</build>
-
-
-
-	<repositories>
-		<repository>
-			<id>repository.engineering.redhat.com</id>
-			<name>Repository Engineering Redhat</name>
-			<url>https://repository.engineering.redhat.com/nexus/content/groups/eng-ops-public/</url>
-			<layout>default</layout>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-		</repository>
-
-		<!-- Atlassian public repo for the Jira client -->
-		<repository>
-			<id>atlassian-public</id>
-			<url>https://maven.atlassian.com/repository/public</url>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-				<checksumPolicy>warn</checksumPolicy>
-			</releases>
-		</repository>
-
-	</repositories>
-
+	
 </project>
