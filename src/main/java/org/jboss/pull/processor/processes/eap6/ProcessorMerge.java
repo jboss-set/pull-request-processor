@@ -1,4 +1,4 @@
-package org.jboss.pull.processor;
+package org.jboss.pull.processor.processes.eap6;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -7,6 +7,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.jboss.pull.processor.Common;
+import org.jboss.pull.processor.JenkinsBuild;
+import org.jboss.pull.processor.processes.Processor;
 import org.jboss.pull.shared.ProcessorPullState;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
@@ -137,7 +140,7 @@ public class ProcessorMerge extends Processor {
                 final PullEvaluator.Result mergeable = helper.getEvaluatorFacade().isMergeable(pullToComplain); // FIXME hmm, we
                                                                                                                 // need to check
                                                                                                                 // this twice :(
-                complain(pullToComplain, mergeable.getDescription());
+                Common.complain(pullToComplain, mergeable.getDescription());
             }
         } finally {
             System.out.println("Completed at: " + Util.getTime());
@@ -150,14 +153,14 @@ public class ProcessorMerge extends Processor {
         comment += COMMENT_PRIVATE_LINK + buildNumber + "\n";
 
         String githubStatus = convertJenkinsStatus(status);
-        postComment(pull, comment);
+        Common.postComment(pull, comment);
         postStatus(pull, buildNumber, githubStatus);
 
         if ("success".equals(githubStatus)) {
-            postComment(pull, "Merged!");
+            Common.postComment(pull, "Merged!");
 
             // update bugzilla/jira state
-            if (!DRY_RUN) {
+            if (!Common.isDryRun()) {
                 helper.getEvaluatorFacade().updateIssueAsMerged(pull);
             }
         }
@@ -178,7 +181,7 @@ public class ProcessorMerge extends Processor {
                 + pull.getTargetBranchTitle() + " has been started:\n";
         comment += COMMENT_PRIVATE_LINK + buildNumber + "\n";
 
-        postComment(pull, comment);
+        Common.postComment(pull, comment);
         postStatus(pull, buildNumber, "pending");
     }
 
@@ -187,7 +190,7 @@ public class ProcessorMerge extends Processor {
                 + " has been triggered:\n";
         comment += COMMENT_PRIVATE_LINK + "\n";
 
-        postComment(pull, comment);
+        Common.postComment(pull, comment);
     }
 
     private void triggerJob(Set<RedhatPullRequest> pullsToMerge) {
@@ -213,7 +216,7 @@ public class ProcessorMerge extends Processor {
             URL url = new URL(BASE_JOB_URL + "/" + JENKINS_JOB_NAME + "/buildWithParameters?token=" + JENKINS_JOB_TOKEN
                     + "&pull=" + URLEncoder.encode(pulls.toString(), "UTF-8") + "&sha1="
                     + URLEncoder.encode(sha1s.toString(), "UTF-8") + "&branch=" + URLEncoder.encode(TARGET_BRANCH, "UTF-8")
-                    + "&dryrun=" + DRY_RUN);
+                    + "&dryrun=" + Common.isDryRun());
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.connect();
             if (urlConnection.getResponseCode() == 200) {
@@ -239,7 +242,7 @@ public class ProcessorMerge extends Processor {
         System.out.println("Setting status: " + status + " on sha " + pull.getSourceBranchSha());
         String targetUrl = PUBLISH_JOB_URL + "/" + JENKINS_JOB_NAME + "/" + buildNumber;
 
-        if (!DRY_RUN) {
+        if (!Common.isDryRun()) {
             pull.postGithubStatus(targetUrl, status);
         }
     }
