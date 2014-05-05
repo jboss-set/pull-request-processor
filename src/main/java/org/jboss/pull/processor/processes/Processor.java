@@ -19,12 +19,10 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.pull.processor;
+package org.jboss.pull.processor.processes;
 
-import java.util.List;
-import java.util.regex.Pattern;
-
-import org.eclipse.egit.github.core.Comment;
+import org.jboss.pull.processor.Common;
+import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
 import org.jboss.pull.shared.spi.PullEvaluator.Result;
 
@@ -37,40 +35,23 @@ import org.jboss.pull.shared.spi.PullEvaluator.Result;
  * @author <a href="mailto:istudens@redhat.com">Ivo Studensky</a>
  * @author Jason T. Greene
  */
-public abstract class Processor extends Common {
+public abstract class Processor {
+
+    protected PullHelper helper;
+
+    public void setHelper(PullHelper helper) {
+        this.helper = helper;
+    }
 
     public Processor() throws Exception {
+        helper = new PullHelper("processor.properties.file", "./processor-eap-6.properties.example");
+
+        // system property "dryrun=true"
+        if (Common.isDryRun()) {
+            System.out.println("Running in a dry run mode.");
+        }
     }
 
     public abstract Result processPullRequest(RedhatPullRequest pullRequest);
-
-    protected void postComment(RedhatPullRequest pullRequest, String comment) {
-        System.out.println("Posting Github Comment:\n\'" + comment + "'");
-
-        if (!DRY_RUN) {
-            pullRequest.postGithubComment(comment);
-        }
-    }
-
-    protected void complain(RedhatPullRequest pullRequest, List<String> description) {
-        if (!description.isEmpty()) {
-            final String pattern = "This PR cannot be merged. Please edit description or associated links.";
-            final StringBuilder comment = new StringBuilder(pattern + "\n");
-            for (String detailDesc : description) {
-                comment.append("- ").append(detailDesc).append("\n");
-            }
-
-            boolean postIt = true;
-
-            Comment lastComplaint = pullRequest.getLastMatchingGithubComment(Pattern.compile(pattern));
-            if (lastComplaint != null && Pattern.matches(comment.toString(), lastComplaint.getBody())) {
-                System.out.println("Complaint hasn't changed. Not posting.");
-                postIt = false;
-            }
-
-            if (postIt)
-                postComment(pullRequest, comment.toString());
-        }
-    }
 
 }

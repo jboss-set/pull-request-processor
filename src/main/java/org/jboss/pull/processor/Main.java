@@ -1,5 +1,8 @@
 package org.jboss.pull.processor;
 
+import org.jboss.pull.processor.processes.eap6.ProcessorEAP6;
+import org.jboss.pull.processor.processes.eap6.ProcessorMerge;
+
 public class Main {
 
     public static void main(String[] argv) throws Exception {
@@ -21,19 +24,7 @@ public class Main {
         }
 
         // Run milestone processing
-        if (Boolean.getBoolean("milestone")) {
-            try {
-                ProcessorGithubMilestone processor = new ProcessorGithubMilestone();
-                processor.run();
-                System.exit(0);
-            } catch (Exception e) {
-                System.err.println(e);
-                e.printStackTrace(System.err);
-            }
-        }
-
-        // Run milestone processing
-        if (Boolean.getBoolean("complain")) {
+        if (Boolean.getBoolean("processEAP6")) {
             try {
                 ProcessorEAP6 processor = new ProcessorEAP6();
                 processor.run();
