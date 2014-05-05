@@ -8,7 +8,9 @@ import java.util.Arrays;
 import org.eclipse.egit.github.core.Milestone;
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.PullRequestMarker;
+import org.jboss.pull.processor.processes.eap6.ProcessorEAP6;
 import org.jboss.pull.shared.PullHelper;
+import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
 import org.jboss.pull.shared.connectors.bugzilla.BZHelper;
 import org.jboss.pull.shared.connectors.common.Issue;
@@ -23,7 +25,7 @@ import static org.mockito.Mockito.when;
 
 @Test
 public class TestComplaints {
-    
+
     private String DESCRIPTION_BUILDER = "Testing pattern matching. \n %s \n %s \n";
 
     private BZHelper setupTargetReleaseBugBZHelper(Issue issue) throws MalformedURLException {
@@ -36,16 +38,17 @@ public class TestComplaints {
     private RedhatPullRequest setupPullRequest(String description) throws MalformedURLException {
         return setupPullRequest(description, "6.x", BugBuilder.getEmptyBug());
     }
-    
+
     private RedhatPullRequest setupPullRequest(String description, String pulledAgainst) throws MalformedURLException {
         return setupPullRequest(description, pulledAgainst, BugBuilder.getEmptyBug());
     }
-    
+
     private RedhatPullRequest setupPullRequest(String description, Issue issue) throws MalformedURLException {
         return setupPullRequest(description, "6.x", issue);
     }
-    
-    private RedhatPullRequest setupPullRequest(String description, String pulledAgainst, Issue issue) throws MalformedURLException {
+
+    private RedhatPullRequest setupPullRequest(String description, String pulledAgainst, Issue issue)
+            throws MalformedURLException {
         BZHelper mockBZHelper = setupTargetReleaseBugBZHelper(issue);
 
         JiraHelper mockJiraHelper = mock(JiraHelper.class);
@@ -68,9 +71,12 @@ public class TestComplaints {
 
         ProcessorEAP6 complainer = new ProcessorEAP6();
         PullHelper mockPullHelper = mock(PullHelper.class);
-        when(mockPullHelper.getGithubMilestones()).thenReturn(new ArrayList<Milestone>(Arrays.asList(new Milestone[]{ new Milestone().setTitle("6.x").setState("Open")})));
+        when(mockPullHelper.getProperties()).thenReturn(
+                Util.loadProperties("src/test/resources/processor-eap-6.properties.example",
+                        "src/test/resources/processor-eap-6.properties.example"));
+        when(mockPullHelper.getGithubMilestones()).thenReturn(
+                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("6.x").setState("Open") })));
         complainer.setHelper(mockPullHelper);
-        
 
         Result result = complainer.processPullRequest(pullRequest);
 
@@ -85,22 +91,30 @@ public class TestComplaints {
 
         ProcessorEAP6 complainer = new ProcessorEAP6();
         PullHelper mockPullHelper = mock(PullHelper.class);
-        when(mockPullHelper.getGithubMilestones()).thenReturn(new ArrayList<Milestone>(Arrays.asList(new Milestone[]{ new Milestone().setTitle("6.x").setState("Open")})));
+        when(mockPullHelper.getProperties()).thenReturn(
+                Util.loadProperties("src/test/resources/processor-eap-6.properties.example",
+                        "src/test/resources/processor-eap-6.properties.example"));
+        when(mockPullHelper.getGithubMilestones()).thenReturn(
+                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("6.x").setState("Open") })));
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
 
-        AssertJUnit.assertFalse(result.isMergeable());
+        AssertJUnit.assertFalse(String.valueOf(result.isMergeable()), result.isMergeable());
         AssertJUnit.assertFalse(result.getDescription().toString(), result.getDescription().contains(Messages.MISSING_BUG));
     }
-    
+
     @Test
     public void testNoUpstream() throws Exception {
         RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER, "", ""));
 
         ProcessorEAP6 complainer = new ProcessorEAP6();
         PullHelper mockPullHelper = mock(PullHelper.class);
-        when(mockPullHelper.getGithubMilestones()).thenReturn(new ArrayList<Milestone>(Arrays.asList(new Milestone[]{ new Milestone().setTitle("6.x").setState("Open")})));
+        when(mockPullHelper.getProperties()).thenReturn(
+                Util.loadProperties("src/test/resources/processor-eap-6.properties.example",
+                        "src/test/resources/processor-eap-6.properties.example"));
+        when(mockPullHelper.getGithubMilestones()).thenReturn(
+                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("6.x").setState("Open") })));
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
@@ -116,47 +130,60 @@ public class TestComplaints {
 
         ProcessorEAP6 complainer = new ProcessorEAP6();
         PullHelper mockPullHelper = mock(PullHelper.class);
-        when(mockPullHelper.getGithubMilestones()).thenReturn(new ArrayList<Milestone>(Arrays.asList(new Milestone[]{ new Milestone().setTitle("6.x").setState("Open")})));
+        when(mockPullHelper.getProperties()).thenReturn(
+                Util.loadProperties("src/test/resources/processor-eap-6.properties.example",
+                        "src/test/resources/processor-eap-6.properties.example"));
+        when(mockPullHelper.getGithubMilestones()).thenReturn(
+                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("6.x").setState("Open") })));
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
 
         AssertJUnit.assertFalse(result.isMergeable());
-        AssertJUnit.assertFalse(result.getDescription().toString(), result.getDescription().contains(Messages.MISSING_UPSTREAM));
+        AssertJUnit
+                .assertFalse(result.getDescription().toString(), result.getDescription().contains(Messages.MISSING_UPSTREAM));
     }
 
     @Test
     public void testHasUpstreamInternalRepoAbbreviated() throws Exception {
-        RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER,
-                "#3", ""));
+        RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER, "#3", ""));
 
         ProcessorEAP6 complainer = new ProcessorEAP6();
         PullHelper mockPullHelper = mock(PullHelper.class);
-        when(mockPullHelper.getGithubMilestones()).thenReturn(new ArrayList<Milestone>(Arrays.asList(new Milestone[]{ new Milestone().setTitle("6.x").setState("Open")})));
+        when(mockPullHelper.getProperties()).thenReturn(
+                Util.loadProperties("src/test/resources/processor-eap-6.properties.example",
+                        "src/test/resources/processor-eap-6.properties.example"));
+        when(mockPullHelper.getGithubMilestones()).thenReturn(
+                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("6.x").setState("Open") })));
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
 
         AssertJUnit.assertFalse(result.isMergeable());
-        AssertJUnit.assertFalse(result.getDescription().toString(), result.getDescription().contains(Messages.MISSING_UPSTREAM));
+        AssertJUnit
+                .assertFalse(result.getDescription().toString(), result.getDescription().contains(Messages.MISSING_UPSTREAM));
     }
-    
+
     @Test
     public void testHasUpstreamExternalRepoAbbreviated() throws Exception {
-        RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER,
-                "wildfly/wildfly#3", ""));
+        RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER, "wildfly/wildfly#3", ""));
 
         ProcessorEAP6 complainer = new ProcessorEAP6();
         PullHelper mockPullHelper = mock(PullHelper.class);
-        when(mockPullHelper.getGithubMilestones()).thenReturn(new ArrayList<Milestone>(Arrays.asList(new Milestone[]{ new Milestone().setTitle("6.x").setState("Open")})));
+        when(mockPullHelper.getProperties()).thenReturn(
+                Util.loadProperties("src/test/resources/processor-eap-6.properties.example",
+                        "src/test/resources/processor-eap-6.properties.example"));
+        when(mockPullHelper.getGithubMilestones()).thenReturn(
+                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("6.x").setState("Open") })));
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
 
         AssertJUnit.assertFalse(result.isMergeable());
-        AssertJUnit.assertFalse(result.getDescription().toString(), result.getDescription().contains(Messages.MISSING_UPSTREAM));
+        AssertJUnit
+                .assertFalse(result.getDescription().toString(), result.getDescription().contains(Messages.MISSING_UPSTREAM));
     }
-    
+
     @Test
     public void testHasUpstreamNotRequired() throws Exception {
         RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER, "no upstream required", ""));
@@ -165,60 +192,67 @@ public class TestComplaints {
 
         ProcessorEAP6 complainer = new ProcessorEAP6();
         PullHelper mockPullHelper = mock(PullHelper.class);
-        when(mockPullHelper.getGithubMilestones()).thenReturn(new ArrayList<Milestone>(Arrays.asList(new Milestone[]{ new Milestone().setTitle("6.x").setState("Open")})));
+        when(mockPullHelper.getProperties()).thenReturn(
+                Util.loadProperties("src/test/resources/processor-eap-6.properties.example",
+                        "src/test/resources/processor-eap-6.properties.example"));
+        when(mockPullHelper.getGithubMilestones()).thenReturn(
+                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("6.x").setState("Open") })));
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
 
         AssertJUnit.assertFalse(result.isMergeable());
-        AssertJUnit.assertFalse(result.getDescription().toString(), result.getDescription().contains(Messages.MISSING_UPSTREAM));
+        AssertJUnit
+                .assertFalse(result.getDescription().toString(), result.getDescription().contains(Messages.MISSING_UPSTREAM));
     }
 
-//    @Test
-//    public void testTargetReleaseNoMatch() throws Exception {
-//        RedhatPullRequest pullRequest = setupPullRequest(
-//                String.format(DESCRIPTION_BUILDER, "https://bugzilla.redhat.com/show_bug.cgi?id=1", ""), "6.1.x");
-//
-//        ProcessorEAP6WrongDirection complainer = new ProcessorEAP6WrongDirection();
-//        PullHelper mockPullHelper = mock(PullHelper.class);
-//        complainer.setHelper(mockPullHelper);
-//
-//        Result result = complainer.processPullRequest(pullRequest);
-//
-//        AssertJUnit.assertFalse(result.isMergeable());
-//        AssertJUnit.assertTrue(result.getDescription().toString(), result.getDescription().contains(Messages.NO_MATCHING_BUG));
-//    }
-//
-//    @Test
-//    public void testTargetReleaseMultipleSet() throws Exception {
-//        RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER,
-//                "https://bugzilla.redhat.com/show_bug.cgi?id=1", ""), BugBuilder.getTargetReleaseBug());
-//
-//        ProcessorEAP6WrongDirection complainer = new ProcessorEAP6WrongDirection();
-//        PullHelper mockPullHelper = mock(PullHelper.class);
-//        when(mockPullHelper.getBranches()).thenReturn(Arrays.asList(new String[] { "6.x", "6.1.x", "6.2.x" }));
-//        complainer.setHelper(mockPullHelper);
-//
-//        Result result = complainer.processPullRequest(pullRequest);
-//
-//        AssertJUnit.assertFalse(result.isMergeable());
-//        AssertJUnit.assertTrue(result.getDescription().toString(), result.getDescription().contains(Messages.getMultipleReleases("1")));
-//    }
-//    
-//    @Test
-//    public void testMilestoneNotSet() throws Exception {
-//        RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER,
-//                "https://bugzilla.redhat.com/show_bug.cgi?id=1", ""), BugBuilder.getMilestoneNotSetBug());
-//
-//        ProcessorEAP6WrongDirection complainer = new ProcessorEAP6WrongDirection();
-//        PullHelper mockPullHelper = mock(PullHelper.class);
-//        when(mockPullHelper.getBranches()).thenReturn(Arrays.asList(new String[] { "6.x", "6.1.x", "6.2.x" }));
-//        complainer.setHelper(mockPullHelper);
-//
-//        Result result = complainer.processPullRequest(pullRequest);
-//
-//        AssertJUnit.assertFalse(result.isMergeable());
-//        AssertJUnit.assertTrue(result.getDescription().toString(), result.getDescription().contains(Messages.getMilestoneNotSet("1")));
-//    }
-    
+    // @Test
+    // public void testTargetReleaseNoMatch() throws Exception {
+    // RedhatPullRequest pullRequest = setupPullRequest(
+    // String.format(DESCRIPTION_BUILDER, "https://bugzilla.redhat.com/show_bug.cgi?id=1", ""), "6.1.x");
+    //
+    // ProcessorEAP6WrongDirection complainer = new ProcessorEAP6WrongDirection();
+    // PullHelper mockPullHelper = mock(PullHelper.class);
+    // complainer.setHelper(mockPullHelper);
+    //
+    // Result result = complainer.processPullRequest(pullRequest);
+    //
+    // AssertJUnit.assertFalse(result.isMergeable());
+    // AssertJUnit.assertTrue(result.getDescription().toString(), result.getDescription().contains(Messages.NO_MATCHING_BUG));
+    // }
+    //
+    // @Test
+    // public void testTargetReleaseMultipleSet() throws Exception {
+    // RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER,
+    // "https://bugzilla.redhat.com/show_bug.cgi?id=1", ""), BugBuilder.getTargetReleaseBug());
+    //
+    // ProcessorEAP6WrongDirection complainer = new ProcessorEAP6WrongDirection();
+    // PullHelper mockPullHelper = mock(PullHelper.class);
+    // when(mockPullHelper.getBranches()).thenReturn(Arrays.asList(new String[] { "6.x", "6.1.x", "6.2.x" }));
+    // complainer.setHelper(mockPullHelper);
+    //
+    // Result result = complainer.processPullRequest(pullRequest);
+    //
+    // AssertJUnit.assertFalse(result.isMergeable());
+    // AssertJUnit.assertTrue(result.getDescription().toString(),
+    // result.getDescription().contains(Messages.getMultipleReleases("1")));
+    // }
+    //
+    // @Test
+    // public void testMilestoneNotSet() throws Exception {
+    // RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER,
+    // "https://bugzilla.redhat.com/show_bug.cgi?id=1", ""), BugBuilder.getMilestoneNotSetBug());
+    //
+    // ProcessorEAP6WrongDirection complainer = new ProcessorEAP6WrongDirection();
+    // PullHelper mockPullHelper = mock(PullHelper.class);
+    // when(mockPullHelper.getBranches()).thenReturn(Arrays.asList(new String[] { "6.x", "6.1.x", "6.2.x" }));
+    // complainer.setHelper(mockPullHelper);
+    //
+    // Result result = complainer.processPullRequest(pullRequest);
+    //
+    // AssertJUnit.assertFalse(result.isMergeable());
+    // AssertJUnit.assertTrue(result.getDescription().toString(),
+    // result.getDescription().contains(Messages.getMilestoneNotSet("1")));
+    // }
+
 }
