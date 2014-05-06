@@ -13,6 +13,7 @@ public class Common {
 
     public static final String BRANCHES_PROPERTY = "github.branches";
     public static final String REQUIRED_FLAGS_PROPERTY = "required.bz.flags";
+    public static final String RELEASE_VALUE_PROPERTY = "releases";
 
     public static Boolean isDryRun() {
         return Boolean.getBoolean("dryrun");
