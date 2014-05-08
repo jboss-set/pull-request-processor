@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
 import org.jboss.pull.processor.Messages;
 import org.jboss.pull.processor.Common;
@@ -19,7 +20,6 @@ import org.jboss.pull.shared.spi.PullEvaluator.Result;
 public class BugRules extends Rule {
 
     protected Set<String> REQUIRED_FLAGS = new HashSet<String>();
-    protected Set<String> RELEASE_VALUES = new HashSet<String>();
 
     public BugRules(PullHelper helper) {
         super(helper);
@@ -37,16 +37,6 @@ public class BugRules extends Rule {
             }
         }
 
-        // Get branch releases to match bugs
-        String releases = Util.require(helper.getProperties(), pullRequest.getTargetBranchTitle() + "."
-                + Common.RELEASE_VALUE_PROPERTY);
-        if (releases != null) {
-            StringTokenizer tokenizer = new StringTokenizer(releases, ", ");
-            while (tokenizer.hasMoreTokens()) {
-                String release = tokenizer.nextToken();
-                RELEASE_VALUES.add(release);
-            }
-        }
     }
 
     public Result processPullRequest(RedhatPullRequest pullRequest, Result result) {
@@ -68,13 +58,15 @@ public class BugRules extends Rule {
             return result;
         }
 
-        for (Bug bug : matches) {
+        if (matches.size() == 1) {
+            Bug bug = matches.get(0);
+
             System.out.println("Using bug id '" + bug.getNumber() + "' as matching bug.");
             List<String> releases = new ArrayList<String>(bug.getFixVersions());
             if (releases.size() != 1) {
-                Common.addLabel(helper, pullRequest, Messages.CHECK_BUG_RELEASE);
+                // Common.addLabel(helper, pullRequest, Messages.CHECK_BUG_RELEASE);
             } else {
-                Common.removeLabel(helper, pullRequest, Messages.CHECK_BUG_RELEASE);
+                // Common.removeLabel(helper, pullRequest, Messages.CHECK_BUG_RELEASE);
             }
 
             checkMilestone(pullRequest, bug, releases.get(0));
@@ -133,60 +125,89 @@ public class BugRules extends Rule {
         return false;
     }
 
+    protected String getBranchRegex(RedhatPullRequest pullRequest) {
+        String branch = pullRequest.getTargetBranchTitle();
+        List<String> branches = helper.getBranches();
+        String branchRegex = null;
+        if (branch.contains("x")) {
+            if (branch.length() == 3) {
+                branchRegex = branch.replace("x", "[0-9]+") + ".0";
+            } else if (branch.length() == 5) {
+                // TODO: Possibly limit regex pattern based on closed github milestones or tags
+                branchRegex = branch.replace("x", "[0-9]+");
+            }
+        }
+        return branchRegex;
+    }
+
     protected List<Bug> getValidBugs(RedhatPullRequest pullRequest) {
+        String regex = getBranchRegex(pullRequest);
 
         List<Issue> bugs = pullRequest.getIssues();
         List<Bug> matches = new ArrayList<Bug>();
+        // Match bugs by target release
         for (Issue bug : bugs) {
             // TODO: Remove when Jira is acceptable
             if (bug instanceof Bug) {
-
                 // If bug contains release that matches a valid release from the configuration file accept it.
-                Issue retval = compareTargetRelease(bug);
+                Issue retval = compareTargetRelease(bug, regex);
 
                 if (retval != null) {
                     matches.add((Bug) retval);
                     continue;
                 }
-
-                // TODO: Enable?
-                // If the target_release doesn't match, check the flags
-                // Check Bug Flags
-//                Issue retVal = compareFlags(bug);
-//                if (retVal != null) {
-//                    matches.add((Bug) retVal);
-//                    continue;
-//                }
             }
         }
+
+        // If no bugs match via target_release
+        // Attempt to match via flag
+        // TODO: Enable?
+        if (matches.isEmpty()) {
+            Common.addLabel(helper, pullRequest, Messages.CHECK_BUG_RELEASE);
+
+            for (Issue bug : bugs) {
+                // TODO: Remove when Jira is acceptable
+                if (bug instanceof Bug) {
+                    // Check Bug Flags
+                    Issue retVal = compareFlags(bug, regex);
+                    if (retVal != null) {
+                        matches.add((Bug) retVal);
+                        continue;
+                    }
+                }
+            }
+        } else {
+            Common.removeLabel(helper, pullRequest, Messages.CHECK_BUG_RELEASE);
+        }
+
         return matches;
     }
 
-    protected Issue compareTargetRelease(Issue bug) {
+    protected Issue compareTargetRelease(Issue bug, String regex) {
         List<String> bugReleases = new ArrayList<String>(bug.getFixVersions());
-        for (String validRelease : RELEASE_VALUES) {
-            for (String bugRelease : bugReleases) {
-                if (bugRelease.contains(validRelease)) {
-//                    System.out.println("Match target_release: " + validRelease + ":" + bugRelease);
+        // for (String validRelease : RELEASE_VALUES) {
+        for (String bugRelease : bugReleases) {
+            if (Pattern.compile(regex).matcher(bugRelease).find()) {
+                System.out.println("Match target_release: " + regex + ":" + bugRelease);
+                return bug;
+            }
+        }
+        // }
+        return null;
+    }
+
+    protected Issue compareFlags(Issue bug, String regex) {
+        List<Flag> flags = bug.getFlags();
+        // for (String validRelease : RELEASE_VALUES) {
+        for (Flag flag : flags) {
+            if (Pattern.compile(regex).matcher(flag.getName()).find()) {
+                if (flag.getStatus() == Flag.Status.POSITIVE) {
+                    System.out.println("Match flag: " + regex + ":" + flag.getName());
                     return bug;
                 }
             }
         }
-        return null;
-    }
-
-    protected Issue compareFlags(Issue bug) {
-        List<Flag> flags = bug.getFlags();
-        for (String validRelease : RELEASE_VALUES) {
-            for (Flag flag : flags) {
-                if (flag.getName().contains(validRelease)) {
-                    if (flag.getStatus() == Flag.Status.POSITIVE) {
-//                        System.out.println("Match flag: " + validRelease + ":" + flag.getName());
-                        return bug;
-                    }
-                }
-            }
-        }
+        // }
         return null;
     }
 
