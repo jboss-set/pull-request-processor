@@ -34,7 +34,7 @@
 		<connection>scm:git:git://github.com/jboss-set/pull-request-processor.git</connection>
 		<developerConnection>scm:git:git@github.com:jboss-set/pull-request-processor.git</developerConnection>
 		<url>https://github.com/jboss-set/pull-request-processor</url>
-		<tag>pull-processor-0.3.Final</tag>
+		<tag>pull-processor-0.3.1.Final</tag>
 	</scm>
 
 	<dependencies>
