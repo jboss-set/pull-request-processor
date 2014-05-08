@@ -10,7 +10,6 @@ import org.jboss.pull.shared.connectors.RedhatPullRequest;
 
 public class Common {
 
-
     public static final String BRANCHES_PROPERTY = "github.branches";
     public static final String REQUIRED_FLAGS_PROPERTY = "required.bz.flags";
     public static final String RELEASE_VALUE_PROPERTY = "releases";
@@ -20,6 +19,7 @@ public class Common {
     }
 
     public static void addLabel(PullHelper helper, RedhatPullRequest pullRequest, String labelTitle) {
+        // System.out.println("Attempting add label " + labelTitle);
         Label label = helper.getLabel(labelTitle.replace(" ", "+"));
         if (label != null) {
             if (!hasLabel(pullRequest, labelTitle)) {
@@ -32,6 +32,7 @@ public class Common {
     }
 
     public static void removeLabel(PullHelper helper, RedhatPullRequest pullRequest, String labelTitle) {
+        // System.out.println("Attempting remove label " + labelTitle);
         Label label = helper.getLabel(labelTitle.replace(" ", "+"));
         if (label != null) {
             if (hasLabel(pullRequest, labelTitle)) {
