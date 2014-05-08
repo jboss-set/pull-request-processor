@@ -11,7 +11,7 @@
 
 	<groupId>org.jboss.jbossset</groupId>
 	<artifactId>pull-processor</artifactId>
-	<version>0.3.2.Final</version>
+	<version>0.3.3-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>Pull Processor</name>
 
@@ -34,7 +34,7 @@
 		<connection>scm:git:git://github.com/jboss-set/pull-request-processor.git</connection>
 		<developerConnection>scm:git:git@github.com:jboss-set/pull-request-processor.git</developerConnection>
 		<url>https://github.com/jboss-set/pull-request-processor</url>
-		<tag>pull-processor-0.3.2.Final</tag>
+		<tag>pull-processor-0.3.1.Final</tag>
 	</scm>
 
 	<dependencies>
