@@ -20,7 +20,7 @@ public class Common {
 
     public static void addLabel(PullHelper helper, RedhatPullRequest pullRequest, String labelTitle) {
         // System.out.println("Attempting add label " + labelTitle);
-        Label label = helper.getLabel(labelTitle.replace(" ", "+"));
+        Label label = helper.getLabel(labelTitle);
         if (label != null) {
             if (!hasLabel(pullRequest, labelTitle)) {
                 if (!isDryRun()) {
@@ -33,7 +33,7 @@ public class Common {
 
     public static void removeLabel(PullHelper helper, RedhatPullRequest pullRequest, String labelTitle) {
         // System.out.println("Attempting remove label " + labelTitle);
-        Label label = helper.getLabel(labelTitle.replace(" ", "+"));
+        Label label = helper.getLabel(labelTitle);
         if (label != null) {
             if (hasLabel(pullRequest, labelTitle)) {
                 if (!isDryRun()) {
