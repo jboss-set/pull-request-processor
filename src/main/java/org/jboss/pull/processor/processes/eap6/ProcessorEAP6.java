@@ -40,7 +40,7 @@ public class ProcessorEAP6 extends Processor {
 
     public void run() {
         System.out.println("Starting " + Util.require(helper.getProperties(), "github.organization") + "/"
-                + Util.require(helper.getProperties(), "github.repo") + "at: " + org.jboss.pull.shared.Util.getTime());
+                + Util.require(helper.getProperties(), "github.repo") + " at: " + org.jboss.pull.shared.Util.getTime());
 
         try {
             final List<RedhatPullRequest> pullRequests = helper.getOpenPullRequests();
