@@ -19,12 +19,15 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.pull.processor.processes;
+package org.jboss.pull.processor;
 
-import org.jboss.pull.processor.Common;
-import org.jboss.pull.shared.PullHelper;
-import org.jboss.pull.shared.connectors.RedhatPullRequest;
-import org.jboss.pull.shared.spi.PullEvaluator.Result;
+import java.net.URL;
+import java.util.List;
+
+import org.jboss.pull.processor.data.ProcessorData;
+import org.jboss.set.aphrodite.Aphrodite;
+import org.jboss.set.aphrodite.spi.StreamService;
+
 
 /**
  * Pull request processor derived from Jason's pull-player. It checks all the open PRs whether they are merge-able and schedule
@@ -35,23 +38,10 @@ import org.jboss.pull.shared.spi.PullEvaluator.Result;
  * @author <a href="mailto:istudens@redhat.com">Ivo Studensky</a>
  * @author Jason T. Greene
  */
-public abstract class Processor {
+public interface Processor {
 
-    protected PullHelper helper;
-
-    public void setHelper(PullHelper helper) {
-        this.helper = helper;
-    }
-
-    public Processor() throws Exception {
-        helper = new PullHelper("processor.properties.file", "./processor-eap-6.properties.example");
-
-        // system property "dryrun=true"
-        if (Common.isDryRun()) {
-            System.out.println("Running in a dry run mode.");
-        }
-    }
-
-    public abstract Result processPullRequest(RedhatPullRequest pullRequest);
+	void init(Aphrodite aphrodite, StreamService streamService) throws Exception;
+	
+	List<ProcessorData> process(URL url) throws ProcessorException;
 
 }

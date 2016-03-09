@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -17,8 +18,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>1.6</maven.compiler.source>
-		<maven.compiler.target>1.6</maven.compiler.target>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
 
 
 		<checkstyle.plugin.version>2.11</checkstyle.plugin.version>
@@ -39,20 +40,16 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.jboss</groupId>
-			<artifactId>jboss-dmr</artifactId>
-			<version>${org.jboss.jboss-dmr.version}</version>
+			<groupId>org.jboss.set</groupId>
+			<artifactId>aphrodite</artifactId>
+			<version>0.3.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.xmlrpc</groupId>
-			<artifactId>xmlrpc-client</artifactId>
-			<version>${xmlrpc-client.version}</version>
+			<groupId>org.freemarker</groupId>
+			<artifactId>freemarker</artifactId>
+			<version>2.3.23</version>
 		</dependency>
-		<dependency>
-			<groupId>org.jboss.jbossset</groupId>
-			<artifactId>pull-shared</artifactId>
-			<version>${org.jboss.jbossset.pull-shared.version}</version>
-		</dependency>
+
 		<!-- Test dependencies -->
 		<dependency>
 			<groupId>org.testng</groupId>
@@ -131,20 +128,20 @@
 		</pluginManagement>
 	</build>
 
-    <repositories>
-        <repository>
-            <id>jboss-product-repository</id>
-            <name>JBoss Internal Product Repository</name>
-            <url>http://download.lab.bos.redhat.com/brewroot/repos/jb-eap-6-rhel-6-build/latest/maven/</url>
-            <layout>default</layout>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-                <updatePolicy>never</updatePolicy>
-            </snapshots>
-        </repository>
-    </repositories>
+	<repositories>
+		<repository>
+			<id>jboss-product-repository</id>
+			<name>JBoss Internal Product Repository</name>
+			<url>http://download.lab.bos.redhat.com/brewroot/repos/jb-eap-6-rhel-6-build/latest/maven/</url>
+			<layout>default</layout>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+		</repository>
+	</repositories>
 </project>

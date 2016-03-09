@@ -1,0 +1,26 @@
+{
+	"issueTrackerConfigs": [
+		{
+			"url": "https://issues.jboss.org/",
+			"username": "<your username>",
+			"password": "<your pass>",
+			"tracker": "JIRA",
+			"defaultIssueLimit": 1
+		},
+		{
+			"url": "https://bugzilla.redhat.com/",
+			"username": "<your username>",
+			"password": "<your pass>",
+			"tracker": "BUGZILLA",
+			"defaultIssueLimit": 1
+		}
+	],
+	"repositoryConfigs": [
+		{
+			"url": "https://github.com/",
+			"username": "<your username>",
+			"password": "<your pass>",
+			"type": "GITHUB"
+		}
+	]
+}
