@@ -21,12 +21,11 @@
  */
 package org.jboss.pull.processor;
 
-import java.net.URL;
 import java.util.List;
 
-import org.jboss.pull.processor.data.ProcessorData;
+import org.jboss.pull.processor.data.EvaluatorData;
 import org.jboss.set.aphrodite.Aphrodite;
-import org.jboss.set.aphrodite.spi.StreamService;
+import org.jboss.set.aphrodite.domain.Repository;
 
 
 /**
@@ -40,8 +39,8 @@ import org.jboss.set.aphrodite.spi.StreamService;
  */
 public interface Processor {
 
-	void init(Aphrodite aphrodite, StreamService streamService) throws Exception;
-	
-	List<ProcessorData> process(URL url) throws ProcessorException;
+    void init(Aphrodite aphrodite) throws Exception;
+    
+    List<EvaluatorData> process(Repository repository) throws ProcessorException;
 
 }

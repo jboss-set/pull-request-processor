@@ -6,3 +6,4 @@ org.jboss.pull.processor.impl.evaluator.PullRequestRelatedEvaluator
 org.jboss.pull.processor.impl.evaluator.RepositoryEvaluator
 org.jboss.pull.processor.impl.evaluator.StreamsEvaluator
 org.jboss.pull.processor.impl.evaluator.UpstreamEvaluator
+org.jboss.pull.processor.impl.evaluator.WritableRepositoryEvaluator

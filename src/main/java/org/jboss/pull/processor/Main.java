@@ -1,70 +1,90 @@
 package org.jboss.pull.processor;
 
-import java.net.URI;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.logging.Logger;
 
-import org.jboss.pull.processor.data.ProcessorData;
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.inf.ArgumentChoice;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
+import net.sourceforge.argparse4j.inf.Namespace;
+
+import org.jboss.pull.processor.data.EvaluatorData;
 import org.jboss.set.aphrodite.Aphrodite;
-import org.jboss.set.aphrodite.JsonStreamService;
-import org.jboss.set.aphrodite.domain.Issue;
-import org.jboss.set.aphrodite.spi.NotFoundException;
-import org.jboss.set.aphrodite.spi.StreamService;
+import org.jboss.set.aphrodite.domain.Repository;
 
 public class Main {
 
-	public static Logger logger = Logger.getLogger("org.jboss.pull.processor");
+    public static Logger logger = Logger.getLogger("org.jboss.pull.processor");
 
-	
-	public void start(String streamName) throws Exception {
-	    logger.info("initializing....");
-	    try (Aphrodite aphrodite = Aphrodite.instance()){
-    		StreamService streamService = getStreamService(aphrodite);
 
-        	List<URL> urls = null;
-        	if(streamName == null) {
+    public void start(List<String> streams, String fileName, Boolean dryrun) throws Exception {
+        logger.info("initializing....");
+        try (Aphrodite aphrodite = Aphrodite.instance()){
+
+            final List<Repository> repositories = new ArrayList<>();
+            if(streams.isEmpty()) {
                 logger.info("finding all repositories...");
-        		urls = streamService.findAllRepositories();
-        	} else {
-        	    logger.info("finding all repositories for stream " + streamName);
-        		urls = streamService.findAllRepositoriesInStream(streamName);
-        	}
-        	logger.info("number of repositories found: " + urls.size());
-        	ServiceLoader<Processor> processors = ServiceLoader.load(Processor.class);
-        	List<ProcessorData> data = new ArrayList<>();
-        	
-        	for(Processor processor : processors) {
-        	    logger.info("executing processor: " + processor.getClass().getName());
-        		for(URL url : urls) {
-    	    		processor.init(aphrodite, streamService);
-    	    		data.addAll(processor.process(url));
-    	    	}
-        	}
-        	logger.info("executing actions...");
-        	ServiceLoader<Action> actions = ServiceLoader.load(Action.class);
-        	ActionContext actionContext = new ActionContext(aphrodite, streamService);
-        	for(Action action : actions) {
-        	    logger.info("executing processor: " + action.getClass().getName());
-        		action.execute(actionContext, data);
-        	}
-	    } finally {
-	        logger.info("finalizing....");
-	    }
-	}
-	
+                repositories.addAll(aphrodite.getDistinctURLRepositoriesFromStreams());
+            } else {
+                for(String stream : streams) {
+                    logger.info("finding all repositories for stream " + stream);
+                    aphrodite.getDistinctURLRepositoriesByStream(stream).stream()
+                        .filter(e -> !repositories.contains(e))
+                        .forEach(e -> repositories.add(e));
+                }
+            }
+            logger.info("number of repositories found: " + repositories.size());
+            ServiceLoader<Processor> processors = ServiceLoader.load(Processor.class);
+            List<EvaluatorData> data = new ArrayList<>();
+            
+            for(Processor processor : processors) {
+                logger.info("executing processor: " + processor.getClass().getName());
+                for(Repository repository : repositories) {
+                    processor.init(aphrodite);
+                    data.addAll(processor.process(repository));
+                }
+            }
+            logger.info("executing actions...");
+            ServiceLoader<Action> actions = ServiceLoader.load(Action.class);
+            ActionContext actionContext = new ActionContext(aphrodite, streams, fileName, dryrun);
+            for(Action action : actions) {
+                logger.info("executing processor: " + action.getClass().getName());
+                action.execute(actionContext, data);
+            }
+        } finally {
+            logger.info("finalizing....");
+        }
+    }
+    
 
-	
-	private StreamService getStreamService(Aphrodite aphrodite) throws NotFoundException {
-		JsonStreamService service = new JsonStreamService(aphrodite);
-		service.loadStreamData();
-		return service;
-	}
-	
-    public static void main(String[] argv) throws Exception {
-    	new Main().start(argv[0]);
+    public static void main(String[] args) throws Exception {
+        ArgumentParser parser = ArgumentParsers.newArgumentParser("pull processor");
+        parser.addArgument("-s", "--streams")
+                .nargs("*")
+                .required(true)
+                .help("Specify streams to be processed");
+        parser.addArgument("-r", "--report")
+                .required(true)
+                .help("File where save the feed report");
+        parser.addArgument("-w", "--write")
+                .setDefault(Boolean.FALSE)
+                .type(Boolean.class)
+                .help("execute in dryRun mode");
+        Namespace ns = null;
+        try {
+            ns = parser.parseArgs(args);
+            List<String> streams = ns.getList("streams");
+            String reportFileName = ns.getString("report");
+            Boolean dryRun = ns.getBoolean("write");
+            new Main().start(streams, reportFileName, dryRun);
+        } catch (ArgumentParserException e) {
+            parser.handleError(e);
+            System.exit(1);
+        }
+
     }
 
 }

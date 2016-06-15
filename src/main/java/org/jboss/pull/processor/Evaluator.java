@@ -1,12 +1,15 @@
 package org.jboss.pull.processor;
 
-import java.util.Map;
+import org.jboss.pull.processor.data.EvaluatorData;
+
 
 
 public interface Evaluator {
 
-	String name();
-	
-    void eval(EvaluatorContext context, Map<String, Object> data);
-    
+    default String name() {
+        return this.getClass().getSimpleName();
+    }
+
+    void eval(EvaluatorContext context, EvaluatorData data);
+
 }

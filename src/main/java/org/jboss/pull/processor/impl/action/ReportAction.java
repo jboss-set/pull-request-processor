@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 
 import org.jboss.pull.processor.Action;
 import org.jboss.pull.processor.ActionContext;
-import org.jboss.pull.processor.data.ProcessorData;
+import org.jboss.pull.processor.data.EvaluatorData;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -23,21 +23,20 @@ import freemarker.template.TemplateExceptionHandler;
 
 public class ReportAction implements Action {
 
-	private static final Logger logger = Logger.getLogger("org.jboss.pull.processor");
-	
-	@Override
-	public void execute(ActionContext actionContext, List<ProcessorData> data) {
-		try {
-			String fileName = "/home/egonzalez/pull-processor/report.html";
-			File file = generateReport(data, fileName);
-    		logger.info("report generated: " + file);
-		} catch (IOException | TemplateException | URISyntaxException e) {
-			logger.log(Level.SEVERE, "something happened during report generation", e);
-		}
+    private static final Logger logger = Logger.getLogger("org.jboss.pull.processor");
 
-	}
-    private File generateReport(List<ProcessorData> data, String fileName) throws IOException, TemplateException, URISyntaxException {
-        Configuration cfg = new Configuration();
+    @Override
+    public void execute(ActionContext actionContext, List<EvaluatorData> data) {
+        try {
+            File file = generateReport(data, actionContext.getFileName());
+            logger.info("report generated: " + file);
+        } catch (IOException | TemplateException | URISyntaxException e) {
+            logger.log(Level.SEVERE, "something happened during report generation", e);
+        }
+
+    }
+    private File generateReport(List<EvaluatorData> data, String fileName) throws IOException, TemplateException, URISyntaxException {
+        Configuration cfg = new Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS);
         URI url = this.getClass().getClassLoader().getResource("META-INF/").toURI();
         cfg.setDirectoryForTemplateLoading(new File(url));
         cfg.setDefaultEncoding("UTF-8");
@@ -57,4 +56,5 @@ public class ReportAction implements Action {
         return file;
         
     }
+
 }
