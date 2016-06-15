@@ -103,7 +103,7 @@ public class SetLabelsAction implements Action {
                     return null;
                 }
                 if(!root.getAttributeValue(Attributes.WRITE_PERMISSION)) {
-                    Main.logger.log(Level.WARNING, " I don't have writting permission for " + pullRequest);
+                    Main.logger.log(Level.WARNING, " I don't have writing permission for " + pullRequest);
                     return null;
                 }
 
@@ -111,23 +111,26 @@ public class SetLabelsAction implements Action {
                 streams.addAll(root.getAttributeValue(Attributes.STREAMS));
                 streams.retainAll(actionContext.getStreams());
                 if(streams.isEmpty()) {
-                    Main.logger.log(Level.WARNING, " The patch does not belong to any stream being processed is not being processed (SKIP set labels) " + pullRequest);
+                    Main.logger.log(Level.WARNING, " The patch does not belong to any stream being processed (SKIP set labels) " + pullRequest);
                     return null;
                 }
-                List<Label> labelsAdded = toLabels(patch, added);
-                List<Label> labelsRemoved = toLabels(patch, removed);
                 List<Label> currentLabels = aphrodite.getLabelsFromPatch(patch);
-                List<Label> newLabelsSet = new ArrayList<>();
-                newLabelsSet.addAll(currentLabels);
-                newLabelsSet.removeAll(labelsRemoved);
-                labelsAdded.removeAll(newLabelsSet);
-                newLabelsSet.addAll(labelsAdded);
+                List<String> currentLabelsStr = currentLabels.stream().map(e -> e.getName()).collect(Collectors.toList());
+
+                List<String> newLabelsStrSet = new ArrayList<>();
+                newLabelsStrSet.addAll(currentLabelsStr);
+                newLabelsStrSet.removeAll(removed);
+                added.removeAll(newLabelsStrSet);
+                newLabelsStrSet.addAll(added);
+
                 // if they are the same set of labels, skip the update
-                if(newLabelsSet.size() == currentLabels.size() && currentLabels.removeAll(newLabelsSet) && currentLabels.isEmpty()) {
+                List<Label> newLabelsSet = toLabels(patch, newLabelsStrSet);
+                if(newLabelsStrSet.size() == currentLabelsStr.size() && currentLabelsStr.removeAll(newLabelsStrSet) && currentLabelsStr.isEmpty()) {
                      return null;
                 }
-                Main.logger.info(patch.getURL() + " executing labels SET [" + (currentLabels.stream().map(e -> e.getName()).collect(Collectors.joining(","))) + "]");
-                aphrodite.setLabelsToPatch(patch, currentLabels);
+
+                Main.logger.info(patch.getURL() + " executing labels SET " + (newLabelsStrSet));
+                aphrodite.setLabelsToPatch(patch, newLabelsSet);
             } catch(Exception e) {
                 Main.logger.log(Level.WARNING, "not found something " + pullRequest, e);
             }
