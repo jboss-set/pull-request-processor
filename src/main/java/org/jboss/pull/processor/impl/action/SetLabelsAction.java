@@ -107,6 +107,13 @@ public class SetLabelsAction implements Action {
                     return null;
                 }
 
+                List<String> streams = new ArrayList<>();
+                streams.addAll(root.getAttributeValue(Attributes.STREAMS));
+                streams.retainAll(actionContext.getStreams());
+                if(streams.isEmpty()) {
+                    Main.logger.log(Level.WARNING, " The patch does not belong to any stream being processed is not being processed (SKIP set labels) " + pullRequest);
+                    return null;
+                }
                 List<Label> labelsAdded = toLabels(patch, added);
                 List<Label> labelsRemoved = toLabels(patch, removed);
                 List<Label> currentLabels = aphrodite.getLabelsFromPatch(patch);
