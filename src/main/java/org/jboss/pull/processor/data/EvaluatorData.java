@@ -10,7 +10,7 @@ public class EvaluatorData {
     public EvaluatorData(Map<String, Object> data) {
         this.data = data;
     }
- 
+
     public EvaluatorData() {
         this.data = new HashMap<>();
     }

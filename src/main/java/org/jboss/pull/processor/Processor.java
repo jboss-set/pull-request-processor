@@ -39,8 +39,8 @@ import org.jboss.set.aphrodite.domain.Repository;
  */
 public interface Processor {
 
-    void init(Aphrodite aphrodite) throws Exception;
-    
+    void init(Aphrodite aphrodite, List<String> allowedStreams) throws Exception;
+
     List<EvaluatorData> process(Repository repository) throws ProcessorException;
 
 }

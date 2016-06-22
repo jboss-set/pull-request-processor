@@ -7,7 +7,7 @@ public class PullRequestData {
     private URL link;
 
     private String label;
- 
+
     private List<String> streams;
 
     public PullRequestData(String label, List<String> streams, URL link) {

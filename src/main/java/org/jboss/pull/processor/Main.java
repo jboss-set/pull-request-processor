@@ -6,7 +6,6 @@ import java.util.ServiceLoader;
 import java.util.logging.Logger;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
-import net.sourceforge.argparse4j.inf.ArgumentChoice;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -20,7 +19,7 @@ public class Main {
     public static Logger logger = Logger.getLogger("org.jboss.pull.processor");
 
 
-    public void start(List<String> streams, String fileName, Boolean dryrun) throws Exception {
+    public void start(List<String> streams, List<String> allowedStreams, String fileName, Boolean dryrun) throws Exception {
         logger.info("initializing....");
         try (Aphrodite aphrodite = Aphrodite.instance()){
 
@@ -39,17 +38,18 @@ public class Main {
             logger.info("number of repositories found: " + repositories.size());
             ServiceLoader<Processor> processors = ServiceLoader.load(Processor.class);
             List<EvaluatorData> data = new ArrayList<>();
-            
+
             for(Processor processor : processors) {
                 logger.info("executing processor: " + processor.getClass().getName());
                 for(Repository repository : repositories) {
-                    processor.init(aphrodite);
+                    processor.init(aphrodite, allowedStreams);
                     data.addAll(processor.process(repository));
                 }
             }
+
             logger.info("executing actions...");
             ServiceLoader<Action> actions = ServiceLoader.load(Action.class);
-            ActionContext actionContext = new ActionContext(aphrodite, streams, fileName, dryrun);
+            ActionContext actionContext = new ActionContext(aphrodite, streams, allowedStreams, fileName, dryrun);
             for(Action action : actions) {
                 logger.info("executing processor: " + action.getClass().getName());
                 action.execute(actionContext, data);
@@ -58,7 +58,6 @@ public class Main {
             logger.info("finalizing....");
         }
     }
-    
 
     public static void main(String[] args) throws Exception {
         ArgumentParser parser = ArgumentParsers.newArgumentParser("pull processor");
@@ -73,18 +72,22 @@ public class Main {
                 .setDefault(Boolean.FALSE)
                 .type(Boolean.class)
                 .help("execute in dryRun mode");
+        parser.addArgument("-as", "--allowed-streams")
+                .nargs("*")
+                .required(true)
+                .help("jira allowed to be tagged in the repos");
         Namespace ns = null;
         try {
             ns = parser.parseArgs(args);
             List<String> streams = ns.getList("streams");
             String reportFileName = ns.getString("report");
             Boolean dryRun = ns.getBoolean("write");
-            new Main().start(streams, reportFileName, dryRun);
+            List<String> allowedStreams = ns.getList("allowed_streams");
+            new Main().start(streams, allowedStreams, reportFileName, dryRun);
         } catch (ArgumentParserException e) {
             parser.handleError(e);
             System.exit(1);
         }
 
     }
-
 }

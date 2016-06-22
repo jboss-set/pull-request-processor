@@ -33,18 +33,21 @@ public class SETProcessor implements Processor {
 
     private ExecutorService service;
 
-    public void init(Aphrodite aphrodite) {
+    private List<String> allowedStreams;
+
+    public void init(Aphrodite aphrodite, List<String> allowedStreams) {
         this.aphrodite = aphrodite;
         this.rules = getRules();
         this.service = Executors.newFixedThreadPool(10);
+        this.allowedStreams = allowedStreams;
     }
 
     public List<EvaluatorData> process(Repository repository) throws ProcessorException {
         try {
             List<Patch> patches = aphrodite.getPatchesByState(repository, PatchState.OPEN);
-            
+
             List<Future<EvaluatorData>> results = this.service.invokeAll(patches.stream().map(e -> new PatchProcessingTask(repository, e)).collect(Collectors.toList()));
-            
+
             List<EvaluatorData> data = new ArrayList<>();
             for(Future<EvaluatorData> result : results) {
                 try {
@@ -66,9 +69,9 @@ public class SETProcessor implements Processor {
     private class PatchProcessingTask implements Callable<EvaluatorData> {
 
         private Repository repository;
-        
+
         private Patch patch;
-        
+
         public PatchProcessingTask(Repository repository, Patch patch) {
             this.repository = repository;
             this.patch = patch;
@@ -77,10 +80,10 @@ public class SETProcessor implements Processor {
         @Override
         public EvaluatorData call() throws Exception {
             try {
-                logger.info("processing " + patch.getURL().toString());
+                logger.fine("processing " + patch.getURL().toString());
                 List<Issue> issues = aphrodite.getIssuesAssociatedWith(patch);
                 List<Patch> relatedPatches = aphrodite.findPatchesRelatedTo(patch);
-                EvaluatorContext context = new EvaluatorContext(aphrodite, repository, patch, issues, relatedPatches);
+                EvaluatorContext context = new EvaluatorContext(aphrodite, repository, patch, issues, relatedPatches, allowedStreams);
                 EvaluatorData data = new EvaluatorData();
                 for(Evaluator rule : rules) {
                     logger.fine("repository " + repository.getURL() + "applying evaluator " + rule.name() + " to " + patch.getId());
@@ -92,17 +95,17 @@ public class SETProcessor implements Processor {
                 throw new Exception(th);
             }
         }
-        
+
     }
 
     private List<Evaluator> getRules() {
         ServiceLoader<Evaluator> rules = ServiceLoader.load(Evaluator.class);
         List<Evaluator> tmp = new ArrayList<Evaluator>();
-        
+
         for(Evaluator rule : rules) {
             tmp.add(rule);
         }
-        
+
         return tmp;
     }
 

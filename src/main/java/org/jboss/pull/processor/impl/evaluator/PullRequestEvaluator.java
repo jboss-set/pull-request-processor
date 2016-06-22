@@ -19,7 +19,5 @@ public class PullRequestEvaluator implements Evaluator {
         List<Stream> streams = context.getAphrodite().getStreamsBy(patch.getRepository(), patch.getCodebase());
         List<String> streamsStr =  streams.stream().map(e -> e.getName()).collect(Collectors.toList());
         data.setAttributeValue(Attributes.PULL_REQUEST, new PullRequestData(patch.getId(), streamsStr, patch.getURL()));
-
     }
-
 }

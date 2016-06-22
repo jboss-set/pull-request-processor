@@ -40,7 +40,7 @@ public class LabelsEvaluator implements Evaluator {
         for(Issue issue : issues) {
             List<LabelData> tmp = new ArrayList<>();
             labels.put(issue.getTrackerId().get(), tmp);
-            
+
             boolean hasAllFlags = true;
             for(Flag flag : Flag.values()) {
                 FlagStatus status = issue.getStage().getStatus(flag);
@@ -55,7 +55,7 @@ public class LabelsEvaluator implements Evaluator {
             } else {
                 okays.put(issue.getTrackerId().get(), 2);
             }
-            
+
             tmp.add(new LabelData(context.getBranch(), true));
             tmp.add(new LabelData("Has All Acks", hasAllFlags));
             for(Flag flag : Flag.values()) {

@@ -7,7 +7,7 @@ public class IssueData {
     private URL link;
 
     private String label;
- 
+
     private List<String> streams;
 
     public IssueData(String label, List<String> streams, URL link) {
@@ -19,7 +19,7 @@ public class IssueData {
     public String getLabel() {
         return label;
     }
-    
+
     public List<String> getStreams() {
         return streams;
     }

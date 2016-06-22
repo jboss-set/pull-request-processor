@@ -120,6 +120,8 @@ public class SetLabelsAction implements Action {
                 List<String> newLabelsStrSet = new ArrayList<>();
                 newLabelsStrSet.addAll(currentLabelsStr);
                 newLabelsStrSet.removeAll(removed);
+                newLabelsStrSet.removeAll(actionContext.getAllowedStreams());
+                newLabelsStrSet.addAll(root.getAttributeValue(Attributes.STREAMS));
                 added.removeAll(newLabelsStrSet);
                 newLabelsStrSet.addAll(added);
 

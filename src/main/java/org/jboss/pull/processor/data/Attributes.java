@@ -13,6 +13,6 @@ public final class Attributes {
     public static final Attribute<List<IssueData>>  ISSUES_OTHER_STREAMS = new Attribute<>("issuesOtherStreams");
     public static final Attribute<Map<String, Integer>> STATUS = new Attribute<>("status");
     public static final Attribute<LinkData> REPOSITORY = new Attribute<>("repository");
-	public static final Attribute<List<String>> STREAMS = new Attribute<>("streams");
-	public static final Attribute<List<String>> MESSAGES = new Attribute<>("messages");
+    public static final Attribute<List<String>> STREAMS = new Attribute<>("streams");
+    public static final Attribute<List<String>> MESSAGES = new Attribute<>("messages");
 }

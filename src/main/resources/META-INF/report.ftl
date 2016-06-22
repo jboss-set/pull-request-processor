@@ -36,9 +36,8 @@
                               <th>#</th>
                             <th>Branch</th>
                             <th>Streams</th>
-                            <th>Issues</th>
-                            <th># other streams</th>
-                            <th>Issues Other Streams</th>
+                            <th>Issues related</th>
+                            <th>#pr related</th>
                           </tr>
                       </thead>
                       <tbody id="eventTableBody">
@@ -52,7 +51,24 @@
                                     <#list data.streams as stream> ${stream} </#list>
                                 </td>
                                 <td>
+                                    <div>Same stream:</div>
                                     <#list data.issuesRelated>
+                                        <ul>
+                                        <#items as issue>
+                                           <li>
+                                                   <a href="${issue.link}">#${issue.label} <#if issue.streams?has_content>(<#list issue.streams as stream> ${stream}<#sep>, </#list> )</#if> </a>
+                                                   <#assign status = data.status>
+                                                   <#switch status[issue.label]>
+                                                      <#case 1> <span class="label label-success">ready to go</span><#break>
+                                                      <#case 2> <span class="label label-warning">no stream</span><#break>
+                                                      <#case 3> <span class="label label-danger">flags needed</span><#break>
+                                                </#switch>
+                                           </li>
+                                        </#items>
+                                        </ul> 
+                                    </#list>
+                                    <div>Other streams:</div>
+                                    <#list data.issuesOtherStreams>
                                         <ul>
                                         <#items as issue>
                                            <li>
@@ -77,23 +93,6 @@
                                               </li>
                                           </#items>
                                           </ul>
-                                    </#list>
-                                </td>
-                                <td>
-                                    <#list data.issuesOtherStreams>
-                                        <ul>
-                                        <#items as issue>
-                                           <li>
-                                                   <a href="${issue.link}">#${issue.label} <#if issue.streams?has_content>(<#list issue.streams as stream> ${stream}<#sep>, </#list> )</#if> </a>
-                                                   <#assign status = data.status>
-                                                   <#switch status[issue.label]>
-                                                      <#case 1> <span class="label label-success">ready to go</span><#break>
-                                                      <#case 2> <span class="label label-warning">no stream</span><#break>
-                                                      <#case 3> <span class="label label-danger">flags needed</span><#break>
-                                                </#switch>
-                                           </li>
-                                        </#items>
-                                        </ul> 
                                     </#list>
                                 </td>
                             </tr>

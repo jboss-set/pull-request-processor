@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
@@ -37,11 +36,10 @@ public class ReportAction implements Action {
     }
     private File generateReport(List<EvaluatorData> data, String fileName) throws IOException, TemplateException, URISyntaxException {
         Configuration cfg = new Configuration(Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS);
-        URI url = this.getClass().getClassLoader().getResource("META-INF/").toURI();
-        cfg.setDirectoryForTemplateLoading(new File(url));
+        cfg.setClassForTemplateLoading(this.getClass(), "/META-INF/");
         cfg.setDefaultEncoding("UTF-8");
         cfg.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
- 
+
         /* Create a data-model */
         Map<String, Object> input = new HashMap<>();
         input.put("rows", data);
@@ -54,7 +52,6 @@ public class ReportAction implements Action {
         Writer out = new FileWriter(file);
         temp.process(input, out);
         return file;
-        
     }
 
 }
