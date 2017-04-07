@@ -1,7 +1,7 @@
 package org.jboss.pull.processor;
 
-import org.jboss.pull.processor.processes.eap6.ProcessorEAP6;
-import org.jboss.pull.processor.processes.eap6.ProcessorMerge;
+import org.jboss.pull.processor.processes.eap7.ProcessorEAP7;
+import org.jboss.pull.processor.processes.eap7.ProcessorMerge;
 
 public class Main {
 
@@ -24,9 +24,9 @@ public class Main {
         }
 
         // Run milestone processing
-        if (Boolean.getBoolean("processEAP6")) {
+        if (Boolean.getBoolean("processEAP7")) {
             try {
-                ProcessorEAP6 processor = new ProcessorEAP6();
+                ProcessorEAP7 processor = new ProcessorEAP7();
                 processor.run();
                 System.exit(0);
             } catch (Exception e) {

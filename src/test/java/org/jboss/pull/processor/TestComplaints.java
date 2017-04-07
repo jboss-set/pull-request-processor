@@ -8,7 +8,7 @@ import java.util.Arrays;
 import org.eclipse.egit.github.core.Milestone;
 import org.eclipse.egit.github.core.PullRequest;
 import org.eclipse.egit.github.core.PullRequestMarker;
-import org.jboss.pull.processor.processes.eap6.ProcessorEAP6;
+import org.jboss.pull.processor.processes.eap7.ProcessorEAP7;
 import org.jboss.pull.shared.PullHelper;
 import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
@@ -36,7 +36,7 @@ public class TestComplaints {
     }
 
     private RedhatPullRequest setupPullRequest(String description) throws MalformedURLException {
-        return setupPullRequest(description, "6.x", BugBuilder.getEmptyBug());
+        return setupPullRequest(description, "7.x", BugBuilder.getEmptyBug());
     }
 
     private RedhatPullRequest setupPullRequest(String description, String pulledAgainst) throws MalformedURLException {
@@ -44,7 +44,7 @@ public class TestComplaints {
     }
 
     private RedhatPullRequest setupPullRequest(String description, Issue issue) throws MalformedURLException {
-        return setupPullRequest(description, "6.x", issue);
+        return setupPullRequest(description, "7.x", issue);
     }
 
     private RedhatPullRequest setupPullRequest(String description, String pulledAgainst, Issue issue)
@@ -61,7 +61,7 @@ public class TestComplaints {
         pr.setBody(description);
         pr.setUrl("https://github.com/uselessorg/jboss-eap/pull/3");
         pr.setBase(new PullRequestMarker().setRef(pulledAgainst));
-        pr.setMilestone(new Milestone().setTitle("6.x"));
+        pr.setMilestone(new Milestone().setTitle("7.x"));
         return new RedhatPullRequest(pr, mockBZHelper, mockJiraHelper, mockGHHelper);
     }
 
@@ -69,13 +69,13 @@ public class TestComplaints {
     public void testNoBug() throws Exception {
         RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER, "", ""));
 
-        ProcessorEAP6 complainer = new ProcessorEAP6();
+        ProcessorEAP7 complainer = new ProcessorEAP7();
         PullHelper mockPullHelper = mock(PullHelper.class);
         when(mockPullHelper.getProperties()).thenReturn(
-                Util.loadProperties("src/test/resources/processor-eap-6.properties.example",
-                        "src/test/resources/processor-eap-6.properties.example"));
+                Util.loadProperties("src/test/resources/processor-eap-7.properties.example",
+                        "src/test/resources/processor-eap-7.properties.example"));
         when(mockPullHelper.getGithubMilestones()).thenReturn(
-                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("6.x").setState("Open") })));
+                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("7.x").setState("Open") })));
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
@@ -89,13 +89,13 @@ public class TestComplaints {
         RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER,
                 "https://bugzilla.redhat.com/show_bug.cgi?id=1", ""));
 
-        ProcessorEAP6 complainer = new ProcessorEAP6();
+        ProcessorEAP7 complainer = new ProcessorEAP7();
         PullHelper mockPullHelper = mock(PullHelper.class);
         when(mockPullHelper.getProperties()).thenReturn(
-                Util.loadProperties("src/test/resources/processor-eap-6.properties.example",
-                        "src/test/resources/processor-eap-6.properties.example"));
+                Util.loadProperties("src/test/resources/processor-eap-7.properties.example",
+                        "src/test/resources/processor-eap-7.properties.example"));
         when(mockPullHelper.getGithubMilestones()).thenReturn(
-                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("6.x").setState("Open") })));
+                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("7.x").setState("Open") })));
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
@@ -108,13 +108,13 @@ public class TestComplaints {
     public void testNoUpstream() throws Exception {
         RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER, "", ""));
 
-        ProcessorEAP6 complainer = new ProcessorEAP6();
+        ProcessorEAP7 complainer = new ProcessorEAP7();
         PullHelper mockPullHelper = mock(PullHelper.class);
         when(mockPullHelper.getProperties()).thenReturn(
-                Util.loadProperties("src/test/resources/processor-eap-6.properties.example",
-                        "src/test/resources/processor-eap-6.properties.example"));
+                Util.loadProperties("src/test/resources/processor-eap-7.properties.example",
+                        "src/test/resources/processor-eap-7.properties.example"));
         when(mockPullHelper.getGithubMilestones()).thenReturn(
-                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("6.x").setState("Open") })));
+                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("7.x").setState("Open") })));
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
@@ -128,13 +128,13 @@ public class TestComplaints {
         RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER,
                 "https://github.com/uselessorg/jboss-eap/pull/3", ""));
 
-        ProcessorEAP6 complainer = new ProcessorEAP6();
+        ProcessorEAP7 complainer = new ProcessorEAP7();
         PullHelper mockPullHelper = mock(PullHelper.class);
         when(mockPullHelper.getProperties()).thenReturn(
-                Util.loadProperties("src/test/resources/processor-eap-6.properties.example",
-                        "src/test/resources/processor-eap-6.properties.example"));
+                Util.loadProperties("src/test/resources/processor-eap-7.properties.example",
+                        "src/test/resources/processor-eap-7.properties.example"));
         when(mockPullHelper.getGithubMilestones()).thenReturn(
-                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("6.x").setState("Open") })));
+                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("7.x").setState("Open") })));
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
@@ -148,13 +148,13 @@ public class TestComplaints {
     public void testHasUpstreamInternalRepoAbbreviated() throws Exception {
         RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER, "#3", ""));
 
-        ProcessorEAP6 complainer = new ProcessorEAP6();
+        ProcessorEAP7 complainer = new ProcessorEAP7();
         PullHelper mockPullHelper = mock(PullHelper.class);
         when(mockPullHelper.getProperties()).thenReturn(
-                Util.loadProperties("src/test/resources/processor-eap-6.properties.example",
-                        "src/test/resources/processor-eap-6.properties.example"));
+                Util.loadProperties("src/test/resources/processor-eap-7.properties.example",
+                        "src/test/resources/processor-eap-7.properties.example"));
         when(mockPullHelper.getGithubMilestones()).thenReturn(
-                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("6.x").setState("Open") })));
+                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("7.x").setState("Open") })));
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
@@ -168,13 +168,13 @@ public class TestComplaints {
     public void testHasUpstreamExternalRepoAbbreviated() throws Exception {
         RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER, "wildfly/wildfly#3", ""));
 
-        ProcessorEAP6 complainer = new ProcessorEAP6();
+        ProcessorEAP7 complainer = new ProcessorEAP7();
         PullHelper mockPullHelper = mock(PullHelper.class);
         when(mockPullHelper.getProperties()).thenReturn(
-                Util.loadProperties("src/test/resources/processor-eap-6.properties.example",
-                        "src/test/resources/processor-eap-6.properties.example"));
+                Util.loadProperties("src/test/resources/processor-eap-7.properties.example",
+                        "src/test/resources/processor-eap-7.properties.example"));
         when(mockPullHelper.getGithubMilestones()).thenReturn(
-                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("6.x").setState("Open") })));
+                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("7.x").setState("Open") })));
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
@@ -190,13 +190,13 @@ public class TestComplaints {
 
         AssertJUnit.assertFalse(pullRequest.isUpstreamRequired());
 
-        ProcessorEAP6 complainer = new ProcessorEAP6();
+        ProcessorEAP7 complainer = new ProcessorEAP7();
         PullHelper mockPullHelper = mock(PullHelper.class);
         when(mockPullHelper.getProperties()).thenReturn(
-                Util.loadProperties("src/test/resources/processor-eap-6.properties.example",
-                        "src/test/resources/processor-eap-6.properties.example"));
+                Util.loadProperties("src/test/resources/processor-eap-7.properties.example",
+                        "src/test/resources/processor-eap-7.properties.example"));
         when(mockPullHelper.getGithubMilestones()).thenReturn(
-                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("6.x").setState("Open") })));
+                new ArrayList<Milestone>(Arrays.asList(new Milestone[] { new Milestone().setTitle("7.x").setState("Open") })));
         complainer.setHelper(mockPullHelper);
 
         Result result = complainer.processPullRequest(pullRequest);
@@ -209,9 +209,9 @@ public class TestComplaints {
     // @Test
     // public void testTargetReleaseNoMatch() throws Exception {
     // RedhatPullRequest pullRequest = setupPullRequest(
-    // String.format(DESCRIPTION_BUILDER, "https://bugzilla.redhat.com/show_bug.cgi?id=1", ""), "6.1.x");
+    // String.format(DESCRIPTION_BUILDER, "https://bugzilla.redhat.com/show_bug.cgi?id=1", ""), "7.1.x");
     //
-    // ProcessorEAP6WrongDirection complainer = new ProcessorEAP6WrongDirection();
+    // ProcessorEAP7WrongDirection complainer = new ProcessorEAP7WrongDirection();
     // PullHelper mockPullHelper = mock(PullHelper.class);
     // complainer.setHelper(mockPullHelper);
     //
@@ -226,9 +226,9 @@ public class TestComplaints {
     // RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER,
     // "https://bugzilla.redhat.com/show_bug.cgi?id=1", ""), BugBuilder.getTargetReleaseBug());
     //
-    // ProcessorEAP6WrongDirection complainer = new ProcessorEAP6WrongDirection();
+    // ProcessorEAP7WrongDirection complainer = new ProcessorEAP7WrongDirection();
     // PullHelper mockPullHelper = mock(PullHelper.class);
-    // when(mockPullHelper.getBranches()).thenReturn(Arrays.asList(new String[] { "6.x", "6.1.x", "6.2.x" }));
+    // when(mockPullHelper.getBranches()).thenReturn(Arrays.asList(new String[] { "7.x", "7.1.x", "7.2.x" }));
     // complainer.setHelper(mockPullHelper);
     //
     // Result result = complainer.processPullRequest(pullRequest);
@@ -243,9 +243,9 @@ public class TestComplaints {
     // RedhatPullRequest pullRequest = setupPullRequest(String.format(DESCRIPTION_BUILDER,
     // "https://bugzilla.redhat.com/show_bug.cgi?id=1", ""), BugBuilder.getMilestoneNotSetBug());
     //
-    // ProcessorEAP6WrongDirection complainer = new ProcessorEAP6WrongDirection();
+    // ProcessorEAP7WrongDirection complainer = new ProcessorEAP7WrongDirection();
     // PullHelper mockPullHelper = mock(PullHelper.class);
-    // when(mockPullHelper.getBranches()).thenReturn(Arrays.asList(new String[] { "6.x", "6.1.x", "6.2.x" }));
+    // when(mockPullHelper.getBranches()).thenReturn(Arrays.asList(new String[] { "7.x", "7.1.x", "7.2.x" }));
     // complainer.setHelper(mockPullHelper);
     //
     // Result result = complainer.processPullRequest(pullRequest);

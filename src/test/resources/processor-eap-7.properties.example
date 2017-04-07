@@ -15,11 +15,11 @@ github.organization=...
 github.repo=...
 
 # Required
-github.branches=6.x
+github.branches=7.x
 
 # Branch-Based required configuration
 #<branch>.releases=...
-6.x.releases=6.3.0
+7.x.releases=7.4.5
 
 # Branch-Based optional configuration
 #<branch>.required.bz.flags=...

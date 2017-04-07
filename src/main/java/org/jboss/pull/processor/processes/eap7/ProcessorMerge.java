@@ -1,4 +1,4 @@
-package org.jboss.pull.processor.processes.eap6;
+package org.jboss.pull.processor.processes.eap7;
 
 import java.net.HttpURLConnection;
 import java.net.URL;

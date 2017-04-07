@@ -1,4 +1,4 @@
-package org.jboss.pull.processor.processes.eap6;
+package org.jboss.pull.processor.processes.eap7;
 
 import java.util.HashSet;
 import java.util.List;
@@ -16,11 +16,11 @@ import org.jboss.pull.shared.Util;
 import org.jboss.pull.shared.connectors.RedhatPullRequest;
 import org.jboss.pull.shared.spi.PullEvaluator.Result;
 
-public class ProcessorEAP6 extends Processor {
+public class ProcessorEAP7 extends Processor {
 
     protected Set<String> branches = new HashSet<String>();
 
-    public ProcessorEAP6() throws Exception {
+    public ProcessorEAP7() throws Exception {
         init();
     }
 

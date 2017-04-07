@@ -44,7 +44,7 @@ public abstract class Processor {
     }
 
     public Processor() throws Exception {
-        helper = new PullHelper("processor.properties.file", "./processor-eap-6.properties.example");
+        helper = new PullHelper("processor.properties.file", "./processor-eap-7.properties.example");
 
         // system property "dryrun=true"
         if (Common.isDryRun()) {
