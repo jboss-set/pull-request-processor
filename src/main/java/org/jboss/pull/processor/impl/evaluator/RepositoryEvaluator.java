@@ -6,10 +6,9 @@ import org.jboss.pull.processor.data.Attributes;
 import org.jboss.pull.processor.data.EvaluatorData;
 import org.jboss.pull.processor.data.LinkData;
 import org.jboss.set.aphrodite.Aphrodite;
-import org.jboss.set.aphrodite.domain.Patch;
+import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.domain.StreamComponent;
-import org.jboss.set.aphrodite.spi.NotFoundException;
 
 public class RepositoryEvaluator implements Evaluator {
 
@@ -17,12 +16,12 @@ public class RepositoryEvaluator implements Evaluator {
     public void eval(EvaluatorContext context, EvaluatorData data) {
         Repository repository = context.getRepository();
         Aphrodite aphrodite = context.getAphrodite();
-        Patch patch = context.getPatch();
+        PullRequest pullRequest = context.getPullRequest();
         try {
-            StreamComponent streamComponent =  aphrodite.getComponentBy(patch.getRepository(), patch.getCodebase());
+            StreamComponent streamComponent =  aphrodite.getComponentBy(pullRequest.getRepository().getURL().toURI(), pullRequest.getCodebase());
             data.setAttributeValue(Attributes.REPOSITORY, new LinkData(streamComponent.getName(), repository.getURL()));
-        } catch (NotFoundException e) {
-            data.setAttributeValue(Attributes.REPOSITORY, new LinkData(patch.getRepository().getURL().getPath(), repository.getURL()));
+        } catch (Exception e) {
+            data.setAttributeValue(Attributes.REPOSITORY, new LinkData(pullRequest.getRepository().getURL().getPath(), repository.getURL()));
         }
     }
 

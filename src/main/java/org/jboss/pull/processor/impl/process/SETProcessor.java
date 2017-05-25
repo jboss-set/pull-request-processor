@@ -18,8 +18,8 @@ import org.jboss.pull.processor.ProcessorException;
 import org.jboss.pull.processor.data.EvaluatorData;
 import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.domain.Issue;
-import org.jboss.set.aphrodite.domain.Patch;
-import org.jboss.set.aphrodite.domain.PatchState;
+import org.jboss.set.aphrodite.domain.PullRequest;
+import org.jboss.set.aphrodite.domain.PullRequestState;
 import org.jboss.set.aphrodite.domain.Repository;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
@@ -44,7 +44,7 @@ public class SETProcessor implements Processor {
 
     public List<EvaluatorData> process(Repository repository) throws ProcessorException {
         try {
-            List<Patch> patches = aphrodite.getPatchesByState(repository, PatchState.OPEN);
+            List<PullRequest> patches = aphrodite.getPullRequestsByState(repository, PullRequestState.OPEN);
 
             List<Future<EvaluatorData>> results = this.service.invokeAll(patches.stream().map(e -> new PatchProcessingTask(repository, e)).collect(Collectors.toList()));
 
@@ -70,28 +70,28 @@ public class SETProcessor implements Processor {
 
         private Repository repository;
 
-        private Patch patch;
+        private PullRequest pullRequest;
 
-        public PatchProcessingTask(Repository repository, Patch patch) {
+        public PatchProcessingTask(Repository repository, PullRequest pullRequest) {
             this.repository = repository;
-            this.patch = patch;
+            this.pullRequest = pullRequest;
         }
 
         @Override
         public EvaluatorData call() throws Exception {
             try {
-                logger.fine("processing " + patch.getURL().toString());
-                List<Issue> issues = aphrodite.getIssuesAssociatedWith(patch);
-                List<Patch> relatedPatches = aphrodite.findPatchesRelatedTo(patch);
-                EvaluatorContext context = new EvaluatorContext(aphrodite, repository, patch, issues, relatedPatches, allowedStreams);
+                logger.fine("processing " + this.pullRequest.getURL().toString());
+                List<Issue> issues = aphrodite.getIssuesAssociatedWith(this.pullRequest);
+                List<PullRequest> relatedPatches = aphrodite.findPullRequestsRelatedTo(this.pullRequest);
+                EvaluatorContext context = new EvaluatorContext(aphrodite, repository, this.pullRequest, issues, relatedPatches, allowedStreams);
                 EvaluatorData data = new EvaluatorData();
                 for(Evaluator rule : rules) {
-                    logger.fine("repository " + repository.getURL() + "applying evaluator " + rule.name() + " to " + patch.getId());
+                    logger.fine("repository " + repository.getURL() + "applying evaluator " + rule.name() + " to " + this.pullRequest.getId());
                     rule.eval(context, data);
                 }
                 return data;
             } catch (Throwable th) {
-                logger.log(Level.SEVERE, "failed to " + patch.getURL(), th);
+                logger.log(Level.SEVERE, "failed to " + this.pullRequest.getURL(), th);
                 throw new Exception(th);
             }
         }

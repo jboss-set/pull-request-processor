@@ -22,7 +22,7 @@ import org.jboss.pull.processor.data.LabelData;
 import org.jboss.pull.processor.data.PullRequestData;
 import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.domain.Label;
-import org.jboss.set.aphrodite.domain.Patch;
+import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.Repository;
 
 public class SetLabelsAction implements Action {
@@ -65,11 +65,11 @@ public class SetLabelsAction implements Action {
         @Override
         public Void call() throws Exception {
             PullRequestData link = root.getAttributeValue(Attributes.PULL_REQUEST);
-            URL pullRequest = link.getLink();
+            URL pullRequestURL = link.getLink();
 
-
+            PullRequest pullRequest = null;
             try {
-                Patch patch = aphrodite.getPatch(pullRequest);
+                pullRequest = aphrodite.getPullRequest(pullRequestURL);
                 List<IssueData> issues = root.getAttributeValue(Attributes.ISSUES_RELATED);
                 Map<String, List<LabelData>> labels = root.getAttributeValue(Attributes.LABELS);
 
@@ -96,7 +96,7 @@ public class SetLabelsAction implements Action {
                 }
                 String addedString = added.stream().collect(Collectors.joining(","));
                 String removedString = removed.stream().collect(Collectors.joining(","));
-                Main.logger.info(patch.getURL() + " labels SET [" + addedString + "] UNSET [" + removedString + "]");
+                Main.logger.info(pullRequest.getURL() + " labels SET [" + addedString + "] UNSET [" + removedString + "]");
 
                 if(!actionContext.getWrite()) {
                     Main.logger.log(Level.WARNING, " running in dry run mode (SKIP set labels) " + pullRequest);
@@ -114,7 +114,7 @@ public class SetLabelsAction implements Action {
                     Main.logger.log(Level.WARNING, " The patch does not belong to any stream being processed (SKIP set labels) " + pullRequest);
                     return null;
                 }
-                List<Label> currentLabels = aphrodite.getLabelsFromPatch(patch);
+                List<Label> currentLabels = aphrodite.getLabelsFromPullRequest(pullRequest);
                 List<String> currentLabelsStr = currentLabels.stream().map(e -> e.getName()).collect(Collectors.toList());
 
                 List<String> newLabelsStrSet = new ArrayList<>();
@@ -126,26 +126,26 @@ public class SetLabelsAction implements Action {
                 newLabelsStrSet.addAll(added);
 
                 // if they are the same set of labels, skip the update
-                List<Label> newLabelsSet = toLabels(patch, newLabelsStrSet);
+                List<Label> newLabelsSet = toLabels(pullRequest, newLabelsStrSet);
                 if(newLabelsStrSet.size() == currentLabelsStr.size() && currentLabelsStr.removeAll(newLabelsStrSet) && currentLabelsStr.isEmpty()) {
                      return null;
                 }
 
-                Main.logger.info(patch.getURL() + " executing labels SET " + (newLabelsStrSet));
-                aphrodite.setLabelsToPatch(patch, newLabelsSet);
+                Main.logger.info(pullRequest.getURL() + " executing labels SET " + (newLabelsStrSet));
+                aphrodite.setLabelsToPullRequest(pullRequest, newLabelsSet);
             } catch(Exception e) {
                 Main.logger.log(Level.WARNING, "not found something " + pullRequest, e);
             }
             return null;
         }
 
-        private List<Label> toLabels(Patch patch, List<String> labelsStr) throws Exception {
+        private List<Label> toLabels(PullRequest pullRequest, List<String> labelsStr) throws Exception {
               final List<Label> tmp;
               synchronized (dataLabels) {
-                  if(!dataLabels.containsKey(patch.getRepository())) {
-                      dataLabels.put(patch.getRepository(), aphrodite.getLabelsFromRepository(patch.getRepository()));
+                  if(!dataLabels.containsKey(pullRequest.getRepository())) {
+                      dataLabels.put(pullRequest.getRepository(), aphrodite.getLabelsFromRepository(pullRequest.getRepository()));
                   }
-                  tmp = dataLabels.get(patch.getRepository());
+                  tmp = dataLabels.get(pullRequest.getRepository());
               }
               List<Label> labelsForPatch = labelsStr.stream()
                        .filter(e-> stringToLabel(e, tmp).isPresent())

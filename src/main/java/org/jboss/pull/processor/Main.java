@@ -1,18 +1,18 @@
 package org.jboss.pull.processor;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.logging.Logger;
 
+import org.jboss.pull.processor.data.EvaluatorData;
+import org.jboss.set.aphrodite.Aphrodite;
+
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
-
-import org.jboss.pull.processor.data.EvaluatorData;
-import org.jboss.set.aphrodite.Aphrodite;
-import org.jboss.set.aphrodite.domain.Repository;
 
 public class Main {
 
@@ -23,27 +23,27 @@ public class Main {
         logger.info("initializing....");
         try (Aphrodite aphrodite = Aphrodite.instance()){
 
-            final List<Repository> repositories = new ArrayList<>();
+            final List<URI> repositoriesURIs = new ArrayList<>();
             if(streams.isEmpty()) {
                 logger.info("finding all repositories...");
-                repositories.addAll(aphrodite.getDistinctURLRepositoriesFromStreams());
+                repositoriesURIs.addAll(aphrodite.getDistinctURLRepositoriesFromStreams());
             } else {
                 for(String stream : streams) {
                     logger.info("finding all repositories for stream " + stream);
                     aphrodite.getDistinctURLRepositoriesByStream(stream).stream()
-                        .filter(e -> !repositories.contains(e))
-                        .forEach(e -> repositories.add(e));
+                        .filter(e -> !repositoriesURIs.contains(e))
+                        .forEach(e -> repositoriesURIs.add(e));
                 }
             }
-            logger.info("number of repositories found: " + repositories.size());
+            logger.info("number of repositories found: " + repositoriesURIs.size());
             ServiceLoader<Processor> processors = ServiceLoader.load(Processor.class);
             List<EvaluatorData> data = new ArrayList<>();
 
             for(Processor processor : processors) {
                 logger.info("executing processor: " + processor.getClass().getName());
-                for(Repository repository : repositories) {
+                for(URI repository : repositoriesURIs) {
                     processor.init(aphrodite, allowedStreams);
-                    data.addAll(processor.process(repository));
+                    data.addAll(processor.process(aphrodite.getRepository(repository.toURL())));
                 }
             }
 
