@@ -68,7 +68,7 @@ public class Main {
         parser.addArgument("-r", "--report")
                 .required(true)
                 .help("File where save the feed report");
-        parser.addArgument("-w", "--write")
+        parser.addArgument("-d", "--dryRun")
                 .setDefault(Boolean.FALSE)
                 .type(Boolean.class)
                 .help("execute in dryRun mode");
@@ -81,7 +81,7 @@ public class Main {
             ns = parser.parseArgs(args);
             List<String> streams = ns.getList("streams");
             String reportFileName = ns.getString("report");
-            Boolean dryRun = ns.getBoolean("write");
+            Boolean dryRun = ns.getBoolean("dryRun");
             List<String> allowedStreams = ns.getList("allowed_streams");
             new Main().start(streams, allowedStreams, reportFileName, dryRun);
         } catch (ArgumentParserException e) {

@@ -14,13 +14,13 @@ public class ActionContext {
 
     private String fileName;
 
-    private Boolean write;
+    private Boolean dryRun;
 
-    public ActionContext(Aphrodite aphrodite, List<String> streams, List<String> allowedStreams, String fileName, Boolean write) {
+    public ActionContext(Aphrodite aphrodite, List<String> streams, List<String> allowedStreams, String fileName, Boolean dryRun) {
         this.aphrodite = aphrodite;
         this.streams = streams;
         this.fileName = fileName;
-        this.write = write;
+        this.dryRun = dryRun;
         this.allowedStreams = allowedStreams;
     }
 
@@ -40,8 +40,7 @@ public class ActionContext {
         return fileName;
     }
 
-    public Boolean getWrite() {
-        return write;
+    public Boolean getDryRun() {
+        return dryRun;
     }
-
 }

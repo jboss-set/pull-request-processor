@@ -98,7 +98,7 @@ public class SetLabelsAction implements Action {
                 String removedString = removed.stream().collect(Collectors.joining(","));
                 Main.logger.info(patch.getURL() + " labels SET [" + addedString + "] UNSET [" + removedString + "]");
 
-                if(!actionContext.getWrite()) {
+                if(actionContext.getDryRun()) {
                     Main.logger.log(Level.WARNING, " running in dry run mode (SKIP set labels) " + pullRequest);
                     return null;
                 }
