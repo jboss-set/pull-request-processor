@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/jboss-set/pull-request-processor.svg?branch=master)](https://travis-ci.org/jboss-set/pull-request-processor)
 pull-request-processor
 ======================
 
