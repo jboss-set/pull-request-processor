@@ -6,9 +6,12 @@ It also checks the status of the latest merge on Hudson, post comments on github
 
 Way to invoke
 
--s streams to be processed
--as : allowed streams to be label
--w: true or false (write or read only execution in github)
--r: where to place the html report
+- -s streams to be processed
 
-java -jar -Daphrodite.config=${PULL_REQUEST_PROCESSOR_HOME}/aphrodite.json -Dstreams.json=${PULL_REQUEST_PROCESSOR_HOME}/streams.json /${PULL_REQUEST_PROCESSOR_HOME}/pull-processor.jar -s ${STREAMS} -r ${WORKSPACE}/report.html -w true  -as 7.0.z.GA
+- -as : allowed streams to be label
+
+- -d: true or false (execution in dryRun mode for write operation in Github)
+
+- -r: where to place the html report
+
+java -jar -Daphrodite.config=${PULL_REQUEST_PROCESSOR_HOME}/aphrodite.json -Dstreams.json=${PULL_REQUEST_PROCESSOR_HOME}/streams.json /${PULL_REQUEST_PROCESSOR_HOME}/pull-processor.jar -s ${STREAMS} -r ${WORKSPACE}/report.html -d true  -as 7.0.z.GA
