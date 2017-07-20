@@ -19,12 +19,11 @@ public class EvaluatorData {
         return data;
     }
 
-    public <T>  T getAttributeValue(Attribute<T> attr) {
-        return ( T)data.get(attr.name());
+    public <T> T getAttributeValue(Attribute<T> attr) {
+        return (T) data.get(attr.name());
     }
 
     public <T> void setAttributeValue(Attribute<T> attr, T value) {
         data.put(attr.name(), value);
     }
-
 }
