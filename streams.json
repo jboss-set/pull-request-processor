@@ -5,30 +5,49 @@
       "upstream": "null",
       "codebases": [
         {
-          "component_name": "wildfly",
-          "repository_url": "https://github.com/wildfly/wildfly/",
-          "codebase": "master"
-        },
-        {
+          "component_name": "wildfly",                        
+          "contacts": [
+              "dotty@redhat.com"
+          ],                       
+          "repository_type": "GIT",                                                                                                                                
+          "repository_url": "https://github.com/wildfly/wildfly.git/",                                                                                                                                                   
+          "codebase": "master",
+          "tag": "",
+          "version": "",
+          "gav": "",
+          "comment": ""                                                                                                                                                                                       
+        },                                                                                                                                                                                                           
+        {                                                                                                                                                                                                            
           "component_name": "wildfly-core",
-          "repository_url": "https://github.com/wildfly/wildfly-core/",
-          "codebase": "master"
-        }
-      ]
-    },
-    {
-      "name": "7.0.z",
-      "upstream": "wildfly",
-      "codebases": [
-        {
+          "contacts": [
+              "dotty@redhat.com"
+          ],                       
+          "repository_type": "GIT",                                                                                                                                                                          
+          "repository_url": "https://github.com/wildfly/wildfly-core.git/",                                                                                                                                              
+          "codebase": "master",
+          "tag": "",
+          "version": "",
+          "gav": "",
+          "comment": ""                                                                                                                                                                                       
+        }                                                                                                                                                                                                            
+      ]                                                                                                                                                                                                              
+    },                                                                                                                                                                                                               
+    {                                                                                                                                                                                                                
+      "name": "7.0.z.GA",                                                                                                                                                                                            
+      "upstream": "wildfly",                                                                                                                                                                                         
+      "codebases": [                                                                                                                                                                                                 
+        {                                                                                                                                                                                                            
           "component_name": "eap7",
-          "repository_url": "https://github.com/jbossas/jboss-eap7/",
-          "codebase": "7.x"
-        },
-        {
-          "component_name": "eap7-core",
-          "repository_url": "https://github.com/jbossas/wildfly-core-eap/",
-          "codebase": "2.x"
+          "contacts": [
+              "dotty@redhat.com"
+          ],                       
+          "repository_type": "GIT",                                                                                                                                                                                   
+          "repository_url": "https://github.com/jbossas/jboss-eap7",                                                                                                                                                
+          "codebase": "7.0.x",
+          "tag": "",
+          "version": "",
+          "gav": "",
+          "comment": ""                                                                                                                                                                                                    
         }
       ]
     },
@@ -38,8 +57,16 @@
       "codebases": [
         {
           "component_name": "eap6",
+          "contacts": [
+              "dotty@redhat.com"
+          ],
+          "repository_type": "GIT",      
           "repository_url": "https://github.com/jbossas/jboss-eap/",
-          "codebase": "6.4.x"
+          "codebase": "6.4.x",
+          "tag": "",
+          "version": "",
+          "gav": "",
+          "comment": ""
         }
       ]
     },
@@ -49,8 +76,16 @@
       "codebases": [
         {
           "component_name": "eap6",
+          "contacts": [
+              "dotty@redhat.com"
+          ],
+          "repository_type": "GIT",      
           "repository_url": "https://github.com/jbossas/jboss-eap/",
-          "codebase": "6.3.x"
+          "codebase": "6.3.x",
+          "tag": "",
+          "version": "",
+          "gav": "",
+          "comment": ""
         }
       ]
     },
@@ -60,8 +95,16 @@
       "codebases": [
         {
           "component_name": "eap6",
+          "contacts": [
+              "dotty@redhat.com"
+          ],
+          "repository_type": "GIT",      
           "repository_url": "https://github.com/jbossas/jboss-eap/",
-          "codebase": "6.2.x"
+          "codebase": "6.2.x",
+          "tag": "",
+          "version": "",
+          "gav": "",
+          "comment": ""
         }
       ]
     },
@@ -71,8 +114,16 @@
       "codebases": [
         {
           "component_name": "eap6",
+          "contacts": [
+              "dotty@redhat.com"
+          ],
+          "repository_type": "GIT",      
           "repository_url": "https://github.com/jbossas/jboss-eap/",
-          "codebase": "6.1.x"
+          "codebase": "6.1.x",
+          "tag": "",
+          "version": "",
+          "gav": "",
+          "comment": ""
         }
       ]
     },
@@ -82,11 +133,18 @@
       "codebases": [
         {
           "component_name": "eap6",
+          "contacts": [
+              "dotty@redhat.com"
+          ],
+          "repository_type": "GIT",      
           "repository_url": "https://github.com/jbossas/jboss-eap/",
-          "codebase": "6.x"
+          "codebase": "6.x",
+          "tag": "",
+          "version": "",
+          "gav": "",
+          "comment": ""
         }
       ]
     }
   ]
 }
-

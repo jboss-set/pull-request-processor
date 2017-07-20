@@ -15,7 +15,7 @@ import org.jboss.pull.processor.data.LabelData;
 import org.jboss.set.aphrodite.domain.Flag;
 import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.Issue;
-import org.jboss.set.aphrodite.domain.Patch;
+import org.jboss.set.aphrodite.domain.PullRequest;
 
 public class LabelsEvaluator implements Evaluator {
 
@@ -24,12 +24,12 @@ public class LabelsEvaluator implements Evaluator {
     @Override
     public void eval(EvaluatorContext context, EvaluatorData data) {
 
-        Patch patch = context.getPatch();
+        PullRequest pullRequest = context.getPullRequest();
         List<Issue> issues = context.getIssues();
 
         //  if there aren't any bug related then we show a message
         if(issues.isEmpty()) {
-            logger.log(Level.WARNING, "No issues found in patch, " + name() + " not applied to " + patch.getURL());
+            logger.log(Level.WARNING, "No issues found in patch, " + name() + " not applied to " + pullRequest.getURL());
         }
 
         Map<String, List<LabelData>> labels = new HashMap<>();

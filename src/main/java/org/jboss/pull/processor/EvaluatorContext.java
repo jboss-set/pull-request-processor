@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.domain.Issue;
-import org.jboss.set.aphrodite.domain.Patch;
+import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.domain.Repository;
 
 
@@ -12,19 +12,19 @@ public class EvaluatorContext {
 
     private Aphrodite aphrodite;
 
-    private Patch patch;
+    private PullRequest pullrequest;
 
     private List<Issue> issues;
 
-    private List<Patch> related;
+    private List<PullRequest> related;
 
     private Repository repository;
 
     private List<String> allowedStreams;
 
-    public EvaluatorContext(Aphrodite aphrodite, Repository repository, Patch patch, List<Issue> issues, List<Patch> related, List<String> allowedStreams) {
+    public EvaluatorContext(Aphrodite aphrodite, Repository repository, PullRequest pullrequest, List<Issue> issues, List<PullRequest> related, List<String> allowedStreams) {
         this.aphrodite = aphrodite;
-        this.patch = patch;
+        this.pullrequest = pullrequest;
         this.issues = issues;
         this.related = related;
         this.repository = repository;
@@ -35,19 +35,19 @@ public class EvaluatorContext {
         return aphrodite;
     }
 
-    public Patch getPatch() {
-        return patch;
+    public PullRequest getPullRequest() {
+        return this.pullrequest;
     }
 
     public String getBranch() {
-        return patch.getCodebase().getName();
+        return this.pullrequest.getCodebase().getName();
     }
 
     public List<Issue> getIssues() {
         return issues;
     }
 
-    public List<Patch> getRelated() {
+    public List<PullRequest> getRelated() {
         return related;
     }
 

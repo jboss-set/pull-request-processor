@@ -8,7 +8,7 @@ import org.jboss.pull.processor.Evaluator;
 import org.jboss.pull.processor.EvaluatorContext;
 import org.jboss.pull.processor.data.Attributes;
 import org.jboss.pull.processor.data.EvaluatorData;
-import org.jboss.set.aphrodite.domain.Patch;
+import org.jboss.set.aphrodite.domain.PullRequest;
 
 public class UpstreamEvaluator implements Evaluator {
 
@@ -16,10 +16,10 @@ public class UpstreamEvaluator implements Evaluator {
 
     @Override
     public void eval(EvaluatorContext context, EvaluatorData data) {
-        Patch patch = context.getPatch();
-        List<Patch> related = context.getRelated();
+        PullRequest pullrequest = context.getPullRequest();
+        List<PullRequest> related = context.getRelated();
 
-        if(!UPSTREAM_NOT_REQUIRED.matcher(patch.getBody()).find()) {
+        if(!UPSTREAM_NOT_REQUIRED.matcher(pullrequest.getBody()).find()) {
             if(!related.isEmpty()) {
                 data.setAttributeValue(Attributes.MESSAGES, Arrays.asList("missing upstream issue link"));
             }
