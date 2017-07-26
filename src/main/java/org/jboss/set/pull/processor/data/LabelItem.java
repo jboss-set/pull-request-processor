@@ -19,20 +19,47 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.set.pull.processor;
+package org.jboss.set.pull.processor.data;
 
-import org.jboss.set.pull.processor.data.EvaluatorData;
+/**
+ * Represent available label, action and if it breaks something.
+ *
+ * @author baranowb
+ *
+ */
+public abstract class LabelItem <T>{
 
+    private LabelAction action;
+    private LabelSeverity severity;
+    protected T label;
 
-
-public interface Evaluator {
-
-    default String name() {
-        return this.getClass().getSimpleName();
+    public LabelItem(final T label, final LabelAction action, final LabelSeverity severity) {
+        super();
+        this.action = action;
+        this.severity = severity;
+        this.label = label;
     }
 
-    void eval(EvaluatorContext context, EvaluatorData data);
+    public LabelAction getAction() {
+        return action;
+    }
 
-    boolean support(ProcessorPhase processorPhase);
+    public LabelSeverity getSeverity() {
+        return severity;
+    }
 
+    public abstract String getLabel();
+
+    @Override
+    public String toString() {
+        return "LabelItem [ label=" + label + ", action=" + action + ", severity=" + severity + "]";
+    }
+
+    public static enum LabelAction {
+        SET, REMOVE; // remove should be used lightly?
+    }
+
+    public static enum LabelSeverity {
+        OK, BAD;
+    }
 }

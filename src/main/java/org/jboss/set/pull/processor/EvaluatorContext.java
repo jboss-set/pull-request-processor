@@ -1,34 +1,41 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright 2017, Red Hat, Inc., and individual contributors
+ * as indicated by the @author tags. See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.jboss.set.pull.processor;
 
-import java.util.List;
-
 import org.jboss.set.aphrodite.Aphrodite;
-import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.domain.PullRequest;
-import org.jboss.set.aphrodite.domain.Repository;
-
 
 public class EvaluatorContext {
 
-    private Aphrodite aphrodite;
+    private final Aphrodite aphrodite;
 
-    private PullRequest pullrequest;
+    private final PullRequest pullRequest;
 
-    private List<Issue> issues;
+    private final StreamComponentDefinition streamComponentDefinition;
 
-    private List<PullRequest> related;
-
-    private Repository repository;
-
-    private List<String> allowedStreams;
-
-    public EvaluatorContext(Aphrodite aphrodite, Repository repository, PullRequest pullrequest, List<Issue> issues, List<PullRequest> related, List<String> allowedStreams) {
+    public EvaluatorContext(final Aphrodite aphrodite, final PullRequest pullrequest, final StreamComponentDefinition streamComponentDefinition) {
         this.aphrodite = aphrodite;
-        this.pullrequest = pullrequest;
-        this.issues = issues;
-        this.related = related;
-        this.repository = repository;
-        this.allowedStreams = allowedStreams;
+        this.pullRequest = pullrequest;
+        this.streamComponentDefinition = streamComponentDefinition;
     }
 
     public Aphrodite getAphrodite() {
@@ -36,26 +43,15 @@ public class EvaluatorContext {
     }
 
     public PullRequest getPullRequest() {
-        return this.pullrequest;
+        return this.pullRequest;
     }
 
     public String getBranch() {
-        return this.pullrequest.getCodebase().getName();
+        return this.pullRequest.getCodebase().getName();
     }
 
-    public List<Issue> getIssues() {
-        return issues;
+    public StreamComponentDefinition getStreamComponentDefinition() {
+        return streamComponentDefinition;
     }
 
-    public List<PullRequest> getRelated() {
-        return related;
-    }
-
-    public Repository getRepository() {
-        return repository;
-    }
-
-    public List<String> getAllowedStreams() {
-        return allowedStreams;
-    }
 }

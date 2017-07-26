@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright (c) 2013, Red Hat, Inc., and individual contributors
+ * Copyright 2017, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -22,20 +22,13 @@
 package org.jboss.set.pull.processor;
 
 /**
- * Pull request processor derived from Jason's pull-player. It checks all the open PRs whether they are merge-able and schedule
- * a merge job on Hudson for them. A merge-able PR must be approved by a comment "review ok" and must comply to
- * org.jboss.pull.shared.PullHelper#isMergeable(). It also checks the status of the latest merge job run on Hudson and post
- * comments on github accordingly, etc.
+ * Determine type of PR/phase that processor and its actors will go through.
  *
- * @author <a href="mailto:istudens@redhat.com">Ivo Studensky</a>
- * @author Jason T. Greene
+ * @author baranowb
+ *
  */
-public interface Processor {
-
-    ProcessorPhase getPhase();
-
-    void init(ProcessorConfig config) throws Exception;
-
-    void process() throws ProcessorException;
-
+public enum ProcessorPhase {
+    // TODO: XXX most likely this can be equal to PR state, but with some hacks?
+    // TODO: XXX follow up on above or possibly use int ID likish thing, so processor can define it by itself?
+    OPEN, EVENTS_CLOSED_UPGRADE;
 }

@@ -1,6 +1,6 @@
 /*
  * JBoss, Home of Professional Open Source.
- * Copyright (c) 2013, Red Hat, Inc., and individual contributors
+ * Copyright 2017, Red Hat, Inc., and individual contributors
  * as indicated by the @author tags. See the copyright.txt file in the
  * distribution for a full listing of individual contributors.
  *
@@ -19,23 +19,21 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.set.pull.processor;
+package org.jboss.set.pull.processor.impl.evaluator;
 
-/**
- * Pull request processor derived from Jason's pull-player. It checks all the open PRs whether they are merge-able and schedule
- * a merge job on Hudson for them. A merge-able PR must be approved by a comment "review ok" and must comply to
- * org.jboss.pull.shared.PullHelper#isMergeable(). It also checks the status of the latest merge job run on Hudson and post
- * comments on github accordingly, etc.
- *
- * @author <a href="mailto:istudens@redhat.com">Ivo Studensky</a>
- * @author Jason T. Greene
- */
-public interface Processor {
+import org.jboss.set.pull.processor.Evaluator;
+import org.jboss.set.pull.processor.data.EvaluatorData;
+import org.jboss.set.pull.processor.data.EvaluatorData.Attribute;
+import org.jboss.set.pull.processor.data.LabelData;
 
-    ProcessorPhase getPhase();
+public abstract class AbstractLabelEvaluator implements Evaluator {
 
-    void init(ProcessorConfig config) throws Exception;
-
-    void process() throws ProcessorException;
-
+    protected LabelData getLabelData(Attribute<LabelData> labelsKey, EvaluatorData data) {
+        LabelData labelData = data.getAttributeValue(labelsKey);
+        if (labelData == null) {
+            labelData = new LabelData();
+            data.setAttributeValue(labelsKey, labelData);
+        }
+        return labelData;
+    }
 }

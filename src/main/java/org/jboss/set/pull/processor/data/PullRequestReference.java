@@ -24,57 +24,40 @@ package org.jboss.set.pull.processor.data;
 import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.pull.processor.StreamComponentDefinition;
 
-public class PullRequestData {
-    private final PullRequest pullRequest;
-    private final StreamComponentDefinition streamComponentDefinition;
-    private boolean required = true;
+//simple class to hold some usefull stuff around
+public class PullRequestReference {
 
-    public PullRequestData(final PullRequest pullRequest, final StreamComponentDefinition streamComponentDefinition) {
+    public PullRequestReference(PullRequest pullRequest, StreamComponentDefinition componentDefinition) {
+        super();
         this.pullRequest = pullRequest;
-        this.streamComponentDefinition = streamComponentDefinition;
+        this.componentDefinition = componentDefinition;
     }
 
-    public void notRequiered() {
-        this.required = false;
-    }
+    // PR
+    private PullRequest pullRequest;
+    // stream that this one belongs to
+    private StreamComponentDefinition componentDefinition;
 
-    public boolean isRequired() {
-        return this.required;
-    }
-
-    public boolean isDefined() {
-        return this.pullRequest != null;
-    }
 
     public PullRequest getPullRequest() {
         return pullRequest;
     }
 
-    public StreamComponentDefinition getStreamComponentDefinition() {
-        return streamComponentDefinition;
+    public void setPullRequest(PullRequest pullRequest) {
+        this.pullRequest = pullRequest;
     }
 
-    public boolean isMerged() {
-        if(isDefined() && this.pullRequest.isMerged()) {
-            return true;
-        } else {
-            return false;
-        }
+    public StreamComponentDefinition getComponentDefinition() {
+        return componentDefinition;
     }
 
-    public boolean isMergeable() {
-        if(isDefined() && this.pullRequest.isMergeable()) {
-            return true;
-        } else {
-            return false;
-        }
+    public void setComponentDefinition(StreamComponentDefinition componentDefinition) {
+        this.componentDefinition = componentDefinition;
     }
 
-    public boolean isUpgrade() {
-        if(isDefined() && this.pullRequest.isUpgrade()) {
-            return true;
-        } else {
-            return false;
-        }
+    @Override
+    public String toString() {
+        return "PullRequestReference [pullRequest=" + pullRequest + ", componentDefinition=" + componentDefinition + "]";
     }
+
 }

@@ -1,161 +1,178 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright 2017, Red Hat, Inc., and individual contributors
+ * as indicated by the @author tags. See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.jboss.set.pull.processor.impl.action;
 
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.PullRequest;
-import org.jboss.set.aphrodite.domain.Repository;
+import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.pull.processor.Action;
 import org.jboss.set.pull.processor.ActionContext;
-import org.jboss.set.pull.processor.Main;
-import org.jboss.set.pull.processor.data.Attributes;
+import org.jboss.set.pull.processor.ProcessorPhase;
 import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.IssueData;
 import org.jboss.set.pull.processor.data.LabelData;
+import org.jboss.set.pull.processor.data.LabelItem;
+import org.jboss.set.pull.processor.data.LabelItem.LabelAction;
 import org.jboss.set.pull.processor.data.PullRequestData;
 
 public class SetLabelsAction implements Action {
 
-    private Map<Repository, List<Label>> dataLabels;
+    private static final Logger LOG = Logger.getLogger(SetLabelsAction.class.getName());
 
-    public SetLabelsAction() {
-       dataLabels = new HashMap<>();
+    @Override
+    public void execute(final ActionContext actionContext, final List<EvaluatorData> data) {
+        try {
+            actionContext.getExecutors().invokeAll(
+                    data.stream().map(e -> new EvaluatorProcessingTask(actionContext, e)).collect(Collectors.toList()));
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+        }
     }
 
     @Override
-    public void execute(ActionContext actionContext, List<EvaluatorData> processorDataList) {
-
-       Aphrodite aphrodite = actionContext.getAphrodite();
-
-       ExecutorService service = Executors.newFixedThreadPool(10);
-       try {
-           service.invokeAll(processorDataList.stream().map(e -> new EvaluatorProcessingTask(aphrodite, actionContext,  e)).collect(Collectors.toList()));
-       } catch (InterruptedException ex) {
-           Main.logger.log(Level.WARNING, " interrupted ", ex);
-       } finally {
-           service.shutdown();
-       }
+    public boolean support(ProcessorPhase processorPhase) {
+        if (processorPhase == ProcessorPhase.OPEN) {// true only for OPEN, in close we just post process?
+            return true;
+        } else {
+            return false;
+        }
     }
 
+    // we can process all PRs concurently, no connection between them should exist
     private class EvaluatorProcessingTask implements Callable<Void> {
 
-        private EvaluatorData root;
+        private final EvaluatorData data;
+        private final ActionContext actionContext;
 
-        private Aphrodite aphrodite;
-
-        private ActionContext actionContext;
-
-        public EvaluatorProcessingTask(Aphrodite aphrodite, ActionContext actionContext, EvaluatorData root) {
-            this.root = root;
-            this.aphrodite = aphrodite;
+        public EvaluatorProcessingTask(final ActionContext actionContext, final EvaluatorData data) {
+            super();
+            this.data = data;
             this.actionContext = actionContext;
         }
 
         @Override
         public Void call() throws Exception {
-            PullRequestData link = root.getAttributeValue(Attributes.PULL_REQUEST);
-            URL pullRequestURL = link.getLink();
+            //TODO: XXX cross check REMOVE list vs CURRENT list to avoid mute removal
+            final PullRequestData pullRequestData = data.getAttributeValue(EvaluatorData.Attributes.PULL_REQUEST_CURRENT);
+            final IssueData issueData = data.getAttributeValue(EvaluatorData.Attributes.ISSUE_CURRENT);
+            final LabelData labelsData = data.getAttributeValue(EvaluatorData.Attributes.LABELS_CURRENT);
+            final PullRequestData upstreamPullRequestData = data
+                    .getAttributeValue(EvaluatorData.Attributes.PULL_REQUEST_UPSTREAM);
+            final IssueData upstreamIssueData = data.getAttributeValue(EvaluatorData.Attributes.ISSUE_UPSTREAM);
+            final LabelData upstreamLabelsData = data.getAttributeValue(EvaluatorData.Attributes.LABELS_UPSTREAM);
+            final Set<Label> currentLabels = new TreeSet(new LabelComparator());
+            currentLabels.addAll(actionContext.getAphrodite().getLabelsFromPullRequest(pullRequestData.getPullRequest()));
 
-            PullRequest pullRequest = null;
-            try {
-                pullRequest = aphrodite.getPullRequest(pullRequestURL);
-                List<IssueData> issues = root.getAttributeValue(Attributes.ISSUES_RELATED);
-                Map<String, List<LabelData>> labels = root.getAttributeValue(Attributes.LABELS);
+            final List<LabelItem<?>> addList = labelsData.getLabels(LabelAction.SET);
+            final List<LabelItem<?>> removeList = labelsData.getLabels(LabelAction.REMOVE);
+            //TODO: XXX make this part of super class, "AbstractConsoleReporting" or something.
+            // or something more generic avavilable for whole tool/s
+            final StringBuilder logBuilder = new StringBuilder();
+            logBuilder.append("\n... " + pullRequestData.getPullRequest().getURL());
+            logBuilder.append("\n   |... " + (issueData.isDefined() ? issueData.getIssue().getURL() : "n/a"));
+            logBuilder.append("\n   |... C:" + currentLabels.stream().map(l -> l.getName()).collect(Collectors.toList()));
+            logBuilder.append("\n   |... S:" + addList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
+            logBuilder.append("\n   |... R:" + removeList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
 
-                // rearrange labels. mapping from issue - labels to labels.name -> labels
-                Map<String, List<LabelData>> labelsRearrange = new HashMap<>();
-                for(IssueData issue : issues) {
-                    List<LabelData> labelsData = labels.get(issue.getLabel());
-                    for(LabelData labelData : labelsData) {
-                        List<LabelData> currentData = labelsRearrange.getOrDefault(labelData.getName(),  new ArrayList<LabelData>());
-                        labelsRearrange.putIfAbsent(labelData.getName(), currentData);
-                        currentData.add(labelData);
-                    }
-                }
+            if (upstreamPullRequestData.isDefined()) {
+                final Set<Label> upstreamLabels = new TreeSet(new LabelComparator());
+                upstreamLabels.addAll(
+                        actionContext.getAphrodite().getLabelsFromPullRequest(upstreamPullRequestData.getPullRequest()));
 
-                // consider that the flag is up if all the issues in the same PR are up.
-                List<String> added = new ArrayList<>();
-                List<String> removed = new ArrayList<>();
-                for(Map.Entry<String, List<LabelData>> e : labelsRearrange.entrySet()) {
-                    if(e.getValue().stream().filter(j -> !j.isOk()).findAny().isPresent()) {
-                        removed.add(e.getKey());
-                    } else {
-                        added.add(e.getKey());
-                    }
-                }
-                String addedString = added.stream().collect(Collectors.joining(","));
-                String removedString = removed.stream().collect(Collectors.joining(","));
-                Main.logger.info(pullRequest.getURL() + " labels SET [" + addedString + "] UNSET [" + removedString + "]");
-
-                if(actionContext.getDryRun()) {
-                    Main.logger.log(Level.WARNING, " running in dry run mode (SKIP set labels) " + pullRequest);
-                    return null;
-                }
-                if(!root.getAttributeValue(Attributes.WRITE_PERMISSION)) {
-                    Main.logger.log(Level.WARNING, " I don't have writing permission for " + pullRequest);
-                    return null;
-                }
-
-                List<String> streams = new ArrayList<>();
-                streams.addAll(root.getAttributeValue(Attributes.STREAMS));
-                streams.retainAll(actionContext.getStreams());
-                if(streams.isEmpty()) {
-                    Main.logger.log(Level.WARNING, " The patch does not belong to any stream being processed (SKIP set labels) " + pullRequest);
-                    return null;
-                }
-                List<Label> currentLabels = aphrodite.getLabelsFromPullRequest(pullRequest);
-                List<String> currentLabelsStr = currentLabels.stream().map(e -> e.getName()).collect(Collectors.toList());
-
-                List<String> newLabelsStrSet = new ArrayList<>();
-                newLabelsStrSet.addAll(currentLabelsStr);
-                newLabelsStrSet.removeAll(removed);
-                newLabelsStrSet.removeAll(actionContext.getAllowedStreams());
-                newLabelsStrSet.addAll(root.getAttributeValue(Attributes.STREAMS));
-                added.removeAll(newLabelsStrSet);
-                newLabelsStrSet.addAll(added);
-
-                // if they are the same set of labels, skip the update
-                List<Label> newLabelsSet = toLabels(pullRequest, newLabelsStrSet);
-                if(newLabelsStrSet.size() == currentLabelsStr.size() && currentLabelsStr.removeAll(newLabelsStrSet) && currentLabelsStr.isEmpty()) {
-                     return null;
-                }
-
-                Main.logger.info(pullRequest.getURL() + " executing labels SET " + (newLabelsStrSet));
-                aphrodite.setLabelsToPullRequest(pullRequest, newLabelsSet);
-            } catch(Exception e) {
-                Main.logger.log(Level.WARNING, "not found something " + pullRequest, e);
+                final List<LabelItem<?>> upstreamAddList = upstreamLabelsData.getLabels(LabelAction.SET);
+                final List<LabelItem<?>> upstreamRemoveList = upstreamLabelsData.getLabels(LabelAction.REMOVE);
+                // just for info ?
+                logBuilder.append("\n   |... Upstream ");
+                logBuilder.append("\n       |... " + (upstreamIssueData.isDefined() ? upstreamIssueData.getIssue().getURL() : "n/a"));
+                logBuilder.append("\n       |... C:" + upstreamLabels.stream().map(l -> l.getName()).collect(Collectors.toList()));
+                logBuilder.append("\n       |... S:" + upstreamAddList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
+                logBuilder.append("\n       |... R:" + upstreamRemoveList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
             }
+            if (!actionContext.isWritePermitted() || !actionContext.isWritePermitedOn(pullRequestData.getPullRequest())) {
+                logBuilder.append("\n   |... Write: <<Skipped>>");
+                LOG.log(Level.INFO, logBuilder.toString());
+                return null;
+            }
+
+            LOG.log(Level.INFO, logBuilder.toString());
+            List<Label> actionItems = convertLabels(removeList, pullRequestData.getPullRequest());
+            for (Label l : actionItems) {
+                if (currentLabels.contains(l)) {
+                    // remove only if it is present, else skip
+                    actionContext.getAphrodite().removeLabelFromPullRequest(pullRequestData.getPullRequest(), l.getName());
+                }
+            }
+
+            actionItems = convertLabels(addList, pullRequestData.getPullRequest());
+            // retain only those that are not present, so we dont try to set them twice
+            actionItems = actionItems.stream().filter(f -> !currentLabels.contains(f)).collect(Collectors.toList());
+            actionContext.getAphrodite().setLabelsToPullRequest(pullRequestData.getPullRequest(), actionItems);
             return null;
         }
 
-        private List<Label> toLabels(PullRequest pullRequest, List<String> labelsStr) throws Exception {
-              final List<Label> tmp;
-              synchronized (dataLabels) {
-                  if(!dataLabels.containsKey(pullRequest.getRepository())) {
-                      dataLabels.put(pullRequest.getRepository(), aphrodite.getLabelsFromRepository(pullRequest.getRepository()));
-                  }
-                  tmp = dataLabels.get(pullRequest.getRepository());
-              }
-              List<Label> labelsForPatch = labelsStr.stream()
-                       .filter(e-> stringToLabel(e, tmp).isPresent())
-                       .map(e -> stringToLabel(e, tmp).get()).collect(Collectors.toList());
-
-              return labelsForPatch;
+        // TODO: XXX change those once aphrodite has been updated. #142
+        private List<Label> convertLabels(final List<LabelItem<?>> labelItems, final PullRequest pullRequest)
+                throws NotFoundException {
+            List<Label> repoLabels = actionContext.getAphrodite().getLabelsFromRepository(pullRequest.getRepository());
+            // this could be done with elaborate and confusing one line lambda
+            final Set<String> names = labelItems.stream().map(li -> li.getLabel().toString()).collect(Collectors.toSet());
+            repoLabels = repoLabels.stream().filter(rl -> {
+                if (names.contains(rl.getName())) {
+                    names.remove(rl.getName());
+                    return true;
+                } else {
+                    return false;
+                }
+            }).collect(Collectors.toList());
+            if (names.size() != 0) {
+                LOG.log(Level.WARNING, "Failed to convert " + names + " into proper repo label.");
+            }
+            return repoLabels;
         }
+    }
 
-        private Optional<Label> stringToLabel(String label, List<Label> availables) {
-            return availables.stream().filter(e -> e.getName().equals(label)).findFirst();
+    private static class LabelComparator implements Comparator<Label> {
+        //Label comparator - to have it neat and possiblt, if Git retain order, to have it always the same way?
+        @Override
+        public int compare(Label o1, Label o2) {
+            if (o1 == null) {
+                return -1;
+            }
+            if (o2 == null) {
+                return 1;
+            }
+            if (o1.equals(o2)) {
+                return 0;
+            }
+            return o1.getName().compareTo(o2.getName());
         }
     }
 }
