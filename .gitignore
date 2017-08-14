@@ -37,3 +37,6 @@ src/main/resources/users.properties
 
 
 /bin
+
+#shade leftovers?
+dependency-reduced-pom.xml
