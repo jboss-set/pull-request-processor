@@ -107,7 +107,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.jboss.pull.processor.Main</mainClass>
+                            <mainClass>org.jboss.set.pull.processor.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
