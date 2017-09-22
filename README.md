@@ -7,12 +7,13 @@ It also checks the status of the latest merge on Hudson, post comments on github
 
 Way to invoke
 
-- -s streams to be processed
+- -s streams to be processed, this should list streams and components that should be scrutinized. It must contain comma separated list of stream and components belonging to stream: streamName[comp1,comp2],stream2Name[comp3,comp4]. Check jboss streams for ids.
 
-- -as : allowed streams to be label
+- -p : defines streams and components that are eligible to be written into. This is selective write permission. It has the same structure as list in -s. If it is not present, it defaults to -s
 
-- -d: true or false (execution in dryRun mode for write operation in Github)
+- -w: true or false - determine if write pemission has been granted
 
-- -r: where to place the html report
+- -r: root path where processor can write output if it supports it
 
-java -jar -Daphrodite.config=${PULL_REQUEST_PROCESSOR_HOME}/aphrodite.json -Dstreams.json=${PULL_REQUEST_PROCESSOR_HOME}/streams.json /${PULL_REQUEST_PROCESSOR_HOME}/pull-processor.jar -s ${STREAMS} -r ${WORKSPACE}/report.html -d true  -as 7.0.z.GA
+Example: 
+java -jar -Daphrodite.config=${PULL_REQUEST_PROCESSOR_HOME}/aphrodite-test.json -Dstreams.json=${PULL_REQUEST_PROCESSOR_HOME}/streams.json ${PULL_REQUEST_PROCESSOR_HOME}/target/pull-processor-0.8.0-SNAPSHOT.jar -s jboss-eap-7.0.z[jbossas-jboss-eap7,jbossas-wildfly-core-eap] -p jboss-eap-7.0.z[jbossas-jboss-eap7,jbossas-wildfly-core-eap] -r ${PULL_REQUEST_PROCESSOR_HOME}/ -w false
