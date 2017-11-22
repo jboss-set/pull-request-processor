@@ -2,6 +2,9 @@ org.jboss.set.pull.processor.impl.evaluator.TriviaEvaluator
 org.jboss.set.pull.processor.impl.evaluator.LinkedIssuesEvaluator
 org.jboss.set.pull.processor.impl.evaluator.LinkedPullRequestEvaluator
 org.jboss.set.pull.processor.impl.evaluator.IssueACKFlagsLabelEvaluator
-org.jboss.set.pull.processor.impl.evaluator.IssuePresentLabelEvaluator
+#disable issue present label evaluation which depends on current issue and upstream issue query from LinkedIssuesEvaluator.
+#this is too strict with PR meta-data format, otherwise it will pollute PR with label "Missing issue". Same reason for "Missing upstream issue".
+#reenable when there is an agreement on PR meta-data format
+#org.jboss.set.pull.processor.impl.evaluator.IssuePresentLabelEvaluator
 org.jboss.set.pull.processor.impl.evaluator.UpstreamPullRequestLabelEvaluator
 org.jboss.set.pull.processor.impl.evaluator.DevStreamLabelEvaluator
