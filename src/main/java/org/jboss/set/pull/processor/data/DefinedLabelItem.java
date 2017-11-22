@@ -19,7 +19,7 @@ public class DefinedLabelItem extends LabelItem<DefinedLabelItem.LabelContent> {
     public static enum LabelContent {
         Needs_devel_ack("Needs devel_ack"),
         Needs_pm_ack("Needs pm_ack"),
-        Needs_qe_ack("Needs qe_ack"),
+        Needs_qa_ack("Needs qa_ack"),
         Has_All_Acks("Has All Acks"),
         Upstream_merged("upstream merged"),
         Missing_upstream_issue("Missing upstream issue"),

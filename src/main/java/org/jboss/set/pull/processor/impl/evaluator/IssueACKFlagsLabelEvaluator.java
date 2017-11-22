@@ -53,7 +53,7 @@ public class IssueACKFlagsLabelEvaluator extends AbstractLabelEvaluator {
             boolean hasAllAcks = true;
             hasAllAcks = hasAllAcks & processFlagStatus(labelData, issueToProcess.getPmAckStatus(), LabelContent.Needs_pm_ack);
             hasAllAcks = hasAllAcks & processFlagStatus(labelData, issueToProcess.getDevAckStatus(), LabelContent.Needs_devel_ack);
-            hasAllAcks = hasAllAcks  & processFlagStatus(labelData, issueToProcess.getQeAckStatus(), LabelContent.Needs_qe_ack);
+            hasAllAcks = hasAllAcks  & processFlagStatus(labelData, issueToProcess.getQeAckStatus(), LabelContent.Needs_qa_ack);
 
             if (hasAllAcks) {
                 LabelItem<?> li = new DefinedLabelItem(LabelContent.Has_All_Acks, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.OK);
