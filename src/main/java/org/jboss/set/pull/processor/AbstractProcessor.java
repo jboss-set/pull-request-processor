@@ -148,7 +148,7 @@ public abstract class AbstractProcessor implements Processor {
                 log(Level.FINE, "processing " + this.pullRequest.getURL().toString());
 
                 EvaluatorContext context = new EvaluatorContext(processorConfig.getAphrodite(), this.pullRequest,
-                        this.streamComponentDefinition);
+                        this.streamComponentDefinition,getPhase());
                 EvaluatorData data = new EvaluatorData();
                 for (Evaluator rule : processorConfig.getEvaluators()) {
                     LOGGER.fine("repository " + pullRequest.getRepository().getURL()

@@ -1,9 +1,0 @@
-org.jboss.set.pull.processor.impl.evaluator.BranchEvaluator
-org.jboss.set.pull.processor.impl.evaluator.IssuesRelatedEvaluator
-org.jboss.set.pull.processor.impl.evaluator.LabelsEvaluator
-org.jboss.set.pull.processor.impl.evaluator.PullRequestEvaluator
-org.jboss.set.pull.processor.impl.evaluator.PullRequestRelatedEvaluator
-org.jboss.set.pull.processor.impl.evaluator.RepositoryEvaluator
-org.jboss.set.pull.processor.impl.evaluator.StreamsEvaluator
-org.jboss.set.pull.processor.impl.evaluator.UpstreamEvaluator
-org.jboss.set.pull.processor.impl.evaluator.WritableRepositoryEvaluator
