@@ -43,6 +43,8 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
         LabelData labelData = super.getLabelData(EvaluatorData.Attributes.LABELS_UPSTREAM, data);
 
         if (upstreamPullRequestData.isDefined()) {
+            labelData.addLabelItem(new DefinedLabelItem(LabelContent.Missing_upstream_PR, LabelItem.LabelAction.REMOVE,
+                    LabelItem.LabelSeverity.OK));
             if (upstreamPullRequestData.isMerged()) {
                 labelData.addLabelItem(new DefinedLabelItem(LabelContent.Upstream_merged, LabelItem.LabelAction.SET,
                         LabelItem.LabelSeverity.OK));
@@ -54,7 +56,7 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
         } else {
             // not defined, check if it is required
             if (upstreamPullRequestData.isRequired()) {
-                labelData.addLabelItem(new DefinedLabelItem(LabelContent.Missing_upstream_PR, LabelItem.LabelAction.REMOVE,
+                labelData.addLabelItem(new DefinedLabelItem(LabelContent.Missing_upstream_PR, LabelItem.LabelAction.SET,
                         LabelItem.LabelSeverity.BAD));
             }
         }
