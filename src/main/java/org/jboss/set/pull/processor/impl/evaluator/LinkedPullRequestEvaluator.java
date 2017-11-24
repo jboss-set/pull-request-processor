@@ -42,7 +42,7 @@ public class LinkedPullRequestEvaluator implements Evaluator {
                     context.getStreamComponentDefinition());
             data.setAttributeValue(EvaluatorData.Attributes.PULL_REQUEST_CURRENT, currentPullRequestData);
             // TOO:XXX change this to PullRequest getUpstream() ?
-            final PullRequest upstreamPullRequest = context.getAphrodite().getUpstreamPullRequest(context.getPullRequest());
+            final PullRequest upstreamPullRequest = context.getAphrodite().getPullRequest(context.getPullRequest().findUpstreamPullRequestURL());
             final PullRequestData upstreamPullRequestData = convert(upstreamPullRequest, null); // TODO: check if we can fetch
                                                                                                 // StreamDef
                                                                                                 // for this?

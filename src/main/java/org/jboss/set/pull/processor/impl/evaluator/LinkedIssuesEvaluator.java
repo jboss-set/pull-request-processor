@@ -48,9 +48,9 @@ public class LinkedIssuesEvaluator implements Evaluator {
         // TODO: handle exception on get op?
         // TODO: XXX move those to PullRequest ?
         try {
-            final Issue currentIssue = context.getAphrodite().getIssue(context.getPullRequest());
-            final Issue upstreamIssue = context.getAphrodite().getUpstreamIssue(context.getPullRequest());
-            final List<Issue> relatedIssues = context.getAphrodite().getRelatedIssues(context.getPullRequest());
+            final Issue currentIssue = context.getAphrodite().getIssue(context.getPullRequest().findIssueURL());
+            final Issue upstreamIssue = context.getAphrodite().getIssue(context.getPullRequest().findUpstreamIssueURL());
+            final List<Issue> relatedIssues = context.getAphrodite().getIssues(context.getPullRequest().findRelatedIssuesURL());
 
             final IssueData currentIssueData = convert(currentIssue);
             final IssueData upstreamIssueData = convert(upstreamIssue);
@@ -62,7 +62,7 @@ public class LinkedIssuesEvaluator implements Evaluator {
             }
 
             // TODO: XXX move those to PullRequest ?
-            if (upstreamIssue == null && context.getAphrodite().isUpstreamRequired(context.getPullRequest())) {
+            if (upstreamIssue == null && context.getPullRequest().isUpstreamRequired()) {
                 upstreamIssueData.notRequired();
             }
             // TODO: XXX what if no upstream required but its there?
