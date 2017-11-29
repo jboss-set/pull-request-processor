@@ -134,7 +134,9 @@ public class SetLabelsAction implements Action {
             actionItems = convertLabels(addList, pullRequestData.getPullRequest());
             // retain only those that are not present, so we dont try to set them twice
             actionItems = actionItems.stream().filter(f -> !currentLabels.contains(f)).collect(Collectors.toList());
-            actionContext.getAphrodite().setLabelsToPullRequest(pullRequestData.getPullRequest(), actionItems);
+            if(!actionItems.isEmpty()) {
+                actionContext.getAphrodite().setLabelsToPullRequest(pullRequestData.getPullRequest(), actionItems);
+            }
             return null;
         }
 
