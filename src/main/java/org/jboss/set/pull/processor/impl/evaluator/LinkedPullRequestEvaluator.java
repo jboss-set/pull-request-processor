@@ -22,6 +22,7 @@
 package org.jboss.set.pull.processor.impl.evaluator;
 
 import java.net.MalformedURLException;
+import java.net.URL;
 
 import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.spi.NotFoundException;
@@ -42,7 +43,8 @@ public class LinkedPullRequestEvaluator implements Evaluator {
                     context.getStreamComponentDefinition());
             data.setAttributeValue(EvaluatorData.Attributes.PULL_REQUEST_CURRENT, currentPullRequestData);
             // TOO:XXX change this to PullRequest getUpstream() ?
-            final PullRequest upstreamPullRequest = context.getAphrodite().getPullRequest(context.getPullRequest().findUpstreamPullRequestURL());
+            URL upstreamPullRequestURL = context.getPullRequest().findUpstreamPullRequestURL();
+            final PullRequest upstreamPullRequest = upstreamPullRequestURL != null ? context.getAphrodite().getPullRequest(upstreamPullRequestURL) : null;
             final PullRequestData upstreamPullRequestData = convert(upstreamPullRequest, null); // TODO: check if we can fetch
                                                                                                 // StreamDef
                                                                                                 // for this?

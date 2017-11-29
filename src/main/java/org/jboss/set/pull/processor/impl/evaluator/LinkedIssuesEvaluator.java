@@ -22,6 +22,7 @@
 package org.jboss.set.pull.processor.impl.evaluator;
 
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 //import java.util.ArrayList;
 import java.util.List;
@@ -48,8 +49,10 @@ public class LinkedIssuesEvaluator implements Evaluator {
         // TODO: handle exception on get op?
         // TODO: XXX move those to PullRequest ?
         try {
-            final Issue currentIssue = context.getAphrodite().getIssue(context.getPullRequest().findIssueURL());
-            final Issue upstreamIssue = context.getAphrodite().getIssue(context.getPullRequest().findUpstreamIssueURL());
+            URL issueURL = context.getPullRequest().findIssueURL();
+            final Issue currentIssue = issueURL != null ? context.getAphrodite().getIssue(issueURL) : null;
+            URL upstreamIssueURL = context.getPullRequest().findUpstreamIssueURL();
+            final Issue upstreamIssue = upstreamIssueURL != null ? context.getAphrodite().getIssue(upstreamIssueURL) : null;
             final List<Issue> relatedIssues = context.getAphrodite().getIssues(context.getPullRequest().findRelatedIssuesURL());
 
             final IssueData currentIssueData = convert(currentIssue);
