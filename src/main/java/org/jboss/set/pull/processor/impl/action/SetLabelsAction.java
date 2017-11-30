@@ -128,13 +128,21 @@ public class SetLabelsAction implements Action {
                 if (currentLabels.contains(l)) {
                     // remove only if it is present, else skip
                     actionContext.getAphrodite().removeLabelFromPullRequest(pullRequestData.getPullRequest(), l.getName());
+                    currentLabels.remove(l); // remove also from currentLabels, as we need to set current labels in below.
                 }
             }
 
             actionItems = convertLabels(addList, pullRequestData.getPullRequest());
-            // retain only those that are not present, so we dont try to set them twice
-            actionItems = actionItems.stream().filter(f -> !currentLabels.contains(f)).collect(Collectors.toList());
-            if(!actionItems.isEmpty()) {
+            // allow to reset developer's label, as 'hold', 'bug', otherwise they would be removed by setLabelsToPullRequest()
+            for (Label l : actionItems) {
+                // retain only those are not present, so we don't try to set them twice
+                if (currentLabels.contains(l)) {
+                    currentLabels.remove(l);
+                }
+            }
+            actionItems.addAll(currentLabels);
+
+            if (!actionItems.isEmpty()) {
                 actionContext.getAphrodite().setLabelsToPullRequest(pullRequestData.getPullRequest(), actionItems);
             }
             return null;
