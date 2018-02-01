@@ -73,7 +73,7 @@ public class LinkedIssuesEvaluator implements Evaluator {
             data.setAttributeValue(EvaluatorData.Attributes.ISSUE_UPSTREAM, upstreamIssueData);
             data.setAttributeValue(EvaluatorData.Attributes.ISSUES_RELATED, relatedIssiesData);
         } catch (MalformedURLException | NotFoundException e) {
-            //TODO: XXX remove this in favor of proper reporting
+            // TODO: XXX remove this in favor of proper reporting
             e.printStackTrace();
         }
     }

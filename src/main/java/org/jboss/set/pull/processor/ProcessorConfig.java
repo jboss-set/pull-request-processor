@@ -58,16 +58,16 @@ public class ProcessorConfig {
 
     private boolean write = false;
 
-    public ProcessorConfig(final List<Evaluator> evaluators, final List<Action> actions, final List<StreamDefinition> streamDefinition,
-            final List<StreamDefinition> writePermitedStreamDefinition, final Aphrodite aphrodite, final ExecutorService executorService,
-            final String rootDirectory, final boolean write) {
+    public ProcessorConfig(final List<Evaluator> evaluators, final List<Action> actions,
+            final List<StreamDefinition> streamDefinition, final List<StreamDefinition> writePermitedStreamDefinition,
+            final Aphrodite aphrodite, final ExecutorService executorService, final String rootDirectory, final boolean write) {
         super();
         this.evaluators = evaluators;
         this.actions = actions;
         this.aphrodite = aphrodite;
         this.executorService = executorService;
         this.streamDefinition = Collections.unmodifiableList(streamDefinition);
-        if(writePermitedStreamDefinition != null){
+        if (writePermitedStreamDefinition != null) {
             this.writePermitedStreamDefinition = Collections.unmodifiableList(writePermitedStreamDefinition);
         } else {
             this.writePermitedStreamDefinition = this.streamDefinition;

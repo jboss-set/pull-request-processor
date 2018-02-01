@@ -77,8 +77,8 @@ public abstract class AbstractProcessor implements Processor {
      * Provide basic filtering of existing PRs and matching codebase to one present in jboss streams.
      */
     private List<PullRequestReference> fetchPullRequests() {
-        //NOTE1: check if we dont leak PRs this way?
-        //NOTE2: do we even care if we leak them?
+        // NOTE1: check if we dont leak PRs this way?
+        // NOTE2: do we even care if we leak them?
         return fetchPullRequestsRaw().stream().filter(pr -> {
             try {
                 if (pr.getComponentDefinition().isFound() && pr.getComponentDefinition().getStreamComponent().getCodebase()
@@ -87,7 +87,7 @@ public abstract class AbstractProcessor implements Processor {
                 else
                     return false;
             } catch (Exception e) {
-                //TODO: XXX hanle it properly
+                // TODO: XXX hanle it properly
                 log(Level.SEVERE, "Failed at: " + pr, e);
                 return false;
             }
@@ -100,7 +100,9 @@ public abstract class AbstractProcessor implements Processor {
             final List<PullRequestReference> pullRequests = fetchPullRequests();
             log(Level.INFO, " processing: " + pullRequests.size() + " PRs");
             List<Future<EvaluatorData>> results = this.processorConfig.getExecutorService()
-                    .invokeAll(pullRequests.stream().map(e -> new PullRequestEvaluatorTask(e.getPullRequest(),e.getComponentDefinition())).collect(Collectors.toList()));
+                    .invokeAll(pullRequests.stream()
+                            .map(e -> new PullRequestEvaluatorTask(e.getPullRequest(), e.getComponentDefinition()))
+                            .collect(Collectors.toList()));
 
             for (Future<EvaluatorData> result : results) {
                 try {
@@ -148,12 +150,11 @@ public abstract class AbstractProcessor implements Processor {
                 log(Level.FINE, "processing " + this.pullRequest.getURL().toString());
 
                 EvaluatorContext context = new EvaluatorContext(processorConfig.getAphrodite(), this.pullRequest,
-                        this.streamComponentDefinition,getPhase());
+                        this.streamComponentDefinition, getPhase());
                 EvaluatorData data = new EvaluatorData();
                 for (Evaluator rule : processorConfig.getEvaluators()) {
-                    LOGGER.fine("repository " + pullRequest.getRepository().getURL()
-                            + "applying evaluator " + rule.name() + " to "
-                            + this.pullRequest.getId());
+                    LOGGER.fine("repository " + pullRequest.getRepository().getURL() + "applying evaluator " + rule.name()
+                            + " to " + this.pullRequest.getId());
                     rule.eval(context, data);
                 }
                 return data;

@@ -43,7 +43,8 @@ public class Main {
 
     public static Logger logger = Logger.getLogger(Main.class.getPackage().getName());
 
-    public void start(List<StreamDefinition> parsedStreams, List<StreamDefinition> writePermittedStreams, String rootDir, Boolean performWriteOperations) throws Exception {
+    public void start(List<StreamDefinition> parsedStreams, List<StreamDefinition> writePermittedStreams, String rootDir,
+            Boolean performWriteOperations) throws Exception {
         logger.info("initializing....");
         try (Aphrodite aphrodite = Aphrodite.instance();
                 ClosableHackForExecutor executor = new ClosableHackForExecutor(Executors.newFixedThreadPool(12));) {
@@ -53,11 +54,11 @@ public class Main {
                 return;
             } else {
                 // XXX: this is a bit scechy, but should do for first iteration
-                matchStreams(aphrodite,parsedStreams);
+                matchStreams(aphrodite, parsedStreams);
             }
 
             if (writePermittedStreams != null && !writePermittedStreams.isEmpty()) {
-                matchStreams(aphrodite,writePermittedStreams);
+                matchStreams(aphrodite, writePermittedStreams);
             }
 
             logger.info("loading evaluators:");
@@ -88,8 +89,8 @@ public class Main {
                         .collect(Collectors.toList());
                 final List<Evaluator> filteredEvaluators = evaluatorServices.stream().filter(a -> a.support(processorPhase))
                         .collect(Collectors.toList());
-                final ProcessorConfig processorConfig = new ProcessorConfig(filteredEvaluators, filteredActions, parsedStreams, writePermittedStreams,
-                        aphrodite, executor.executorService, rootDir, performWriteOperations);
+                final ProcessorConfig processorConfig = new ProcessorConfig(filteredEvaluators, filteredActions, parsedStreams,
+                        writePermittedStreams, aphrodite, executor.executorService, rootDir, performWriteOperations);
                 processor.init(processorConfig);
             }
 
@@ -103,7 +104,7 @@ public class Main {
         }
     }
 
-    private void matchStreams(final Aphrodite aphrodite, final List<StreamDefinition> defs) throws NotFoundException{
+    private void matchStreams(final Aphrodite aphrodite, final List<StreamDefinition> defs) throws NotFoundException {
         for (StreamDefinition streamDefinition : defs) {
             logger.info("finding all repositories for stream " + streamDefinition);
             Stream stream = aphrodite.getStream(streamDefinition.getName());
@@ -161,9 +162,8 @@ public class Main {
                     .collect(Collectors.toList());
             streams = ns.getList("permitted");
             List<StreamDefinition> writePermittedStreams = null;
-            if(streams != null)
-                writePermittedStreams = streams.stream().map(e -> new StreamDefinition(e))
-                .collect(Collectors.toList());
+            if (streams != null)
+                writePermittedStreams = streams.stream().map(e -> new StreamDefinition(e)).collect(Collectors.toList());
             String directoryRoot = ns.getString("root");
             Boolean performWriteOperations = ns.getBoolean("write");
             // List<String> allowedStreams = ns.getList("allowed_streams");

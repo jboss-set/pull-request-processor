@@ -31,6 +31,7 @@ import org.jboss.set.pull.processor.data.IssueData;
 import org.jboss.set.pull.processor.data.LabelData;
 import org.jboss.set.pull.processor.data.LabelItem;
 import static org.jboss.set.pull.processor.data.DefinedLabelItem.LabelContent;
+
 /**
  * Check what ACK flags we have and set up labels accordingly(or clear).
  *
@@ -52,21 +53,23 @@ public class IssueACKFlagsLabelEvaluator extends AbstractLabelEvaluator {
             LabelData labelData = super.getLabelData(labelsKey, data);
             boolean hasAllAcks = true;
             hasAllAcks = hasAllAcks & processFlagStatus(labelData, issueToProcess.getPmAckStatus(), LabelContent.Needs_pm_ack);
-            hasAllAcks = hasAllAcks & processFlagStatus(labelData, issueToProcess.getDevAckStatus(), LabelContent.Needs_devel_ack);
-            hasAllAcks = hasAllAcks  & processFlagStatus(labelData, issueToProcess.getQeAckStatus(), LabelContent.Needs_qa_ack);
+            hasAllAcks = hasAllAcks
+                    & processFlagStatus(labelData, issueToProcess.getDevAckStatus(), LabelContent.Needs_devel_ack);
+            hasAllAcks = hasAllAcks & processFlagStatus(labelData, issueToProcess.getQeAckStatus(), LabelContent.Needs_qa_ack);
 
             if (hasAllAcks) {
-                LabelItem<?> li = new DefinedLabelItem(LabelContent.Has_All_Acks, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.OK);
+                LabelItem<?> li = new DefinedLabelItem(LabelContent.Has_All_Acks, LabelItem.LabelAction.SET,
+                        LabelItem.LabelSeverity.OK);
                 labelData.addLabelItem(li);
             } else {
-                LabelItem<?> li = new DefinedLabelItem(LabelContent.Has_All_Acks, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.BAD);
+                LabelItem<?> li = new DefinedLabelItem(LabelContent.Has_All_Acks, LabelItem.LabelAction.REMOVE,
+                        LabelItem.LabelSeverity.BAD);
                 labelData.addLabelItem(li);
             }
         }
     }
 
-    protected boolean processFlagStatus(final LabelData labelData, final FlagStatus status,
-            final LabelContent label) {
+    protected boolean processFlagStatus(final LabelData labelData, final FlagStatus status, final LabelContent label) {
         if (status.equals(FlagStatus.ACCEPTED)) {
             LabelItem<?> li = new DefinedLabelItem(label, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.OK);
             labelData.addLabelItem(li);

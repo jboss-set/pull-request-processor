@@ -32,36 +32,42 @@ import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.LabelData;
 import org.jboss.set.pull.processor.data.LabelItem.LabelAction;
 import org.jboss.set.pull.processor.data.LabelItem.LabelSeverity;
+
 /**
  * Set dev labels PR. This include branch of PR and label derived from stream name.
+ *
  * @author baranowb
  *
  */
 public class DevStreamLabelEvaluator extends AbstractLabelEvaluator {
-    //digit.digit|lowercase.digit|lowercase
+    // digit.digit|lowercase.digit|lowercase
     private static final Pattern STREAM_PATTERN = Pattern.compile("[\\d]\\.[\\d\\w]\\.[\\d\\w]");
+
     @Override
     public void eval(EvaluatorContext context, EvaluatorData data) {
         final LabelData labelData = super.getLabelData(EvaluatorData.Attributes.LABELS_CURRENT, data);
-        final CodeBaseLabelItem branchLabel = new CodeBaseLabelItem(context.getPullRequest().getCodebase(), LabelAction.SET, LabelSeverity.OK);
+        final CodeBaseLabelItem branchLabel = new CodeBaseLabelItem(context.getPullRequest().getCodebase(), LabelAction.SET,
+                LabelSeverity.OK);
         labelData.addLabelItem(branchLabel);
-        final Matcher matcher = STREAM_PATTERN.matcher(context.getStreamComponentDefinition().getStreamDefinition().getStream().getName());
-        if(matcher.find()) {
-           //example "jboss-eap-7.z.0" --> "7.z.0.GA"
-           final CodeBaseLabelItem streamLabel = new CodeBaseLabelItem(new Codebase(matcher.group()+".GA"), LabelAction.SET, LabelSeverity.OK);
-           labelData.addLabelItem(streamLabel);
+        final Matcher matcher = STREAM_PATTERN
+                .matcher(context.getStreamComponentDefinition().getStreamDefinition().getStream().getName());
+        if (matcher.find()) {
+            // example "jboss-eap-7.z.0" --> "7.z.0.GA"
+            final CodeBaseLabelItem streamLabel = new CodeBaseLabelItem(new Codebase(matcher.group() + ".GA"), LabelAction.SET,
+                    LabelSeverity.OK);
+            labelData.addLabelItem(streamLabel);
         } else {
-            //TODO: complain?
+            // TODO: complain?
         }
-      //TODO: do we need upstream dev labels as well?
-      //TODO: figure out remove action? (as is, we dont remove every label and reset them)
-      //TODO: add regex match and remove any other codebase like label?
-      //TODO: add check PR codebase vs stream codebase component codebase?
+        // TODO: do we need upstream dev labels as well?
+        // TODO: figure out remove action? (as is, we dont remove every label and reset them)
+        // TODO: add regex match and remove any other codebase like label?
+        // TODO: add check PR codebase vs stream codebase component codebase?
     }
 
     @Override
     public boolean support(ProcessorPhase processorPhase) {
-        if(processorPhase == ProcessorPhase.OPEN) {
+        if (processorPhase == ProcessorPhase.OPEN) {
             return true;
         } else {
             return false;

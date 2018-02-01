@@ -29,6 +29,7 @@ import org.jboss.set.pull.processor.data.LabelData;
 import org.jboss.set.pull.processor.data.LabelItem;
 import org.jboss.set.pull.processor.data.PullRequestData;
 import static org.jboss.set.pull.processor.data.DefinedLabelItem.LabelContent;
+
 /**
  * Check status of PR and if we need it.
  *
