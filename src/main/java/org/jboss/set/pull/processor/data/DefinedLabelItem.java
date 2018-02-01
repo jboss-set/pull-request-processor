@@ -17,11 +17,12 @@ public class DefinedLabelItem extends LabelItem<DefinedLabelItem.LabelContent> {
      *
      */
     public static enum LabelContent {
+        // These match labels on Github. Don't change it unless you synchronize with Github.
         Needs_devel_ack("Needs devel_ack"),
         Needs_pm_ack("Needs pm_ack"),
         Needs_qa_ack("Needs qa_ack"),
         Has_All_Acks("Has All Acks"),
-        Upstream_merged("upstream merged"),
+        Upstream_merged("Upstream merged"),
         Missing_upstream_issue("Missing upstream issue"),
         Missing_issue("Missing issue"),
         Missing_upstream_PR("Missing upstream PR"),
