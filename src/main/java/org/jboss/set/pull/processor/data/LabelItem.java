@@ -27,7 +27,7 @@ package org.jboss.set.pull.processor.data;
  * @author baranowb
  *
  */
-public abstract class LabelItem <T>{
+public abstract class LabelItem<T> {
 
     private LabelAction action;
     private LabelSeverity severity;

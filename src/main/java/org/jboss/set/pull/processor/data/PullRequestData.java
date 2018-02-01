@@ -55,7 +55,7 @@ public class PullRequestData {
     }
 
     public boolean isMerged() {
-        if(isDefined() && this.pullRequest.isMerged()) {
+        if (isDefined() && this.pullRequest.isMerged()) {
             return true;
         } else {
             return false;
@@ -63,7 +63,7 @@ public class PullRequestData {
     }
 
     public boolean isMergeable() {
-        if(isDefined() && this.pullRequest.isMergeable()) {
+        if (isDefined() && this.pullRequest.isMergeable()) {
             return true;
         } else {
             return false;
@@ -71,7 +71,7 @@ public class PullRequestData {
     }
 
     public boolean isUpgrade() {
-        if(isDefined() && this.pullRequest.isUpgrade()) {
+        if (isDefined() && this.pullRequest.isUpgrade()) {
             return true;
         } else {
             return false;

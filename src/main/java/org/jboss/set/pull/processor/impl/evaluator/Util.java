@@ -32,7 +32,8 @@ import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.Issue;
 
 public final class Util {
-    private Util() {}
+    private Util() {
+    }
 
     private static final Pattern patternStreamFlagBuzilla = Pattern.compile("[0-9]\\.[0-9]\\.[0-9z]");
     private static final Pattern patternStreamFlagJira = Pattern.compile("[0-9](\\.[0-9a-zA-Z]+)*");
@@ -42,9 +43,9 @@ public final class Util {
         EnumSet<FlagStatus> set = EnumSet.of(FlagStatus.ACCEPTED, FlagStatus.SET);
         List<String> streams = new ArrayList<>();
         Map<String, FlagStatus> statuses = issue.getStreamStatus();
-        for(Map.Entry<String, FlagStatus> status : statuses.entrySet()) {
+        for (Map.Entry<String, FlagStatus> status : statuses.entrySet()) {
             String stream = extract(status.getKey());
-            if(stream != null && set.contains(status.getValue())) {
+            if (stream != null && set.contains(status.getValue())) {
                 streams.add(stream);
             }
         }
@@ -54,10 +55,10 @@ public final class Util {
     public static String extract(String value) {
         Matcher matcherBugzilla = patternStreamFlagBuzilla.matcher(value);
         Matcher matcherJira = patternStreamFlagJira.matcher(value);
-        if(matcherJira.find()){
+        if (matcherJira.find()) {
             return matcherJira.group();
         } else if (matcherBugzilla.find()) {
-            String bugzilla =  matcherBugzilla.group();
+            String bugzilla = matcherBugzilla.group();
             return (bugzilla.length() >= 5 ? bugzilla.substring(bugzilla.length() - 5) : bugzilla);
         } else {
             return null;

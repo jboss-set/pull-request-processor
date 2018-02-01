@@ -38,7 +38,6 @@ public class PullRequestReference {
     // stream that this one belongs to
     private StreamComponentDefinition componentDefinition;
 
-
     public PullRequest getPullRequest() {
         return pullRequest;
     }

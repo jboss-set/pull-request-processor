@@ -44,7 +44,9 @@ public class LinkedPullRequestEvaluator implements Evaluator {
             data.setAttributeValue(EvaluatorData.Attributes.PULL_REQUEST_CURRENT, currentPullRequestData);
             // TOO:XXX change this to PullRequest getUpstream() ?
             URL upstreamPullRequestURL = context.getPullRequest().findUpstreamPullRequestURL();
-            final PullRequest upstreamPullRequest = upstreamPullRequestURL != null ? context.getAphrodite().getPullRequest(upstreamPullRequestURL) : null;
+            final PullRequest upstreamPullRequest = upstreamPullRequestURL != null
+                    ? context.getAphrodite().getPullRequest(upstreamPullRequestURL)
+                    : null;
             final PullRequestData upstreamPullRequestData = convert(upstreamPullRequest, null); // TODO: check if we can fetch
                                                                                                 // StreamDef
                                                                                                 // for this?
@@ -53,12 +55,13 @@ public class LinkedPullRequestEvaluator implements Evaluator {
                 upstreamPullRequestData.notRequiered();
             data.setAttributeValue(EvaluatorData.Attributes.PULL_REQUEST_UPSTREAM, upstreamPullRequestData);
         } catch (MalformedURLException | NotFoundException e) {
-            //TODO: XXX remove this in favor of proper reporting
+            // TODO: XXX remove this in favor of proper reporting
             e.printStackTrace();
         }
     }
 
-    protected PullRequestData convert(final PullRequest pullRequest, final StreamComponentDefinition streamComponentDefinition) {
+    protected PullRequestData convert(final PullRequest pullRequest,
+            final StreamComponentDefinition streamComponentDefinition) {
         // simple for now
         return new PullRequestData(pullRequest, streamComponentDefinition);
     }

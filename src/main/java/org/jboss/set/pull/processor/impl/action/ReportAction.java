@@ -7,8 +7,10 @@ import org.jboss.set.pull.processor.Action;
 import org.jboss.set.pull.processor.ActionContext;
 import org.jboss.set.pull.processor.ProcessorPhase;
 import org.jboss.set.pull.processor.data.EvaluatorData;
+
 /**
  * Action which produces report if proper flag has been set.
+ *
  * @author baranowb
  *
  */

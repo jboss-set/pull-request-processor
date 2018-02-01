@@ -39,6 +39,7 @@ import org.jboss.set.pull.processor.data.PullRequestReference;
 
 /**
  * Process all PRs in OPEN state
+ *
  * @author baranowb
  *
  */
@@ -57,30 +58,33 @@ public class OpenPRProcessor extends AbstractProcessor {
 
     @Override
     protected List<PullRequestReference> fetchPullRequestsRaw() {
-        //TODO: this might be bad idea but we will process all repos here and try to make sense out of it
+        // TODO: this might be bad idea but we will process all repos here and try to make sense out of it
         final List<PullRequestReference> pullRequests = new ArrayList<>();
-        for(StreamDefinition streamDefinition: super.processorConfig.getStreamDefinition()){
-            if(streamDefinition.isFound()){
-                for(StreamComponentDefinition streamComponentDefinition:streamDefinition.getStreamComponents()){
-                    if(streamDefinition.isFound()){
-                    try {
-                        final Repository repository = super.processorConfig.getAphrodite().getRepository(streamComponentDefinition.getStreamComponent().getRepositoryURL().toURL());
-                        if(repository != null){
-                            final List<PullRequest> componentPullRequests = super.processorConfig.getAphrodite().getPullRequestsByState(repository, PullRequestState.OPEN);
-                            //translate it into refs, add to ret val
-                            pullRequests.addAll(componentPullRequests.stream().map(p->{
-                                return  new PullRequestReference(p, streamComponentDefinition);
-                            }).collect(Collectors.toList()));
-                        } else {
-                            super.LOGGER.warning("Did not find repository: "+streamComponentDefinition.getStreamComponent().getRepositoryURL());
+        for (StreamDefinition streamDefinition : super.processorConfig.getStreamDefinition()) {
+            if (streamDefinition.isFound()) {
+                for (StreamComponentDefinition streamComponentDefinition : streamDefinition.getStreamComponents()) {
+                    if (streamDefinition.isFound()) {
+                        try {
+                            final Repository repository = super.processorConfig.getAphrodite()
+                                    .getRepository(streamComponentDefinition.getStreamComponent().getRepositoryURL().toURL());
+                            if (repository != null) {
+                                final List<PullRequest> componentPullRequests = super.processorConfig.getAphrodite()
+                                        .getPullRequestsByState(repository, PullRequestState.OPEN);
+                                // translate it into refs, add to ret val
+                                pullRequests.addAll(componentPullRequests.stream().map(p -> {
+                                    return new PullRequestReference(p, streamComponentDefinition);
+                                }).collect(Collectors.toList()));
+                            } else {
+                                super.LOGGER.warning("Did not find repository: "
+                                        + streamComponentDefinition.getStreamComponent().getRepositoryURL());
+                            }
+                        } catch (MalformedURLException e) {
+                            super.log(Level.WARNING, "Did not find repo", e);
+                        } catch (NotFoundException e) {
+                            super.log(Level.WARNING, "Did not find repo", e);
                         }
-                    } catch (MalformedURLException e) {
-                        super.log(Level.WARNING, "Did not find repo",e);
-                    } catch (NotFoundException e) {
-                        super.log(Level.WARNING, "Did not find repo",e);
-                    }
                     } else {
-                        super.log(Level.WARNING, "Component not found, ignoring: "+streamComponentDefinition);
+                        super.log(Level.WARNING, "Component not found, ignoring: " + streamComponentDefinition);
                     }
                 }
             }

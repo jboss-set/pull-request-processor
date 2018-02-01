@@ -23,8 +23,6 @@ package org.jboss.set.pull.processor;
 
 import org.jboss.set.pull.processor.data.EvaluatorData;
 
-
-
 public interface Evaluator {
 
     default String name() {

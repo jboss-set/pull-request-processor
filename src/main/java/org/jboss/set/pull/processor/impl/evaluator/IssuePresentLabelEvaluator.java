@@ -30,6 +30,7 @@ import org.jboss.set.pull.processor.data.EvaluatorData.Attribute;
 import org.jboss.set.pull.processor.data.IssueData;
 import org.jboss.set.pull.processor.data.LabelData;
 import org.jboss.set.pull.processor.data.LabelItem;
+
 /**
  * Set labels based on presence of issues.
  *

@@ -57,7 +57,7 @@ public class StreamComponentDefinition {
 
     @Override
     public String toString() {
-        return "StreamComponentDefinition [name=" + name + ", found=" + isFound() +"]";
+        return "StreamComponentDefinition [name=" + name + ", found=" + isFound() + "]";
     }
 
 }

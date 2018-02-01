@@ -1,6 +1,5 @@
 package org.jboss.set.pull.processor.data;
 
-
 public class DefinedLabelItem extends LabelItem<DefinedLabelItem.LabelContent> {
 
     public DefinedLabelItem(LabelContent label, LabelAction action, LabelSeverity severity) {
@@ -11,8 +10,10 @@ public class DefinedLabelItem extends LabelItem<DefinedLabelItem.LabelContent> {
     public String getLabel() {
         return super.label.toString();
     }
+
     /**
      * Static content that can be used as label
+     *
      * @author baranowb
      *
      */

@@ -110,8 +110,9 @@ public class IssueData {
 
     @Override
     public String toString() {
-        return "IssueData [issue=" + (issue!=null?issue.getURL(): "NA") + ", streamsAckedInIssue=" + streamsAckedInIssue + ", required=" + required
-                + ", devAckStatus=" + devAckStatus + ", qeAckStatus=" + qeAckStatus + ", pmAckStatus=" + pmAckStatus + "]";
+        return "IssueData [issue=" + (issue != null ? issue.getURL() : "NA") + ", streamsAckedInIssue=" + streamsAckedInIssue
+                + ", required=" + required + ", devAckStatus=" + devAckStatus + ", qeAckStatus=" + qeAckStatus
+                + ", pmAckStatus=" + pmAckStatus + "]";
     }
 
 }
