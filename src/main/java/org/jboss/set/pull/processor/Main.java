@@ -30,9 +30,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import org.jboss.set.aphrodite.Aphrodite;
-import org.jboss.set.aphrodite.domain.Stream;
-import org.jboss.set.aphrodite.domain.StreamComponent;
-import org.jboss.set.aphrodite.spi.NotFoundException;
+import org.jboss.set.pull.processor.impl.evaluator.util.StreamDefinitionUtil;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
@@ -54,11 +52,11 @@ public class Main {
                 return;
             } else {
                 // XXX: this is a bit scechy, but should do for first iteration
-                matchStreams(aphrodite, parsedStreams);
+                StreamDefinitionUtil.matchStreams(aphrodite, parsedStreams);
             }
 
             if (writePermittedStreams != null && !writePermittedStreams.isEmpty()) {
-                matchStreams(aphrodite, writePermittedStreams);
+                StreamDefinitionUtil.matchStreams(aphrodite, writePermittedStreams);
             }
 
             logger.info("loading evaluators:");
@@ -101,29 +99,6 @@ public class Main {
             }
         } finally {
             logger.info("finalizing.");
-        }
-    }
-
-    private void matchStreams(final Aphrodite aphrodite, final List<StreamDefinition> defs) throws NotFoundException {
-        for (StreamDefinition streamDefinition : defs) {
-            logger.info("finding all repositories for stream " + streamDefinition);
-            Stream stream = aphrodite.getStream(streamDefinition.getName());
-            if (stream == null) {
-                logger.warning("No stream present for " + streamDefinition);
-                continue;
-            } else {
-                streamDefinition.setStream(stream);
-                for (StreamComponentDefinition streamComponentDefinition : streamDefinition.getStreamComponents()) {
-                    final StreamComponent streamComponent = stream.getComponent(streamComponentDefinition.getName());
-                    if (streamComponent == null) {
-                        logger.warning("No component for stream '" + streamDefinition.getName() + "' under '"
-                                + streamComponentDefinition + "'");
-                        continue;
-                    } else {
-                        streamComponentDefinition.setStreamComponent(streamComponent);
-                    }
-                }
-            }
         }
     }
 

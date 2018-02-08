@@ -34,6 +34,7 @@ import org.jboss.set.pull.processor.EvaluatorContext;
 import org.jboss.set.pull.processor.ProcessorPhase;
 import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.IssueData;
+import org.jboss.set.pull.processor.impl.evaluator.util.IssueStreamLabelsUtil;
 
 /**
  * Simply retrieve issues from PR and process so other evaluators or action items can do some magic. This requires aphro to have
@@ -63,11 +64,10 @@ public class LinkedIssuesEvaluator implements Evaluator {
                     relatedIssiesData.add(convert(relatedIssue));
                 }
             }
-
-            // TODO: XXX move those to PullRequest ?
             if (upstreamIssue == null && context.getPullRequest().isUpstreamRequired()) {
                 upstreamIssueData.notRequired();
             }
+
             // TODO: XXX what if no upstream required but its there?
             data.setAttributeValue(EvaluatorData.Attributes.ISSUE_CURRENT, currentIssueData);
             data.setAttributeValue(EvaluatorData.Attributes.ISSUE_UPSTREAM, upstreamIssueData);
@@ -82,7 +82,7 @@ public class LinkedIssuesEvaluator implements Evaluator {
         if (issue == null) {
             return new IssueData();// default, we should return more than null;
         }
-        final IssueData issueData = new IssueData(issue, Util.getStreams(issue));
+        final IssueData issueData = new IssueData(issue, IssueStreamLabelsUtil.getStreams(issue));
         return issueData;
     }
 

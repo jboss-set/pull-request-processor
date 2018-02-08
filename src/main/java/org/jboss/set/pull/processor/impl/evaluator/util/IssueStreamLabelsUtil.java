@@ -19,7 +19,7 @@
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
-package org.jboss.set.pull.processor.impl.evaluator;
+package org.jboss.set.pull.processor.impl.evaluator.util;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -31,8 +31,8 @@ import java.util.regex.Pattern;
 import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.aphrodite.domain.Issue;
 
-public final class Util {
-    private Util() {
+public final class IssueStreamLabelsUtil {
+    private IssueStreamLabelsUtil() {
     }
 
     private static final Pattern patternStreamFlagBuzilla = Pattern.compile("[0-9]\\.[0-9]\\.[0-9z]");

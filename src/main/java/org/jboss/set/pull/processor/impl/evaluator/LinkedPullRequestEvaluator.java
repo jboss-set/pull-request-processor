@@ -23,6 +23,7 @@ package org.jboss.set.pull.processor.impl.evaluator;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 
 import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.spi.NotFoundException;
@@ -30,9 +31,11 @@ import org.jboss.set.pull.processor.Evaluator;
 import org.jboss.set.pull.processor.EvaluatorContext;
 import org.jboss.set.pull.processor.ProcessorPhase;
 import org.jboss.set.pull.processor.StreamComponentDefinition;
+import org.jboss.set.pull.processor.StreamDefinition;
 import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.IssueData;
 import org.jboss.set.pull.processor.data.PullRequestData;
+import org.jboss.set.pull.processor.impl.evaluator.util.StreamDefinitionUtil;
 
 public class LinkedPullRequestEvaluator implements Evaluator {
 
@@ -47,9 +50,7 @@ public class LinkedPullRequestEvaluator implements Evaluator {
             final PullRequest upstreamPullRequest = upstreamPullRequestURL != null
                     ? context.getAphrodite().getPullRequest(upstreamPullRequestURL)
                     : null;
-            final PullRequestData upstreamPullRequestData = convert(upstreamPullRequest, null); // TODO: check if we can fetch
-                                                                                                // StreamDef
-                                                                                                // for this?
+            final PullRequestData upstreamPullRequestData = convert(upstreamPullRequest, determineUpstreamStreamComponentDefinition(context));
             final IssueData upstreamIssue = data.getAttributeValue(EvaluatorData.Attributes.ISSUE_UPSTREAM);
             if (!upstreamIssue.isRequired())
                 upstreamPullRequestData.notRequiered();
@@ -58,6 +59,17 @@ public class LinkedPullRequestEvaluator implements Evaluator {
             // TODO: XXX remove this in favor of proper reporting
             e.printStackTrace();
         }
+    }
+
+    protected StreamComponentDefinition determineUpstreamStreamComponentDefinition(final EvaluatorContext context) throws NotFoundException {
+        //check if we have stream comp, stream and if there is upstream
+        //TODO: XXX no upstream == violation?
+        final StreamComponentDefinition assumedDownstreamToMatch = context.getStreamComponentDefinition();
+        if(!assumedDownstreamToMatch.isFound() || !assumedDownstreamToMatch.getStreamDefinition().isFound() || assumedDownstreamToMatch.getStreamDefinition().getStream().getUpstream() == null)
+            return null;
+        final StreamDefinition upstreamStreamDef = new StreamDefinition(assumedDownstreamToMatch.getStreamDefinition().getStream().getUpstream().getName(), assumedDownstreamToMatch.getName());
+        StreamDefinitionUtil.matchStreams(context.getAphrodite(), Arrays.asList(upstreamStreamDef));
+        return upstreamStreamDef.getStreamComponents().get(0);
     }
 
     protected PullRequestData convert(final PullRequest pullRequest,

@@ -57,6 +57,11 @@ public class StreamDefinition {
         }
     }
 
+    public StreamDefinition(final String name, final String...streamComponentNames) {
+        this.name = name;
+        this.streamComponents = Arrays.asList(streamComponentNames).stream().map(sc-> new StreamComponentDefinition(sc, this)).collect(Collectors.toList());
+    }
+
     public String getName() {
         return name;
     }
