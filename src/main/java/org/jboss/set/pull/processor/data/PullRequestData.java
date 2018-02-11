@@ -34,7 +34,7 @@ public class PullRequestData {
         this.streamComponentDefinition = streamComponentDefinition;
     }
 
-    public void notRequiered() {
+    public void notRequired() {
         this.required = false;
     }
 
