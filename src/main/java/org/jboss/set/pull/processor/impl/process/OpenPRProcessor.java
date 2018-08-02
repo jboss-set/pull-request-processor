@@ -65,6 +65,11 @@ public class OpenPRProcessor extends AbstractProcessor {
                 for (StreamComponentDefinition streamComponentDefinition : streamDefinition.getStreamComponents()) {
                     if (streamDefinition.isFound()) {
                         try {
+                            if(!streamComponentDefinition.isFound()) {
+                                super.LOGGER.warning("Not FOUND, ignoring: "
+                                        + streamComponentDefinition.getName());
+                                continue;
+                            }
                             final Repository repository = super.processorConfig.getAphrodite()
                                     .getRepository(streamComponentDefinition.getStreamComponent().getRepositoryURL().toURL());
                             if (repository != null) {
