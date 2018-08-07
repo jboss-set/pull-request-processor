@@ -47,34 +47,53 @@ public class LinkedIssuesEvaluator implements Evaluator {
     @Override
     public void eval(EvaluatorContext context, EvaluatorData data) {
         // TODO: handle exception on get op?
-        // TODO: XXX move those to PullRequest ?
+        URL issueURL;
+        Issue currentIssue = null;
         try {
-            URL issueURL = context.getPullRequest().findIssueURL();
-            final Issue currentIssue = issueURL != null ? context.getAphrodite().getIssue(issueURL) : null;
-            URL upstreamIssueURL = context.getPullRequest().findUpstreamIssueURL();
-            final Issue upstreamIssue = upstreamIssueURL != null ? context.getAphrodite().getIssue(upstreamIssueURL) : null;
-            final List<Issue> relatedIssues = context.getAphrodite().getIssues(context.getPullRequest().findRelatedIssuesURL());
+            issueURL = context.getPullRequest().findIssueURL();
+            if (issueURL != null) {
+                context.getAphrodite().getIssue(issueURL);
+            }
 
+        } catch (MalformedURLException | NotFoundException e) {
+            e.printStackTrace();
+        } finally {
             final IssueData currentIssueData = convert(currentIssue);
+            data.setAttributeValue(EvaluatorData.Attributes.ISSUE_CURRENT, currentIssueData);
+        }
+
+        URL upstreamIssueURL;
+        Issue upstreamIssue = null;
+        try {
+            upstreamIssueURL = context.getPullRequest().findUpstreamIssueURL();
+            if (upstreamIssueURL != null) {
+                upstreamIssue = context.getAphrodite().getIssue(upstreamIssueURL);
+            }
+        } catch (MalformedURLException | NotFoundException e) {
+            e.printStackTrace();
+        } finally {
             final IssueData upstreamIssueData = convert(upstreamIssue);
+            // TODO: XXX move those to PullRequest ?
+            if (upstreamIssue == null && context.getPullRequest().isUpstreamRequired()) {
+                upstreamIssueData.notRequired();
+            }
+            data.setAttributeValue(EvaluatorData.Attributes.ISSUE_UPSTREAM, upstreamIssueData);
+        }
+
+        List<Issue> relatedIssues = null;
+        try {
+            relatedIssues = context.getAphrodite().getIssues(context.getPullRequest().findRelatedIssuesURL());
+        } catch (MalformedURLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
             final List<IssueData> relatedIssiesData = new ArrayList<>();
             if (relatedIssues != null) {
                 for (Issue relatedIssue : relatedIssues) {
                     relatedIssiesData.add(convert(relatedIssue));
                 }
             }
-
-            // TODO: XXX move those to PullRequest ?
-            if (upstreamIssue == null && context.getPullRequest().isUpstreamRequired()) {
-                upstreamIssueData.notRequired();
-            }
-            // TODO: XXX what if no upstream required but its there?
-            data.setAttributeValue(EvaluatorData.Attributes.ISSUE_CURRENT, currentIssueData);
-            data.setAttributeValue(EvaluatorData.Attributes.ISSUE_UPSTREAM, upstreamIssueData);
             data.setAttributeValue(EvaluatorData.Attributes.ISSUES_RELATED, relatedIssiesData);
-        } catch (MalformedURLException | NotFoundException e) {
-            // TODO: XXX remove this in favor of proper reporting
-            e.printStackTrace();
         }
     }
 
