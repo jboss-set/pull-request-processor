@@ -52,7 +52,7 @@ public class LinkedIssuesEvaluator implements Evaluator {
         try {
             issueURL = context.getPullRequest().findIssueURL();
             if (issueURL != null) {
-                context.getAphrodite().getIssue(issueURL);
+                currentIssue = context.getAphrodite().getIssue(issueURL);
             }
 
         } catch (MalformedURLException | NotFoundException e) {
