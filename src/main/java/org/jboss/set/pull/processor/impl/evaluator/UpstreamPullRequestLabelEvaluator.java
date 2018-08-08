@@ -41,7 +41,7 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
     @Override
     public void eval(EvaluatorContext context, EvaluatorData data) {
         final PullRequestData upstreamPullRequestData = data.getAttributeValue(EvaluatorData.Attributes.PULL_REQUEST_UPSTREAM);
-        LabelData labelData = super.getLabelData(EvaluatorData.Attributes.LABELS_UPSTREAM, data);
+        LabelData labelData = super.getLabelData(EvaluatorData.Attributes.LABELS_CURRENT, data);
 
         if (upstreamPullRequestData.isDefined()) {
             labelData.addLabelItem(new DefinedLabelItem(LabelContent.Missing_upstream_PR, LabelItem.LabelAction.REMOVE,
