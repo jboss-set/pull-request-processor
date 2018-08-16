@@ -36,6 +36,7 @@ import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.pull.processor.Action;
 import org.jboss.set.pull.processor.ActionContext;
 import org.jboss.set.pull.processor.ProcessorPhase;
+import org.jboss.set.pull.processor.data.DefinedLabelItem;
 import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.IssueData;
 import org.jboss.set.pull.processor.data.LabelData;
@@ -89,14 +90,15 @@ public class SetLabelsAction implements Action {
             final IssueData upstreamIssueData = data.getAttributeValue(EvaluatorData.Attributes.ISSUE_UPSTREAM);
             final LabelData upstreamLabelsData = data.getAttributeValue(EvaluatorData.Attributes.LABELS_UPSTREAM);
             final Set<Label> currentLabels = new TreeSet(new LabelComparator());
-            currentLabels.addAll(actionContext.getAphrodite().getLabelsFromPullRequest(pullRequestData.getPullRequest()));
+            final PullRequest pullRequest = pullRequestData.getPullRequest();
+            currentLabels.addAll(actionContext.getAphrodite().getLabelsFromPullRequest(pullRequest));
 
             final List<LabelItem<?>> addList = labelsData.getLabels(LabelAction.SET);
             final List<LabelItem<?>> removeList = labelsData.getLabels(LabelAction.REMOVE);
             // TODO: XXX make this part of super class, "AbstractConsoleReporting" or something.
             // or something more generic avavilable for whole tool/s
             final StringBuilder logBuilder = new StringBuilder();
-            logBuilder.append("\n... ").append(pullRequestData.getPullRequest().getURL());
+            logBuilder.append("\n... ").append(pullRequest.getURL());
             logBuilder.append("\n   |... ").append((issueData.isDefined() ? issueData.getIssue().getURL() : "n/a"));
             logBuilder.append("\n   |... C:").append(currentLabels.stream().map(l -> l.getName()).collect(Collectors.toList()));
             logBuilder.append("\n   |... S:").append(addList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
@@ -116,23 +118,40 @@ public class SetLabelsAction implements Action {
                 logBuilder.append("\n       |... S:").append(upstreamAddList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
                 logBuilder.append("\n       |... R:").append(upstreamRemoveList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
             }
-            if (!actionContext.isWritePermitted() || !actionContext.isWritePermitedOn(pullRequestData.getPullRequest())) {
+
+            boolean requestChanges = addList.stream()
+                    .filter(l -> l.getLabel().equals(DefinedLabelItem.LabelContent.Needs_devel_ack.toString())
+                            || l.getLabel().equals(DefinedLabelItem.LabelContent.Needs_pm_ack.toString())
+                            || l.getLabel().equals(DefinedLabelItem.LabelContent.Needs_qa_ack.toString())
+                            || l.getLabel().equals(DefinedLabelItem.LabelContent.Missing_issue.toString())
+                            || l.getLabel().equals(DefinedLabelItem.LabelContent.Missing_upstream_issue.toString())
+                            || l.getLabel().equals(DefinedLabelItem.LabelContent.Missing_upstream_PR.toString())
+                            || l.getLabel().equals(DefinedLabelItem.LabelContent.Corrupted_upgrade_meta.toString()))
+                    .findAny().isPresent();
+
+            if (requestChanges) {
+                logBuilder.append(("\n|... Request changes on Pull Request."));
+            } else {
+                logBuilder.append(("\n|... Approve on Pull Request."));
+            }
+
+            if (!actionContext.isWritePermitted() || !actionContext.isWritePermitedOn(pullRequest)) {
                 logBuilder.append("\n   |... Write: <<Skipped>>");
                 LOG.log(Level.INFO, logBuilder.toString());
                 return null;
             }
 
             LOG.log(Level.INFO, logBuilder.toString());
-            List<Label> actionItems = convertLabels(removeList, pullRequestData.getPullRequest());
+            List<Label> actionItems = convertLabels(removeList, pullRequest);
             for (Label l : actionItems) {
                 if (currentLabels.contains(l)) {
                     // remove only if it is present, else skip
-                    actionContext.getAphrodite().removeLabelFromPullRequest(pullRequestData.getPullRequest(), l.getName());
+                    actionContext.getAphrodite().removeLabelFromPullRequest(pullRequest, l.getName());
                     currentLabels.remove(l); // remove also from currentLabels, as we need to set current labels in below.
                 }
             }
 
-            actionItems = convertLabels(addList, pullRequestData.getPullRequest());
+            actionItems = convertLabels(addList, pullRequest);
             // allow to reset developer's label, as 'hold', 'bug', otherwise they would be removed by setLabelsToPullRequest()
             for (Label l : actionItems) {
                 // retain only those are not present, so we don't try to set them twice
@@ -143,7 +162,14 @@ public class SetLabelsAction implements Action {
             actionItems.addAll(currentLabels);
 
             if (!actionItems.isEmpty()) {
-                actionContext.getAphrodite().setLabelsToPullRequest(pullRequestData.getPullRequest(), actionItems);
+                actionContext.getAphrodite().setLabelsToPullRequest(pullRequest, actionItems);
+            }
+
+            // update pull request review
+            if (requestChanges) {
+                 pullRequest.requestChangesOnPullRequest("Invalid label exists, Please check Label list.");
+            } else {
+                 pullRequest.approveOnPullRequest();
             }
             return null;
         }

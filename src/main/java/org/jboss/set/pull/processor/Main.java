@@ -32,6 +32,9 @@ import java.util.stream.Collectors;
 import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.domain.Stream;
 import org.jboss.set.aphrodite.domain.StreamComponent;
+import org.jboss.set.aphrodite.domain.spi.PullRequestHome;
+import org.jboss.set.aphrodite.repository.services.github.GithubPullRequestHomeService;
+import org.jboss.set.aphrodite.simplecontainer.SimpleContainer;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
@@ -40,14 +43,19 @@ import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
 
 public class Main {
-
-    public static Logger logger = Logger.getLogger(Main.class.getPackage().getName());
+    private static final  Logger logger = Logger.getLogger(Main.class.getPackage().getName());
+    private static final SimpleContainer simpleContainer = (SimpleContainer) SimpleContainer.instance();
 
     public void start(List<StreamDefinition> parsedStreams, List<StreamDefinition> writePermittedStreams, String rootDir,
             Boolean performWriteOperations) throws Exception {
         logger.info("initializing....");
         try (Aphrodite aphrodite = Aphrodite.instance();
                 ClosableHackForExecutor executor = new ClosableHackForExecutor(Executors.newFixedThreadPool(12));) {
+
+            simpleContainer.register(Aphrodite.class.getSimpleName(), aphrodite);
+            GithubPullRequestHomeService GithubPullRequestHomeService = new GithubPullRequestHomeService(aphrodite);
+            simpleContainer.register(PullRequestHome.class.getSimpleName(), GithubPullRequestHomeService);
+
             if (parsedStreams.isEmpty()) {
                 // this shouldnt happen
                 logger.info("No streams specified, can't work like that, make up your mind");
