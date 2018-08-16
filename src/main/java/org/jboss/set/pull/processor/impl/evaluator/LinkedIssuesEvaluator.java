@@ -74,7 +74,7 @@ public class LinkedIssuesEvaluator implements Evaluator {
         } finally {
             final IssueData upstreamIssueData = convert(upstreamIssue);
             // TODO: XXX move those to PullRequest ?
-            if (upstreamIssue == null && context.getPullRequest().isUpstreamRequired()) {
+            if (upstreamIssue == null && !context.getPullRequest().isUpstreamRequired()) {
                 upstreamIssueData.notRequired();
             }
             data.setAttributeValue(EvaluatorData.Attributes.ISSUE_UPSTREAM, upstreamIssueData);

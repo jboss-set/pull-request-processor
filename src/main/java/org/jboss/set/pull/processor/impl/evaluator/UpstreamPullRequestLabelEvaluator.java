@@ -59,6 +59,12 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
             if (upstreamPullRequestData.isRequired()) {
                 labelData.addLabelItem(new DefinedLabelItem(LabelContent.Missing_upstream_PR, LabelItem.LabelAction.SET,
                         LabelItem.LabelSeverity.BAD));
+            } else {
+                // not defined and not required, remove both.
+                labelData.addLabelItem(new DefinedLabelItem(LabelContent.Missing_upstream_PR, LabelItem.LabelAction.REMOVE,
+                        LabelItem.LabelSeverity.OK));
+                labelData.addLabelItem(new DefinedLabelItem(LabelContent.Upstream_merged, LabelItem.LabelAction.REMOVE,
+                        LabelItem.LabelSeverity.BAD));
             }
         }
     }

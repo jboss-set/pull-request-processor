@@ -43,7 +43,7 @@ public class IssuePresentLabelEvaluator extends AbstractLabelEvaluator {
     public void eval(EvaluatorContext context, EvaluatorData data) {
         processPresenceLabel(EvaluatorData.Attributes.ISSUE_CURRENT, EvaluatorData.Attributes.LABELS_CURRENT,
                 LabelContent.Missing_issue, data);
-        processPresenceLabel(EvaluatorData.Attributes.ISSUE_UPSTREAM, EvaluatorData.Attributes.LABELS_UPSTREAM,
+        processPresenceLabel(EvaluatorData.Attributes.ISSUE_UPSTREAM, EvaluatorData.Attributes.LABELS_CURRENT,
                 LabelContent.Missing_upstream_issue, data);
     }
 
@@ -51,7 +51,7 @@ public class IssuePresentLabelEvaluator extends AbstractLabelEvaluator {
             final LabelContent expectoPatronum, final EvaluatorData data) {
         LabelData labelData = super.getLabelData(labelsKey, data);
         final IssueData issueToProcess = data.getAttributeValue(issueKey);
-        if (issueToProcess.isDefined()) {
+        if (issueToProcess.isDefined() || !issueToProcess.isRequired()) {
             LabelItem<?> li = new DefinedLabelItem(expectoPatronum, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.OK);
             labelData.addLabelItem(li);
         } else {
