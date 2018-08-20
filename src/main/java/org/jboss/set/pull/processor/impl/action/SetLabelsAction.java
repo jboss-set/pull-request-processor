@@ -36,12 +36,12 @@ import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.pull.processor.Action;
 import org.jboss.set.pull.processor.ActionContext;
 import org.jboss.set.pull.processor.ProcessorPhase;
-import org.jboss.set.pull.processor.data.DefinedLabelItem;
 import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.IssueData;
 import org.jboss.set.pull.processor.data.LabelData;
 import org.jboss.set.pull.processor.data.LabelItem;
 import org.jboss.set.pull.processor.data.LabelItem.LabelAction;
+import org.jboss.set.pull.processor.data.LabelItem.LabelSeverity;
 import org.jboss.set.pull.processor.data.PullRequestData;
 
 public class SetLabelsAction implements Action {
@@ -119,15 +119,7 @@ public class SetLabelsAction implements Action {
                 logBuilder.append("\n       |... R:").append(upstreamRemoveList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
             }
 
-            boolean requestChanges = addList.stream()
-                    .filter(l -> l.getLabel().equals(DefinedLabelItem.LabelContent.Needs_devel_ack.toString())
-                            || l.getLabel().equals(DefinedLabelItem.LabelContent.Needs_pm_ack.toString())
-                            || l.getLabel().equals(DefinedLabelItem.LabelContent.Needs_qa_ack.toString())
-                            || l.getLabel().equals(DefinedLabelItem.LabelContent.Missing_issue.toString())
-                            || l.getLabel().equals(DefinedLabelItem.LabelContent.Missing_upstream_issue.toString())
-                            || l.getLabel().equals(DefinedLabelItem.LabelContent.Missing_upstream_PR.toString())
-                            || l.getLabel().equals(DefinedLabelItem.LabelContent.Corrupted_upgrade_meta.toString()))
-                    .findAny().isPresent();
+            boolean requestChanges = addList.stream().filter(l -> l.getSeverity() == LabelSeverity.BAD).findAny().isPresent();
 
             if (requestChanges) {
                 logBuilder.append(("\n|... Request changes on Pull Request."));
