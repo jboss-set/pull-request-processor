@@ -71,10 +71,10 @@
             <version>${version.org.jboss.set.aphrodite}</version>
         </dependency>
         <dependency>
-			<groupId>org.jboss.set</groupId>
-			<artifactId>jboss-aphrodite-simplecontainer</artifactId>
-			<version>${version.org.jboss.set.aphrodite}</version>
-		</dependency>
+            <groupId>org.jboss.set</groupId>
+            <artifactId>jboss-aphrodite-simplecontainer</artifactId>
+            <version>${version.org.jboss.set.aphrodite}</version>
+        </dependency>
         <dependency>
             <groupId>org.freemarker</groupId>
             <artifactId>freemarker</artifactId>
