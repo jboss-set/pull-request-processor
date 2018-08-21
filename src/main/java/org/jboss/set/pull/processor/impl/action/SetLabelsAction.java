@@ -109,14 +109,16 @@ public class SetLabelsAction implements Action {
                 upstreamLabels.addAll(
                         actionContext.getAphrodite().getLabelsFromPullRequest(upstreamPullRequestData.getPullRequest()));
 
-                final List<LabelItem<?>> upstreamAddList = upstreamLabelsData.getLabels(LabelAction.SET);
-                final List<LabelItem<?>> upstreamRemoveList = upstreamLabelsData.getLabels(LabelAction.REMOVE);
                 // just for info ?
                 logBuilder.append("\n   |... Upstream ");
                 logBuilder.append("\n       |... ").append((upstreamIssueData.isDefined() ? upstreamIssueData.getIssue().getURL() : "n/a"));
                 logBuilder.append("\n       |... C:").append(upstreamLabels.stream().map(l -> l.getName()).collect(Collectors.toList()));
-                logBuilder.append("\n       |... S:").append(upstreamAddList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
-                logBuilder.append("\n       |... R:").append(upstreamRemoveList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
+                if (upstreamIssueData.isDefined()) {
+                    final List<LabelItem<?>> upstreamAddList = upstreamLabelsData.getLabels(LabelAction.SET);
+                    final List<LabelItem<?>> upstreamRemoveList = upstreamLabelsData.getLabels(LabelAction.REMOVE);
+                    logBuilder.append("\n       |... S:").append(upstreamAddList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
+                    logBuilder.append("\n       |... R:").append(upstreamRemoveList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
+                }
             }
 
             boolean requestChanges = addList.stream().filter(l -> l.getSeverity() == LabelSeverity.BAD).findAny().isPresent();
