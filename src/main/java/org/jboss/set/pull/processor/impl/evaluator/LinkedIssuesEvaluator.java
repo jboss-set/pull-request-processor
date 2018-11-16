@@ -24,7 +24,6 @@ package org.jboss.set.pull.processor.impl.evaluator;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-//import java.util.ArrayList;
 import java.util.List;
 
 import org.jboss.set.aphrodite.domain.Issue;
@@ -34,6 +33,7 @@ import org.jboss.set.pull.processor.EvaluatorContext;
 import org.jboss.set.pull.processor.ProcessorPhase;
 import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.IssueData;
+import org.jboss.set.pull.processor.impl.evaluator.util.IssueStreamLabelsUtil;
 
 /**
  * Simply retrieve issues from PR and process so other evaluators or action items can do some magic. This requires aphro to have
@@ -101,7 +101,7 @@ public class LinkedIssuesEvaluator implements Evaluator {
         if (issue == null) {
             return new IssueData();// default, we should return more than null;
         }
-        final IssueData issueData = new IssueData(issue, Util.getStreams(issue));
+        final IssueData issueData = new IssueData(issue, IssueStreamLabelsUtil.getStreams(issue));
         return issueData;
     }
 

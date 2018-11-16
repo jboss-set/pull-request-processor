@@ -27,7 +27,9 @@ public class DefinedLabelItem extends LabelItem<DefinedLabelItem.LabelContent> {
         Missing_upstream_issue("Missing upstream issue"),
         Missing_issue("Missing issue"),
         Missing_upstream_PR("Missing upstream PR"),
-        Corrupted_upgrade_meta("Corrupted upgrade");
+        Corrupted_upgrade_meta("Corrupted upgrade"),
+        Upstream_PR_Repository_Mismatch("Upstream PR repository mismatched"),
+        Upstream_PR_Branch_Mismatch("Upstream PR branch mismatched");
 
         private String label;
 

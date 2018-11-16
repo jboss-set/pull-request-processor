@@ -30,6 +30,10 @@ import org.jboss.set.pull.processor.data.LabelItem;
 import org.jboss.set.pull.processor.data.PullRequestData;
 import static org.jboss.set.pull.processor.data.DefinedLabelItem.LabelContent;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.logging.Level;
+
 /**
  * Check status of PR and if we need it.
  *
@@ -41,16 +45,17 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
     @Override
     public void eval(EvaluatorContext context, EvaluatorData data) {
         final PullRequestData upstreamPullRequestData = data.getAttributeValue(EvaluatorData.Attributes.PULL_REQUEST_UPSTREAM);
-        LabelData labelData = super.getLabelData(EvaluatorData.Attributes.LABELS_CURRENT, data);
+        final LabelData labelData = super.getLabelData(EvaluatorData.Attributes.LABELS_CURRENT, data);
+
+        boolean isMismatched = isUpsreamPRMismatched(labelData, upstreamPullRequestData);
 
         if (upstreamPullRequestData.isDefined()) {
             labelData.addLabelItem(new DefinedLabelItem(LabelContent.Missing_upstream_PR, LabelItem.LabelAction.REMOVE,
                     LabelItem.LabelSeverity.OK));
-            if (upstreamPullRequestData.isMerged()) {
+            if (upstreamPullRequestData.isMerged() && !isMismatched) {
                 labelData.addLabelItem(new DefinedLabelItem(LabelContent.Upstream_merged, LabelItem.LabelAction.SET,
                         LabelItem.LabelSeverity.OK));
             } else {
-                // TODO: check if this can happen
                 labelData.addLabelItem(new DefinedLabelItem(LabelContent.Upstream_merged, LabelItem.LabelAction.REMOVE,
                         LabelItem.LabelSeverity.BAD));
             }
@@ -67,6 +72,43 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
                         LabelItem.LabelSeverity.BAD));
             }
         }
+    }
+
+    protected boolean isUpsreamPRMismatched(final LabelData labelData, final PullRequestData pullRequestData) {
+        if (!pullRequestData.isRequired() || !pullRequestData.isDefined()) {
+            // it's not defined or not required, just remove and return
+            LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Repository_Mismatch, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.OK);
+            labelData.addLabelItem(li);
+            li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Branch_Mismatch, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.OK);
+            labelData.addLabelItem(li);
+            return false;
+        }
+
+        boolean isMismatched = false;
+        try {
+            final URI pullRequestRepositoryURI = pullRequestData.getPullRequest().getRepository().getURL().toURI();
+            final URI componentRepositoryURI =  pullRequestData.getStreamComponentDefinition().getStreamComponent().getRepositoryURL();
+            if(pullRequestRepositoryURI.equals(componentRepositoryURI)) {
+                LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Repository_Mismatch, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.OK);
+                labelData.addLabelItem(li);
+            } else {
+                LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Repository_Mismatch, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.BAD);
+                labelData.addLabelItem(li);
+                isMismatched = true;
+            }
+
+            if(pullRequestData.getPullRequest().getCodebase().equals(pullRequestData.getStreamComponentDefinition().getStreamComponent().getCodebase())) {
+                LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Branch_Mismatch, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.OK);
+                labelData.addLabelItem(li);
+            } else {
+                LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Branch_Mismatch, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.BAD);
+                labelData.addLabelItem(li);
+                isMismatched = true;
+            }
+        } catch (URISyntaxException e) {
+            super.LOG.log(Level.SEVERE, "Failed to assess repository/PR URI", e);
+        }
+        return isMismatched;
     }
 
     @Override
