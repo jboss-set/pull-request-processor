@@ -11,7 +11,7 @@
 
     <groupId>org.jboss.set</groupId>
     <artifactId>pull-processor</artifactId>
-    <version>0.8.5.Final-SNAPSHOT</version>
+    <version>0.8.5.Final</version>
     <packaging>jar</packaging>
     <name>Pull Processor</name>
 
