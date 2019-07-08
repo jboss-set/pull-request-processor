@@ -53,14 +53,14 @@ public class ProcessorConfig {
     // list of streams that we can tamper with. In essence we can process more
     // to have big picture and tamper with subset
     private List<StreamDefinition> writePermitedStreamDefinition;
-    // root dir where we can work.
-    private File rootDirectory;
+    // report file where we can work.
+    private File reportFile;
 
     private boolean write = false;
 
     public ProcessorConfig(final List<Evaluator> evaluators, final List<Action> actions,
             final List<StreamDefinition> streamDefinition, final List<StreamDefinition> writePermitedStreamDefinition,
-            final Aphrodite aphrodite, final ExecutorService executorService, final String rootDirectory, final boolean write) {
+            final Aphrodite aphrodite, final ExecutorService executorService, final String reportFile, final boolean write) {
         super();
         this.evaluators = evaluators;
         this.actions = actions;
@@ -72,7 +72,7 @@ public class ProcessorConfig {
         } else {
             this.writePermitedStreamDefinition = this.streamDefinition;
         }
-        this.rootDirectory = new File(rootDirectory);
+        this.reportFile = new File(reportFile);
         this.write = write;
     }
 
@@ -100,8 +100,8 @@ public class ProcessorConfig {
         return writePermitedStreamDefinition;
     }
 
-    public File getRootDirectory() {
-        return rootDirectory;
+    public File getReportFile() {
+        return reportFile;
     }
 
     public boolean isWrite() {

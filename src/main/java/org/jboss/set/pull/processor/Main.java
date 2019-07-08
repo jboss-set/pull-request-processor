@@ -44,7 +44,7 @@ public class Main {
     private static final  Logger logger = Logger.getLogger(Main.class.getPackage().getName());
     private static final SimpleContainer simpleContainer = (SimpleContainer) SimpleContainer.instance();
 
-    public void start(List<StreamDefinition> parsedStreams, List<StreamDefinition> writePermittedStreams, String rootDir,
+    public void start(List<StreamDefinition> parsedStreams, List<StreamDefinition> writePermittedStreams, String reportFile,
             Boolean performWriteOperations) throws Exception {
         logger.info("initializing....");
         try (Aphrodite aphrodite = Aphrodite.instance();
@@ -96,7 +96,7 @@ public class Main {
                 final List<Evaluator> filteredEvaluators = evaluatorServices.stream().filter(a -> a.support(processorPhase))
                         .collect(Collectors.toList());
                 final ProcessorConfig processorConfig = new ProcessorConfig(filteredEvaluators, filteredActions, parsedStreams,
-                        writePermittedStreams, aphrodite, executor.executorService, rootDir, performWriteOperations);
+                        writePermittedStreams, aphrodite, executor.executorService, reportFile, performWriteOperations);
                 processor.init(processorConfig);
             }
 
@@ -131,7 +131,7 @@ public class Main {
                 "Specify streams to be processed. Format of entry: stream[component,component],stream[component,component]");
         parser.addArgument("-p", "--permitted").nargs("*").required(false).help(
                 "Specify streams/components that are eligible for write. Format of entry: stream[component,component],stream[component,component]");
-        parser.addArgument("-r", "--root").required(true).help("File where save the feed report");
+        parser.addArgument("-f", "--file").required(true).help("File where save the feed report");
         parser.addArgument("-w", "--write").setDefault(Boolean.FALSE).type(Boolean.class)
                 .help("Determine if processors should perform write operation on resources or run locally only. ");
         // parser.addArgument("-as", "--allowed-streams").nargs("*").required(true).help("jira allowed to be tagged in the
@@ -147,10 +147,10 @@ public class Main {
             List<StreamDefinition> writePermittedStreams = null;
             if (streams != null)
                 writePermittedStreams = streams.stream().map(e -> new StreamDefinition(e)).collect(Collectors.toList());
-            String directoryRoot = ns.getString("root");
+            String reportFile = ns.getString("file");
             Boolean performWriteOperations = ns.getBoolean("write");
             // List<String> allowedStreams = ns.getList("allowed_streams");
-            new Main().start(parsedStreams, writePermittedStreams, directoryRoot, performWriteOperations);
+            new Main().start(parsedStreams, writePermittedStreams, reportFile, performWriteOperations);
         } catch (ArgumentParserException e) {
             parser.handleError(e);
             System.exit(1);

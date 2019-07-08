@@ -42,8 +42,8 @@ public class ActionContext {
         return this.processorConfig.getAphrodite();
     }
 
-    public File getRoot() {
-        return this.processorConfig.getRootDirectory();
+    public File getReportFile() {
+        return this.processorConfig.getReportFile();
     }
 
     public boolean isWritePermitted() {

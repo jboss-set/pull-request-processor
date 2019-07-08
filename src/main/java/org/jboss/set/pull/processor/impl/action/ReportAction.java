@@ -30,9 +30,8 @@ public class ReportAction implements Action {
 
     @Override
     public void execute(ActionContext actionContext, List<EvaluatorData> data) {
-        final File rootFile = actionContext.getRoot();
-
-        writeReport(rootFile);
+        final File reportFile = actionContext.getReportFile();
+        writeReport(reportFile);
     }
 
     public static synchronized void addItemToReport(ReportItem ri) {
@@ -40,12 +39,12 @@ public class ReportAction implements Action {
     }
 
     /**
-     * @param rootFile
+     * @param reportFile
      * @param reportItems
      */
-    private void writeReport(File rootFile) {
-        LOG.log(Level.INFO, "Start writing report to file : " + rootFile);
-        try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(rootFile)))) {
+    private void writeReport(File reportFile) {
+        LOG.log(Level.INFO, "Start writing report to file : " + reportFile);
+        try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(reportFile)))) {
             writer.write("<!DOCTYPE html>\n" +
                 "<html>\n" +
                 "<head>\n" +
@@ -59,11 +58,11 @@ public class ReportAction implements Action {
                 "\n" +
                 "<table>\n" +
                 "  <tr>\n" +
-                "    <th>PR</th>\n" +
+                "    <th>Pull Request</th>\n" +
                 "    <th>Issue</th>\n" +
-                "    <th>Current Label</th>\n" +
-                "    <th>Set Label</th>\n" +
-                "    <th>Remove</th>\n" +
+                "    <th>Current Labels</th>\n" +
+                "    <th>Add Labels</th>\n" +
+                "    <th>Remove Labels</th>\n" +
                 "  </tr>");
 
             for(int i=0 ;i<reportItems.size();i++) {
@@ -85,7 +84,7 @@ public class ReportAction implements Action {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        LOG.log(Level.INFO, "Finish writing report to file : " + rootFile);
+        LOG.log(Level.INFO, "Finish writing report to file : " + reportFile);
     }
 
     @Override
