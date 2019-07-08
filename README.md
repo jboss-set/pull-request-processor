@@ -13,7 +13,7 @@ Way to invoke
 
 - -w: true or false - determine if write pemission has been granted
 
-- -r: root path where processor can write output if it supports it
+- -r: root path where processor can write output report in HTML format if it supports it
 
 Example: 
-java -jar -Daphrodite.config=${PULL_REQUEST_PROCESSOR_HOME}/aphrodite-test.json -Dstreams.json=${PULL_REQUEST_PROCESSOR_HOME}/streams.json ${PULL_REQUEST_PROCESSOR_HOME}/target/pull-processor-0.8.0-SNAPSHOT.jar -s jboss-eap-7.0.z[jbossas-jboss-eap7,jbossas-wildfly-core-eap] -p jboss-eap-7.0.z[jbossas-jboss-eap7,jbossas-wildfly-core-eap] -r ${PULL_REQUEST_PROCESSOR_HOME}/ -w false
+java -jar -Daphrodite.config=${PULL_REQUEST_PROCESSOR_HOME}/aphrodite-test.json -Dstreams.json=${PULL_REQUEST_PROCESSOR_HOME}/streams.json ${PULL_REQUEST_PROCESSOR_HOME}/target/pull-processor-0.8.0-SNAPSHOT.jar -s jboss-eap-7.0.z[jbossas-jboss-eap7,jbossas-wildfly-core-eap] -p jboss-eap-7.0.z[jbossas-jboss-eap7,jbossas-wildfly-core-eap] -r ${PULL_REQUEST_PROCESSOR_HOME}/report.html -w false

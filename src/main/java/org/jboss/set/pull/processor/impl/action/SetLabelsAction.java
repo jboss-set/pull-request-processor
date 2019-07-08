@@ -21,6 +21,7 @@
  */
 package org.jboss.set.pull.processor.impl.action;
 
+import java.net.URL;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -43,6 +44,7 @@ import org.jboss.set.pull.processor.data.LabelItem;
 import org.jboss.set.pull.processor.data.LabelItem.LabelAction;
 import org.jboss.set.pull.processor.data.LabelItem.LabelSeverity;
 import org.jboss.set.pull.processor.data.PullRequestData;
+import org.jboss.set.pull.processor.data.ReportItem;
 
 public class SetLabelsAction implements Action {
 
@@ -99,11 +101,21 @@ public class SetLabelsAction implements Action {
             // TODO: XXX make this part of super class, "AbstractConsoleReporting" or something.
             // or something more generic avavilable for whole tool/s
             final StringBuilder logBuilder = new StringBuilder();
-            logBuilder.append("\n... ").append(pullRequest.getURL());
-            logBuilder.append("\n   |... ").append((issueData.isDefined() ? issueData.getIssue().getURL() : "n/a"));
-            logBuilder.append("\n   |... C:").append(currentLabels.stream().map(l -> l.getName()).collect(Collectors.toList()));
-            logBuilder.append("\n   |... S:").append(addList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
-            logBuilder.append("\n   |... R:").append(removeList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
+
+            final URL url = pullRequest.getURL();
+            final String issue = issueData.isDefined() ? issueData.getIssue().getURL().toString() : "n/a";
+            final List<String> currentLabelsNames = currentLabels.stream().map(l -> l.getName()).collect(Collectors.toList());
+            final List<String> addLabelsNames = addList.stream().map(l -> l.getLabel()).collect(Collectors.toList());
+            final List<String> removeLabelsNames = removeList.stream().map(l -> l.getLabel()).collect(Collectors.toList());
+            logBuilder.append("\n... ").append(url);
+            logBuilder.append("\n   |... ").append(issue);
+            logBuilder.append("\n   |... C:").append(currentLabelsNames);
+            logBuilder.append("\n   |... A:").append(addLabelsNames);
+            logBuilder.append("\n   |... R:").append(removeLabelsNames);
+
+            // For the HTML report file
+            ReportItem ri = new ReportItem(url.toString(), issue, currentLabelsNames, addLabelsNames, removeLabelsNames);
+            ReportAction.addItemToReport(ri);
 
             if (upstreamPullRequestData.isDefined()) {
                 final Set<Label> upstreamLabels = new TreeSet(new LabelComparator());
@@ -117,7 +129,7 @@ public class SetLabelsAction implements Action {
                 if (upstreamIssueData.isDefined()) {
                     final List<LabelItem<?>> upstreamAddList = upstreamLabelsData.getLabels(LabelAction.SET);
                     final List<LabelItem<?>> upstreamRemoveList = upstreamLabelsData.getLabels(LabelAction.REMOVE);
-                    logBuilder.append("\n       |... S:").append(upstreamAddList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
+                    logBuilder.append("\n       |... A:").append(upstreamAddList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
                     logBuilder.append("\n       |... R:").append(upstreamRemoveList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
                 }
             }
@@ -191,7 +203,7 @@ public class SetLabelsAction implements Action {
     }
 
     private static class LabelComparator implements Comparator<Label> {
-        // Label comparator - to have it neat and possiblt, if Git retain order, to have it always the same way?
+        // Label comparator - to have it neat and possible, if Git retain order, to have it always the same way?
         @Override
         public int compare(Label o1, Label o2) {
             if (o1 == null) {
