@@ -49,7 +49,7 @@ import org.jboss.set.pull.processor.data.ReportItem;
 public class SetLabelsAction implements Action {
 
     private static final Logger LOG = Logger.getLogger(SetLabelsAction.class.getName());
-    private static final String Request_Changes_Comment = "According to [pull-request-review-criteria-for-merge](https://mojo.redhat.com/docs/DOC-1179321-pull-request-review-criteria-for-merge) document，this pull request does not satisfy all review criteria for merge. Please check the associated pull request labels to revise.";
+    private static final String Request_Changes_Comment = "According to [pull-request-review-criteria-for-merge](https://source.redhat.com/groups/public/jboss-sustaining-engineering-team/jboss_sustaining_engineering_team_wiki/pull_request_review_criteria_for_merge) document，this pull request does not satisfy all review criteria for merge. Please check the associated pull request labels to revise.";
 
     @Override
     public void execute(final ActionContext actionContext, final List<EvaluatorData> data) {
