@@ -5,6 +5,8 @@ pull-request-processor
 A processor which checks open PRs, verifies whether they are mergeable and triggers a given Hudson job in order to merge them.
 It also checks the status of the latest merge on Hudson, post comments on github, etc.
 
+TEST
+
 Way to invoke
 
 - -s streams to be processed, this should list streams and components that should be scrutinized. It must contain comma separated list of stream and components belonging to stream: streamName[comp1,comp2],stream2Name[comp3,comp4]. Check jboss streams for ids.
