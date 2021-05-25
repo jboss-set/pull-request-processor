@@ -52,7 +52,7 @@ public class LinkedPullRequestEvaluator implements Evaluator {
                     : null;
             final PullRequestData upstreamPullRequestData = convert(upstreamPullRequest, determineUpstreamStreamComponentDefinition(context));
             final IssueData upstreamIssue = data.getAttributeValue(EvaluatorData.Attributes.ISSUE_UPSTREAM);
-            if (!upstreamIssue.isRequired())
+            if (!upstreamIssue.isRequired() || !currentPullRequestData.getPullRequest().isUpstreamPrRequired())
                 upstreamPullRequestData.notRequired();
             data.setAttributeValue(EvaluatorData.Attributes.PULL_REQUEST_UPSTREAM, upstreamPullRequestData);
         } catch (MalformedURLException | NotFoundException e) {
