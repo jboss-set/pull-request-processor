@@ -59,6 +59,9 @@ public class LinkedIssuesEvaluator implements Evaluator {
             e.printStackTrace();
         } finally {
             final IssueData currentIssueData = convert(currentIssue);
+            if (currentIssue == null && !context.getPullRequest().isIssueRequired()) {
+                currentIssueData.notRequired();
+            }
             data.setAttributeValue(EvaluatorData.Attributes.ISSUE_CURRENT, currentIssueData);
         }
 
