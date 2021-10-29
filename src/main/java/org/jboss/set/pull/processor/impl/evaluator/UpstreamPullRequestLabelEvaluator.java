@@ -21,6 +21,7 @@
  */
 package org.jboss.set.pull.processor.impl.evaluator;
 
+import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.pull.processor.EvaluatorContext;
 import org.jboss.set.pull.processor.ProcessorPhase;
 import org.jboss.set.pull.processor.data.DefinedLabelItem;
@@ -32,6 +33,7 @@ import static org.jboss.set.pull.processor.data.DefinedLabelItem.LabelContent;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.logging.Level;
 
 /**
@@ -97,7 +99,10 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
                 isMismatched = true;
             }
 
-            if(pullRequestData.getPullRequest().getCodebase().equals(pullRequestData.getStreamComponentDefinition().getStreamComponent().getCodebase())) {
+            Codebase prCodeBase = pullRequestData.getPullRequest().getCodebase();
+            Codebase codeBase = pullRequestData.getStreamComponentDefinition().getStreamComponent().getCodebase();
+            // This hack for upstream branch rename from "master" to "main", add an ability to check codebase like "master|main"
+            if (prCodeBase.equals(codeBase) || (codeBase.getName().contains("|") && Arrays.asList(codeBase.getName().split("\\|")).contains(prCodeBase.getName()))) {
                 LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Branch_Mismatch, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.OK);
                 labelData.addLabelItem(li);
             } else {
