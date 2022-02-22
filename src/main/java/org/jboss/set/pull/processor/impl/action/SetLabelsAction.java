@@ -142,8 +142,6 @@ public class SetLabelsAction implements Action {
                 logBuilder.append(("\n|... Approve on Pull Request."));
             }
 
-            boolean r = this.actionContext.isReviewPermitted();
-
             if (!actionContext.isWritePermitted() || !actionContext.isWritePermitedOn(pullRequest)) {
                 logBuilder.append("\n   |... Write: <<Skipped>>");
                 LOG.log(Level.INFO, logBuilder.toString());
