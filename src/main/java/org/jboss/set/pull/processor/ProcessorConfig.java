@@ -56,11 +56,12 @@ public class ProcessorConfig {
     // report file where we can work.
     private File reportFile;
 
+    private boolean review = false;
     private boolean write = false;
 
     public ProcessorConfig(final List<Evaluator> evaluators, final List<Action> actions,
             final List<StreamDefinition> streamDefinition, final List<StreamDefinition> writePermitedStreamDefinition,
-            final Aphrodite aphrodite, final ExecutorService executorService, final String reportFile, final boolean write) {
+            final Aphrodite aphrodite, final ExecutorService executorService, final String reportFile, final boolean review, final boolean write) {
         super();
         this.evaluators = evaluators;
         this.actions = actions;
@@ -73,6 +74,7 @@ public class ProcessorConfig {
             this.writePermitedStreamDefinition = this.streamDefinition;
         }
         this.reportFile = new File(reportFile);
+        this.review = review;
         this.write = write;
     }
 
@@ -102,6 +104,10 @@ public class ProcessorConfig {
 
     public File getReportFile() {
         return reportFile;
+    }
+
+    public boolean isReview() {
+        return review;
     }
 
     public boolean isWrite() {

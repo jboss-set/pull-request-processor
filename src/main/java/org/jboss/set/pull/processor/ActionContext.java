@@ -46,6 +46,10 @@ public class ActionContext {
         return this.processorConfig.getReportFile();
     }
 
+    public boolean isReviewPermitted() {
+        return this.processorConfig.isReview();
+    }
+
     public boolean isWritePermitted() {
         return this.processorConfig.isWrite();
     }

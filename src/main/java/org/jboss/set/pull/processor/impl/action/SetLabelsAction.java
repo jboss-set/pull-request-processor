@@ -142,6 +142,8 @@ public class SetLabelsAction implements Action {
                 logBuilder.append(("\n|... Approve on Pull Request."));
             }
 
+            boolean r = this.actionContext.isReviewPermitted();
+
             if (!actionContext.isWritePermitted() || !actionContext.isWritePermitedOn(pullRequest)) {
                 logBuilder.append("\n   |... Write: <<Skipped>>");
                 LOG.log(Level.INFO, logBuilder.toString());
@@ -173,10 +175,13 @@ public class SetLabelsAction implements Action {
             }
 
             // update pull request review
-            if (requestChanges) {
-                pullRequest.requestChangesOnPullRequest(Request_Changes_Comment);
-            } else {
-                pullRequest.approveOnPullRequest();
+            // SET-464 Disable pull request review action by default, turn on by option "-r true".
+            if (this.actionContext.isReviewPermitted()) {
+                if (requestChanges) {
+                    pullRequest.requestChangesOnPullRequest(Request_Changes_Comment);
+                } else {
+                    pullRequest.approveOnPullRequest();
+                }
             }
             return null;
         }

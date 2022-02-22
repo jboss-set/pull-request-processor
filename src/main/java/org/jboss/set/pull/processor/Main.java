@@ -45,7 +45,7 @@ public class Main {
     private static final SimpleContainer simpleContainer = (SimpleContainer) SimpleContainer.instance();
 
     public void start(List<StreamDefinition> parsedStreams, List<StreamDefinition> writePermittedStreams, String reportFile,
-            Boolean performWriteOperations) throws Exception {
+            boolean performReviewAction, Boolean performWriteOperations) throws Exception {
         logger.info("initializing....");
         try (Aphrodite aphrodite = Aphrodite.instance();
                 ClosableHackForExecutor executor = new ClosableHackForExecutor(Executors.newFixedThreadPool(12));) {
@@ -96,7 +96,7 @@ public class Main {
                 final List<Evaluator> filteredEvaluators = evaluatorServices.stream().filter(a -> a.support(processorPhase))
                         .collect(Collectors.toList());
                 final ProcessorConfig processorConfig = new ProcessorConfig(filteredEvaluators, filteredActions, parsedStreams,
-                        writePermittedStreams, aphrodite, executor.executorService, reportFile, performWriteOperations);
+                        writePermittedStreams, aphrodite, executor.executorService, reportFile, performReviewAction, performWriteOperations);
                 processor.init(processorConfig);
             }
 
@@ -132,6 +132,8 @@ public class Main {
         parser.addArgument("-p", "--permitted").nargs("*").required(false).help(
                 "Specify streams/components that are eligible for write. Format of entry: stream[component,component],stream[component,component]");
         parser.addArgument("-f", "--file").required(true).help("File where save the feed report");
+        parser.addArgument("-r", "--review").setDefault(Boolean.FALSE).type(Boolean.class)
+                .help("Determine if pull request review action is performed.");
         parser.addArgument("-w", "--write").setDefault(Boolean.FALSE).type(Boolean.class)
                 .help("Determine if processors should perform write operation on resources or run locally only. ");
         // parser.addArgument("-as", "--allowed-streams").nargs("*").required(true).help("jira allowed to be tagged in the
@@ -148,9 +150,10 @@ public class Main {
             if (streams != null)
                 writePermittedStreams = streams.stream().map(e -> new StreamDefinition(e)).collect(Collectors.toList());
             String reportFile = ns.getString("file");
+            boolean performReviewAction = ns.getBoolean("review");
             Boolean performWriteOperations = ns.getBoolean("write");
             // List<String> allowedStreams = ns.getList("allowed_streams");
-            new Main().start(parsedStreams, writePermittedStreams, reportFile, performWriteOperations);
+            new Main().start(parsedStreams, writePermittedStreams, reportFile, performReviewAction, performWriteOperations);
         } catch (ArgumentParserException e) {
             parser.handleError(e);
             System.exit(1);
