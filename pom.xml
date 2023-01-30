@@ -29,7 +29,6 @@
         <version.org.freemarker.freemarker>2.3.23</version.org.freemarker.freemarker>
         <version.net.sourceforge.argparse4j>0.7.0</version.net.sourceforge.argparse4j>
         <version.mockito>1.9.5</version.mockito>
-        <version.testng>6.8.7</version.testng>
     </properties>
 
     <scm>
@@ -84,12 +83,6 @@
             <groupId>net.sourceforge.argparse4j</groupId>
             <artifactId>argparse4j</artifactId>
             <version>${version.net.sourceforge.argparse4j}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>${version.testng}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
