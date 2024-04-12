@@ -48,7 +48,9 @@ public class Main {
             boolean performReviewAction, Boolean performWriteOperations) throws Exception {
         logger.info("initializing....");
         try (Aphrodite aphrodite = Aphrodite.instance();
-                ClosableHackForExecutor executor = new ClosableHackForExecutor(Executors.newFixedThreadPool(12));) {
+             // The Jira rate limit currently imposed is 1 call per 2 seconds per node per user. The current design violate above limitation.
+             // Unfortunately I have to make this single thread to make sure evaluators don't break rate limit.
+                ClosableHackForExecutor executor = new ClosableHackForExecutor(Executors.newFixedThreadPool(1));) {
 
             simpleContainer.register(Aphrodite.class.getSimpleName(), aphrodite);
             GithubPullRequestHomeService GithubPullRequestHomeService = new GithubPullRequestHomeService(aphrodite);

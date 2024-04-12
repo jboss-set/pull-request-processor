@@ -29,7 +29,7 @@ public interface Evaluator {
         return this.getClass().getSimpleName();
     }
 
-    void eval(EvaluatorContext context, EvaluatorData data);
+    void eval(EvaluatorContext context, EvaluatorData data) throws InterruptedException;
 
     boolean support(ProcessorPhase processorPhase);
 

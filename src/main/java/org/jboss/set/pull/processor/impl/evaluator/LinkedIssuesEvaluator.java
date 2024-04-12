@@ -25,6 +25,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.jboss.set.aphrodite.domain.Issue;
 import org.jboss.set.aphrodite.spi.NotFoundException;
@@ -45,13 +46,15 @@ import org.jboss.set.pull.processor.impl.evaluator.util.IssueStreamLabelsUtil;
 public class LinkedIssuesEvaluator implements Evaluator {
 
     @Override
-    public void eval(EvaluatorContext context, EvaluatorData data) {
+    public void eval(EvaluatorContext context, EvaluatorData data) throws InterruptedException {
         // TODO: handle exception on get op?
         URL issueURL;
         Issue currentIssue = null;
         try {
             issueURL = context.getPullRequest().findIssueURL();
             if (issueURL != null) {
+                // The Jira rate limit currently imposed is 1 call per 2 seconds per node per user.
+                TimeUnit.SECONDS.sleep(2);
                 currentIssue = context.getAphrodite().getIssue(issueURL);
             }
 
@@ -70,6 +73,8 @@ public class LinkedIssuesEvaluator implements Evaluator {
         try {
             upstreamIssueURL = context.getPullRequest().findUpstreamIssueURL();
             if (upstreamIssueURL != null) {
+                // The Jira rate limit currently imposed is 1 call per 2 seconds per node per user.
+                TimeUnit.SECONDS.sleep(2);
                 upstreamIssue = context.getAphrodite().getIssue(upstreamIssueURL);
             }
         } catch (MalformedURLException | NotFoundException e) {
@@ -85,6 +90,8 @@ public class LinkedIssuesEvaluator implements Evaluator {
 
         List<Issue> relatedIssues = null;
         try {
+            // The Jira rate limit currently imposed is 1 call per 2 seconds per node per user.
+            TimeUnit.SECONDS.sleep(2);
             relatedIssues = context.getAphrodite().getIssues(context.getPullRequest().findRelatedIssuesURL());
         } catch (MalformedURLException e) {
             // TODO Auto-generated catch block
