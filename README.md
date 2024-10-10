@@ -11,7 +11,7 @@ Way to invoke
 
 - -p : defines streams and components that are eligible to be written into. This is selective write permission. It has the same structure as list in -s. If it is not present, it defaults to -s
 
-- -w: true or false - determine if write pemission has been granted
+- -w: true or false - determine if write permission has been granted
 
 - -f: file path where processor can write output report in HTML format if it supports it
 
