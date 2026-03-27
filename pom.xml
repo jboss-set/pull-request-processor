@@ -5,7 +5,7 @@
     <parent>
         <artifactId>jboss-parent</artifactId>
         <groupId>org.jboss</groupId>
-        <version>16</version>
+        <version>51</version>
         <relativePath />
     </parent>
 
@@ -17,15 +17,15 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
 
 
         <checkstyle.plugin.version>2.15</checkstyle.plugin.version>
 
         <org.jboss.jboss-dmr.version>1.1.6.Final</org.jboss.jboss-dmr.version>
-        <org.wildfly.wildfly.build.config.version>8.0.0.Final</org.wildfly.wildfly.build.config.version>
-        <version.org.jboss.set.aphrodite>0.7.16.Final</version.org.jboss.set.aphrodite>
+        <org.wildfly.checkstyle-config.version>1.0.8.Final</org.wildfly.checkstyle-config.version>
+        <version.org.jboss.set.aphrodite>0.7.21.Final-SNAPSHOT</version.org.jboss.set.aphrodite>
         <version.org.freemarker.freemarker>2.3.23</version.org.freemarker.freemarker>
         <version.net.sourceforge.argparse4j>0.7.0</version.net.sourceforge.argparse4j>
         <version.mockito>1.9.5</version.mockito>
@@ -119,10 +119,10 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-              				<transformers>
-                				<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-              				</transformers>
-            			</configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                            </transformers>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -132,24 +132,23 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
-                    <version>${checkstyle.plugin.version}</version>
                     <configuration>
-                        <configLocation>jboss-as-checkstyle/checkstyle.xml</configLocation>
+                        <configLocation>wildfly-checkstyle/checkstyle.xml</configLocation>
                         <consoleOutput>true</consoleOutput>
                         <failsOnError>true</failsOnError>
-                        <useFile />
+                        <linkXRef>false</linkXRef>
                     </configuration>
                     <dependencies>
                         <dependency>
-                            <groupId>org.wildfly</groupId>
-                            <artifactId>wildfly-build-config</artifactId>
-                            <version>${org.wildfly.wildfly.build.config.version}</version>
+                            <groupId>org.wildfly.checkstyle</groupId>
+                            <artifactId>wildfly-checkstyle-config</artifactId>
+                            <version>${org.wildfly.checkstyle-config.version}</version>
                         </dependency>
                     </dependencies>
                     <executions>
                         <execution>
                             <id>check-style</id>
-                            <phase>compile</phase>
+                            <phase>validate</phase>
                             <goals>
                                 <goal>checkstyle</goal>
                             </goals>
@@ -159,34 +158,20 @@
             </plugins>
         </pluginManagement>
     </build> 
+    <distributionManagement>
+       <repository>
+           <id>github</id>
+           <name>GitHub Sustaining Engineering Team Apache Maven Packages</name>
+           <url>https://maven.pkg.github.com/jboss-set/pull-request-processor</url>
+       </repository>
+    </distributionManagement>
     <repositories>
         <repository>
-            <id>jboss-product-repository</id>
-            <name>JBoss Internal Product Repository</name>
-            <url>https://download.lab.bos.redhat.com/brewroot/repos/jb-eap-6-rhel-6-build/latest/maven/</url>
-            <layout>default</layout>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-                <updatePolicy>never</updatePolicy>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>jboss-public-repository-group</id>
-            <name>JBoss Public Repository Group</name>
-            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-            <layout>default</layout>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <updatePolicy>daily</updatePolicy>
-            </snapshots>
+          <id>github</id>
+          <url>https://maven.pkg.github.com/jboss-set/aphrodite</url>
+          <snapshots>
+            <enabled>true</enabled>
+          </snapshots>
         </repository>
     </repositories>
 </project>
