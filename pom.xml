@@ -25,7 +25,7 @@
 
         <org.jboss.jboss-dmr.version>1.1.6.Final</org.jboss.jboss-dmr.version>
         <org.wildfly.checkstyle-config.version>1.0.8.Final</org.wildfly.checkstyle-config.version>
-        <version.org.jboss.set.aphrodite>0.7.21.Final-SNAPSHOT</version.org.jboss.set.aphrodite>
+        <version.org.jboss.set.aphrodite>0.7.21.Final</version.org.jboss.set.aphrodite>
         <version.org.freemarker.freemarker>2.3.23</version.org.freemarker.freemarker>
         <version.net.sourceforge.argparse4j>0.7.0</version.net.sourceforge.argparse4j>
         <version.mockito>1.9.5</version.mockito>
@@ -93,7 +93,22 @@
     </dependencies>
 
     <build>
+
         <plugins>
+            <!-- we don't deploy in sonatype/jboss-->
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nxrm3-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>nexus-deploy</id>
+                        <phase>none</phase> 
+                        <goals>
+                            <goal>staging-deploy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
@@ -172,6 +187,9 @@
           <snapshots>
             <enabled>true</enabled>
           </snapshots>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
         </repository>
     </repositories>
 </project>
