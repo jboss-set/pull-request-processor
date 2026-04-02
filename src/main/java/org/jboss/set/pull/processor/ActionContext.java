@@ -22,10 +22,8 @@
 package org.jboss.set.pull.processor;
 
 import java.io.File;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.net.URI;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.domain.PullRequest;
@@ -62,32 +60,17 @@ public class ActionContext {
         return this.processorConfig.getStreamDefinition();
     }
 
-    public ExecutorService getExecutors() {
-        return this.processorConfig.getExecutorService();
-    }
-
-    public boolean isWritePermitedOn(final PullRequest pullRequest) {
+    public boolean isWritePermitedOn(PullRequest pullRequest) {
         // match repo and branch vs permited write repo and branch, to see if we
         // should perform any write ops.
-        final String pullRequestBranch = pullRequest.getCodebase().getName();
-        final URL repoURL = pullRequest.getRepository().getURL(); // repo will have bit without pull/\\d+
+        final String pullRequestBranch = pullRequest.getCodebase().getBranch();
+        final URI repoURL = pullRequest.getRepository().getURI(); // repo will have bit without pull/\\d+
         for (StreamDefinition streamDefinition : this.processorConfig.getWritePermitedStreamDefinition()) {
-            if (!streamDefinition.isFound()) {
-                continue;
-            }
             for (StreamComponentDefinition streamComponentDefinition : streamDefinition.getStreamComponents()) {
-                if (!streamComponentDefinition.isFound()) {
-                    continue;
-                }
-                try {
-                    if (repoURL.toURI().equals(streamComponentDefinition.getStreamComponent().getRepositoryURL())
-                            && pullRequestBranch
-                                    .equals(streamComponentDefinition.getStreamComponent().getCodebase().getName())) {
-                        return true;
-                    }
-                } catch (URISyntaxException e) {
-                    // TODO: XXX this should not happen, add proper log/info output for CI console
-                    e.printStackTrace();
+                if (repoURL.equals(streamComponentDefinition.getStreamComponent().getRepositoryURI())
+                        && pullRequestBranch
+                                .equals(streamComponentDefinition.getStreamComponent().getCodebase().getBranch())) {
+                    return true;
                 }
             }
         }

@@ -70,10 +70,6 @@ public class StreamDefinition {
         return streamComponents;
     }
 
-    public boolean isFound() {
-        return this.stream != null;
-    }
-
     public Stream getStream() {
         return stream;
     }
@@ -84,7 +80,7 @@ public class StreamDefinition {
 
     @Override
     public String toString() {
-        return "StreamDefinition [name=" + name + ", found=" + isFound() + ", streamComponents=" + streamComponents + "]";
+        return "StreamDefinition [name=" + name + ", streamComponents=" + streamComponents + "]";
     }
 
 }

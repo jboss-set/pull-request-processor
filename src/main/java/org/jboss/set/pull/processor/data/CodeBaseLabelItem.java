@@ -10,7 +10,7 @@ public class CodeBaseLabelItem extends LabelItem<Codebase> {
 
     @Override
     public String getLabel() {
-        return super.label.getName();
+        return super.label.getBranch();
     }
 
 }

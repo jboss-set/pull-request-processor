@@ -21,20 +21,17 @@
  */
 package org.jboss.set.pull.processor.impl.evaluator;
 
+import java.net.URI;
+
 import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.pull.processor.EvaluatorContext;
-import org.jboss.set.pull.processor.ProcessorPhase;
+import org.jboss.set.pull.processor.data.Attributes;
 import org.jboss.set.pull.processor.data.DefinedLabelItem;
+import org.jboss.set.pull.processor.data.DefinedLabelItem.LabelContent;
 import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.LabelData;
 import org.jboss.set.pull.processor.data.LabelItem;
 import org.jboss.set.pull.processor.data.PullRequestData;
-import static org.jboss.set.pull.processor.data.DefinedLabelItem.LabelContent;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.logging.Level;
 
 /**
  * Check status of PR and if we need it.
@@ -46,8 +43,8 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
 
     @Override
     public void eval(EvaluatorContext context, EvaluatorData data) {
-        final PullRequestData upstreamPullRequestData = data.getAttributeValue(EvaluatorData.Attributes.PULL_REQUEST_UPSTREAM);
-        final LabelData labelData = super.getLabelData(EvaluatorData.Attributes.LABELS_CURRENT, data);
+        final PullRequestData upstreamPullRequestData = data.getAttributeValue(Attributes.PULL_REQUEST_UPSTREAM);
+        final LabelData labelData = super.getLabelData(Attributes.LABELS_CURRENT, data);
 
         boolean isMismatched = isUpsreamPRMismatched(labelData, upstreamPullRequestData);
 
@@ -87,41 +84,29 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
         }
 
         boolean isMismatched = false;
-        try {
-            final URI pullRequestRepositoryURI = pullRequestData.getPullRequest().getRepository().getURL().toURI();
-            final URI componentRepositoryURI =  pullRequestData.getStreamComponentDefinition().getStreamComponent().getRepositoryURL();
-            if(pullRequestRepositoryURI.equals(componentRepositoryURI)) {
-                LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Repository_Mismatch, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.OK);
-                labelData.addLabelItem(li);
-            } else {
-                LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Repository_Mismatch, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.BAD);
-                labelData.addLabelItem(li);
-                isMismatched = true;
-            }
+        final URI pullRequestRepositoryURI = pullRequestData.getPullRequest().getRepository().getURI();
+        final URI componentRepositoryURI =  pullRequestData.getStreamComponentDefinition().getStreamComponent().getRepositoryURI();
+        if(pullRequestRepositoryURI.equals(componentRepositoryURI)) {
+            LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Repository_Mismatch, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.OK);
+            labelData.addLabelItem(li);
+        } else {
+            LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Repository_Mismatch, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.BAD);
+            labelData.addLabelItem(li);
+            isMismatched = true;
+        }
 
-            Codebase prCodeBase = pullRequestData.getPullRequest().getCodebase();
-            Codebase codeBase = pullRequestData.getStreamComponentDefinition().getStreamComponent().getCodebase();
-            // This hack for upstream branch rename from "master" to "main", add an ability to check codebase like "master|main"
-            if (prCodeBase.equals(codeBase) || (codeBase.getName().contains("|") && Arrays.asList(codeBase.getName().split("\\|")).contains(prCodeBase.getName()))) {
-                LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Branch_Mismatch, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.OK);
-                labelData.addLabelItem(li);
-            } else {
-                LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Branch_Mismatch, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.BAD);
-                labelData.addLabelItem(li);
-                isMismatched = true;
-            }
-        } catch (URISyntaxException e) {
-            super.LOG.log(Level.SEVERE, "Failed to assess repository/PR URI", e);
+        Codebase prCodeBase = pullRequestData.getPullRequest().getCodebase();
+        Codebase codeBase = pullRequestData.getStreamComponentDefinition().getStreamComponent().getCodebase();
+        // This hack for upstream branch rename from "master" to "main", add an ability to check codebase like "master|main"
+        if (prCodeBase.isIn(codeBase)) {
+            LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Branch_Mismatch, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.OK);
+            labelData.addLabelItem(li);
+        } else {
+            LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Branch_Mismatch, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.BAD);
+            labelData.addLabelItem(li);
+            isMismatched = true;
         }
         return isMismatched;
-    }
-
-    @Override
-    public boolean support(ProcessorPhase processorPhase) {
-        if (processorPhase == ProcessorPhase.OPEN) {
-            return true;
-        }
-        return false;
     }
 
 }

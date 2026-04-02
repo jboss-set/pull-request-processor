@@ -21,6 +21,8 @@
  */
 package org.jboss.set.pull.processor;
 
+import org.jboss.set.pull.processor.data.PullRequestReference;
+
 /**
  * Pull request processor derived from Jason's pull-player. It checks all the open PRs whether they are merge-able and schedule
  * a merge job on Hudson for them. A merge-able PR must be approved by a comment "review ok" and must comply to
@@ -32,10 +34,11 @@ package org.jboss.set.pull.processor;
  */
 public interface Processor {
 
-    ProcessorPhase getPhase();
-
     void init(ProcessorConfig config) throws Exception;
 
-    void process() throws ProcessorException;
+    void process(PullRequestReference pullRequestReferneces) throws ProcessorException;
 
+    default String getName() {
+        return this.getClass().getSimpleName();
+    }
 }

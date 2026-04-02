@@ -21,17 +21,16 @@
  */
 package org.jboss.set.pull.processor.impl.evaluator;
 
-import java.util.logging.Logger;
-
 import org.jboss.set.pull.processor.Evaluator;
+import org.jboss.set.pull.processor.data.Attribute;
 import org.jboss.set.pull.processor.data.EvaluatorData;
-import org.jboss.set.pull.processor.data.EvaluatorData.Attribute;
 import org.jboss.set.pull.processor.data.LabelData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractLabelEvaluator implements Evaluator {
 
-    @SuppressWarnings("unused")
-    protected final Logger LOG = Logger.getLogger(getClass().getName());
+    protected static final Logger LOG = LoggerFactory.getLogger(AbstractLabelEvaluator.class);
 
     protected LabelData getLabelData(Attribute<LabelData> labelsKey, EvaluatorData data) {
         LabelData labelData = data.getAttributeValue(labelsKey);
