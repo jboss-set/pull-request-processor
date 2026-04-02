@@ -39,10 +39,6 @@ public class StreamComponentDefinition {
         return name;
     }
 
-    public boolean isFound() {
-        return this.streamComponent != null;
-    }
-
     public StreamComponent getStreamComponent() {
         return streamComponent;
     }
@@ -57,7 +53,7 @@ public class StreamComponentDefinition {
 
     @Override
     public String toString() {
-        return "StreamComponentDefinition [name=" + name + ", found=" + isFound() + "]";
+        return "StreamComponentDefinition [name=" + name + "]";
     }
 
 }

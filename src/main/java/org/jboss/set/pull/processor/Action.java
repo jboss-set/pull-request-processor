@@ -21,8 +21,6 @@
  */
 package org.jboss.set.pull.processor;
 
-import java.util.List;
-
 import org.jboss.set.pull.processor.data.EvaluatorData;
 
 /**
@@ -33,8 +31,6 @@ import org.jboss.set.pull.processor.data.EvaluatorData;
  */
 public interface Action {
 
-    void execute(ActionContext actionContext, List<EvaluatorData> data);
-
-    boolean support(ProcessorPhase processorPhase);
+    void execute(ActionContext actionContext, EvaluatorData data);
 
 }

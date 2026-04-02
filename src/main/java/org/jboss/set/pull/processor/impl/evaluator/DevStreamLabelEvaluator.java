@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 
 import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.pull.processor.EvaluatorContext;
-import org.jboss.set.pull.processor.ProcessorPhase;
+import org.jboss.set.pull.processor.data.Attributes;
 import org.jboss.set.pull.processor.data.CodeBaseLabelItem;
 import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.LabelData;
@@ -45,7 +45,7 @@ public class DevStreamLabelEvaluator extends AbstractLabelEvaluator {
 
     @Override
     public void eval(EvaluatorContext context, EvaluatorData data) {
-        final LabelData labelData = super.getLabelData(EvaluatorData.Attributes.LABELS_CURRENT, data);
+        final LabelData labelData = super.getLabelData(Attributes.LABELS_CURRENT, data);
         final CodeBaseLabelItem branchLabel = new CodeBaseLabelItem(context.getPullRequest().getCodebase(), LabelAction.SET,
                 LabelSeverity.OK);
         labelData.addLabelItem(branchLabel);
@@ -63,15 +63,6 @@ public class DevStreamLabelEvaluator extends AbstractLabelEvaluator {
         // TODO: figure out remove action? (as is, we dont remove every label and reset them)
         // TODO: add regex match and remove any other codebase like label?
         // TODO: add check PR codebase vs stream codebase component codebase?
-    }
-
-    @Override
-    public boolean support(ProcessorPhase processorPhase) {
-        if (processorPhase == ProcessorPhase.OPEN) {
-            return true;
-        } else {
-            return false;
-        }
     }
 
 }

@@ -32,14 +32,10 @@ public class EvaluatorContext {
 
     private final StreamComponentDefinition streamComponentDefinition;
 
-    private final ProcessorPhase processorPhase;
-
-    public EvaluatorContext(final Aphrodite aphrodite, final PullRequest pullrequest,
-            final StreamComponentDefinition streamComponentDefinition, final ProcessorPhase processorPhase) {
+    public EvaluatorContext(Aphrodite aphrodite, PullRequest pullrequest, StreamComponentDefinition streamComponentDefinition) {
         this.aphrodite = aphrodite;
         this.pullRequest = pullrequest;
         this.streamComponentDefinition = streamComponentDefinition;
-        this.processorPhase = processorPhase;
     }
 
     public Aphrodite getAphrodite() {
@@ -51,14 +47,11 @@ public class EvaluatorContext {
     }
 
     public String getBranch() {
-        return this.pullRequest.getCodebase().getName();
+        return this.pullRequest.getCodebase().getBranch();
     }
 
     public StreamComponentDefinition getStreamComponentDefinition() {
         return streamComponentDefinition;
     }
 
-    public ProcessorPhase getProcessorPhase() {
-        return this.processorPhase;
-    }
 }

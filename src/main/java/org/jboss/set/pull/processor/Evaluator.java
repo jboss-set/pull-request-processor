@@ -29,8 +29,6 @@ public interface Evaluator {
         return this.getClass().getSimpleName();
     }
 
-    void eval(EvaluatorContext context, EvaluatorData data) throws InterruptedException;
-
-    boolean support(ProcessorPhase processorPhase);
+    void eval(EvaluatorContext context, EvaluatorData data) throws Exception;
 
 }

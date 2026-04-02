@@ -17,18 +17,15 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-
+        <maven.compiler.release>21</maven.compiler.release>
 
         <checkstyle.plugin.version>2.15</checkstyle.plugin.version>
 
-        <org.jboss.jboss-dmr.version>1.1.6.Final</org.jboss.jboss-dmr.version>
         <org.wildfly.checkstyle-config.version>1.0.8.Final</org.wildfly.checkstyle-config.version>
-        <version.org.jboss.set.aphrodite>0.7.22.Final</version.org.jboss.set.aphrodite>
+        <version.org.jboss.set.aphrodite>1.0.0.Final</version.org.jboss.set.aphrodite>
         <version.org.freemarker.freemarker>2.3.23</version.org.freemarker.freemarker>
         <version.net.sourceforge.argparse4j>0.7.0</version.net.sourceforge.argparse4j>
-        <version.mockito>1.9.5</version.mockito>
+        <version.org.slf4j>2.0.17</version.org.slf4j>
     </properties>
 
     <scm>
@@ -39,6 +36,16 @@
     </scm>
 
     <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${version.org.slf4j}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${version.org.slf4j}</version>
+        </dependency>
         <dependency>
             <groupId>org.jboss.set</groupId>
             <artifactId>jboss-aphrodite-common</artifactId>
@@ -75,20 +82,9 @@
             <version>${version.org.jboss.set.aphrodite}</version>
         </dependency>
         <dependency>
-            <groupId>org.freemarker</groupId>
-            <artifactId>freemarker</artifactId>
-            <version>${version.org.freemarker.freemarker}</version>
-        </dependency>
-        <dependency>
             <groupId>net.sourceforge.argparse4j</groupId>
             <artifactId>argparse4j</artifactId>
             <version>${version.net.sourceforge.argparse4j}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>${version.mockito}</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -123,6 +119,23 @@
                         </manifest>
                     </archive>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>verify-dependencies</id>
+                        <goals>
+                            <goal>analyze-only</goal>
+                        </goals>
+                        <phase>verify</phase>
+                        <configuration>
+                            <failOnWarning>true</failOnWarning>
+                            <outputXML>true</outputXML>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

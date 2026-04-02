@@ -21,8 +21,8 @@
  */
 package org.jboss.set.pull.processor.impl.evaluator.util;
 
+import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Logger;
 
 import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.domain.Stream;
@@ -30,35 +30,40 @@ import org.jboss.set.aphrodite.domain.StreamComponent;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.pull.processor.StreamComponentDefinition;
 import org.jboss.set.pull.processor.StreamDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class StreamDefinitionUtil {
 
-    private static Logger logger = Logger.getLogger(StreamDefinitionUtil.class.getPackage().getName());
+    private static Logger logger = LoggerFactory.getLogger(StreamDefinitionUtil.class);
     /**
      * Fetch stream/component definition from aphrodite if it match conf parameters(StreamDefinition and StreamComponentDefinition)
      * @param aphrodite
      * @param defs
      * @throws NotFoundException
      */
-    public static void matchStreams(final Aphrodite aphrodite, final List<StreamDefinition> defs) throws NotFoundException {
-        for (StreamDefinition streamDefinition : defs) {
-            logger.info("finding all repositories for stream " + streamDefinition);
+    public static void matchStreams(Aphrodite aphrodite, List<StreamDefinition> defs) throws NotFoundException {
+        Iterator<StreamDefinition> defsIterator = defs.iterator();
+        while(defsIterator.hasNext()) {
+            StreamDefinition streamDefinition = defsIterator.next();
+            logger.debug("finding all repositories for stream " + streamDefinition);
             Stream stream = aphrodite.getStream(streamDefinition.getName());
             if (stream == null) {
-                logger.warning("No stream present for " + streamDefinition);
+                logger.warn("No stream present for {}, ignoring", streamDefinition);
+                defsIterator.remove();
                 continue;
-            } else {
-                streamDefinition.setStream(stream);
-                for (StreamComponentDefinition streamComponentDefinition : streamDefinition.getStreamComponents()) {
-                    final StreamComponent streamComponent = stream.getComponent(streamComponentDefinition.getName());
-                    if (streamComponent == null) {
-                        logger.warning("No component for stream '" + streamDefinition.getName() + "' under '"
-                                + streamComponentDefinition + "'");
-                        continue;
-                    } else {
-                        streamComponentDefinition.setStreamComponent(streamComponent);
-                    }
+            }
+            streamDefinition.setStream(stream);
+            Iterator<StreamComponentDefinition> componentIterator = streamDefinition.getStreamComponents().iterator();
+            while(componentIterator.hasNext()) {
+                StreamComponentDefinition streamComponentDefinition = componentIterator.next();
+                StreamComponent streamComponent = stream.getComponent(streamComponentDefinition.getName());
+                if (streamComponent == null) {
+                    logger.warn("No component for stream '{}' under '{}', ignoring", streamDefinition.getName(), streamComponentDefinition);
+                    componentIterator.remove();;
+                    continue;
                 }
+                streamComponentDefinition.setStreamComponent(streamComponent);
             }
         }
     }

@@ -7,14 +7,13 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.jboss.set.pull.processor.Action;
 import org.jboss.set.pull.processor.ActionContext;
-import org.jboss.set.pull.processor.ProcessorPhase;
 import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.ReportItem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Action which produces report if proper flag has been set.
@@ -25,11 +24,11 @@ import org.jboss.set.pull.processor.data.ReportItem;
  */
 public class ReportAction implements Action {
 
-    private static final Logger LOG = Logger.getLogger(ReportAction.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(ReportAction.class.getName());
     private static final List<ReportItem> reportItems = new ArrayList<ReportItem>();
 
     @Override
-    public void execute(ActionContext actionContext, List<EvaluatorData> data) {
+    public void execute(ActionContext actionContext, EvaluatorData data) {
         final File reportFile = actionContext.getReportFile();
         writeReport(reportFile);
     }
@@ -43,7 +42,7 @@ public class ReportAction implements Action {
      * @param reportItems
      */
     private void writeReport(File reportFile) {
-        LOG.log(Level.INFO, "Start writing report to file : " + reportFile);
+        LOG.info("Start writing report to file: {}", reportFile);
         try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(reportFile)))) {
             writer.write("<!DOCTYPE html>\n" +
                 "<html>\n" +
@@ -80,16 +79,11 @@ public class ReportAction implements Action {
                "\n" +
                "</body>\n" +
                "</html>");
+            LOG.info("Finish writing report to file: {}", reportFile);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            LOG.error("Error during action reporting", e);
         }
-        LOG.log(Level.INFO, "Finish writing report to file : " + reportFile);
-    }
 
-    @Override
-    public boolean support(ProcessorPhase processorPhase) {
-        return ProcessorPhase.OPEN == processorPhase;
     }
 
 }

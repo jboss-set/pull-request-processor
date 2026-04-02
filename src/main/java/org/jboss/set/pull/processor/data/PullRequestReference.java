@@ -56,7 +56,7 @@ public class PullRequestReference {
 
     @Override
     public String toString() {
-        return "PullRequestReference [pullRequest=" + pullRequest + ", componentDefinition=" + componentDefinition + "]";
+        return "PullRequestReference [pullRequest=" + pullRequest.getURI() + ", stream=" + componentDefinition.getStreamDefinition().getName() + ", component="+ componentDefinition.getName() + "]";
     }
 
 }

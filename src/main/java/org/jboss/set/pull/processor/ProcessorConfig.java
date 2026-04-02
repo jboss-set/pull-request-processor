@@ -24,7 +24,6 @@ package org.jboss.set.pull.processor;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 import org.jboss.set.aphrodite.Aphrodite;
 
@@ -44,8 +43,6 @@ public class ProcessorConfig {
 
     private Aphrodite aphrodite;
 
-    private ExecutorService executorService;
-
     // stream defs that were cross checked between user input and streams.json
     // still it contain both valid and invalid versions.
     private List<StreamDefinition> streamDefinition;
@@ -57,25 +54,19 @@ public class ProcessorConfig {
     private File reportFile;
 
     private boolean review = false;
+
     private boolean write = false;
 
-    public ProcessorConfig(final List<Evaluator> evaluators, final List<Action> actions,
-            final List<StreamDefinition> streamDefinition, final List<StreamDefinition> writePermitedStreamDefinition,
-            final Aphrodite aphrodite, final ExecutorService executorService, final String reportFile, final boolean review, final boolean write) {
+    public ProcessorConfig(ProcessorConfigBuilder builder) {
         super();
-        this.evaluators = evaluators;
-        this.actions = actions;
-        this.aphrodite = aphrodite;
-        this.executorService = executorService;
-        this.streamDefinition = Collections.unmodifiableList(streamDefinition);
-        if (writePermitedStreamDefinition != null) {
-            this.writePermitedStreamDefinition = Collections.unmodifiableList(writePermitedStreamDefinition);
-        } else {
-            this.writePermitedStreamDefinition = this.streamDefinition;
-        }
-        this.reportFile = new File(reportFile);
-        this.review = review;
-        this.write = write;
+        this.evaluators = builder.evaluators;
+        this.actions = builder.actions;
+        this.aphrodite = builder.aphrodite;
+        this.streamDefinition = Collections.unmodifiableList(builder.parsedStreams);
+        this.writePermitedStreamDefinition = builder.writePermittedStreams;
+        this.review = builder.performReviewAction;
+        this.write = builder.performWriteOperations;
+        this.reportFile = new File(builder.reportFile);
     }
 
     public List<Evaluator> getEvaluators() {
@@ -88,10 +79,6 @@ public class ProcessorConfig {
 
     public Aphrodite getAphrodite() {
         return aphrodite;
-    }
-
-    public ExecutorService getExecutorService() {
-        return executorService;
     }
 
     public List<StreamDefinition> getStreamDefinition() {
@@ -114,4 +101,62 @@ public class ProcessorConfig {
         return write;
     }
 
+    public static ProcessorConfigBuilder newProcessConfigBuilder() {
+        return new ProcessorConfigBuilder();
+    }
+
+    public static class ProcessorConfigBuilder {
+        List<StreamDefinition> parsedStreams;
+        List<StreamDefinition> writePermittedStreams;
+        String reportFile;
+        boolean performReviewAction;
+        Boolean performWriteOperations;
+        List<Evaluator> evaluators;
+        List<Action> actions;
+        Aphrodite aphrodite;
+
+        public ProcessorConfigBuilder parsedStreams(List<StreamDefinition> parsedStreams) {
+            this.parsedStreams = parsedStreams;
+            return this;
+        }
+
+        public ProcessorConfigBuilder actions(List<Action> actions) {
+            this.actions = actions;
+            return this;
+        }
+
+        public ProcessorConfigBuilder evaluators(List<Evaluator> evaluators) {
+            this.evaluators = evaluators;
+            return this;
+        }
+
+        public ProcessorConfigBuilder writePermittedStreams(List<StreamDefinition> writePermittedStreams) {
+            this.writePermittedStreams = writePermittedStreams;
+            return this;
+        }
+
+        public ProcessorConfigBuilder reportFile(String reportFile) {
+            this.reportFile = reportFile;
+            return this;
+        }
+
+        public ProcessorConfigBuilder aphrodite(Aphrodite aphrodite) {
+            this.aphrodite = aphrodite;
+            return this;
+        }
+
+        public ProcessorConfigBuilder performReviewAction(boolean performReviewAction) {
+            this.performReviewAction = performReviewAction;
+            return this;
+        }
+
+        public ProcessorConfigBuilder performWriteOperations(boolean performWriteOperations) {
+            this.performWriteOperations = performWriteOperations;
+            return this;
+        }
+
+        public ProcessorConfig build() {
+            return new ProcessorConfig(this);
+        }
+    }
 }

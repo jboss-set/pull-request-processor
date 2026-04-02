@@ -25,6 +25,10 @@ public class ProcessorException extends Exception {
 
     private static final long serialVersionUID = 1L;
 
+    public ProcessorException(Throwable ex) {
+        super(ex);
+    }
+
     public ProcessorException(String message, Throwable ex) {
         super(message, ex);
     }

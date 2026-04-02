@@ -23,14 +23,14 @@ package org.jboss.set.pull.processor.impl.evaluator;
 
 import org.jboss.set.aphrodite.domain.FlagStatus;
 import org.jboss.set.pull.processor.EvaluatorContext;
-import org.jboss.set.pull.processor.ProcessorPhase;
+import org.jboss.set.pull.processor.data.Attribute;
+import org.jboss.set.pull.processor.data.Attributes;
 import org.jboss.set.pull.processor.data.DefinedLabelItem;
+import org.jboss.set.pull.processor.data.DefinedLabelItem.LabelContent;
 import org.jboss.set.pull.processor.data.EvaluatorData;
-import org.jboss.set.pull.processor.data.EvaluatorData.Attribute;
 import org.jboss.set.pull.processor.data.IssueData;
 import org.jboss.set.pull.processor.data.LabelData;
 import org.jboss.set.pull.processor.data.LabelItem;
-import static org.jboss.set.pull.processor.data.DefinedLabelItem.LabelContent;
 
 /**
  * Check what ACK flags we have and set up labels accordingly(or clear).
@@ -42,12 +42,11 @@ public class IssueACKFlagsLabelEvaluator extends AbstractLabelEvaluator {
 
     @Override
     public void eval(EvaluatorContext context, EvaluatorData data) {
-        processAckLabels(EvaluatorData.Attributes.ISSUE_CURRENT, EvaluatorData.Attributes.LABELS_CURRENT, data);
-        processAckLabels(EvaluatorData.Attributes.ISSUE_UPSTREAM, EvaluatorData.Attributes.LABELS_UPSTREAM, data);
+        processAckLabels(Attributes.ISSUE_CURRENT, Attributes.LABELS_CURRENT, data);
+        processAckLabels(Attributes.ISSUE_UPSTREAM, Attributes.LABELS_UPSTREAM, data);
     }
 
-    protected void processAckLabels(final Attribute<IssueData> issueKey, final Attribute<LabelData> labelsKey,
-            final EvaluatorData data) {
+    protected void processAckLabels(Attribute<IssueData> issueKey, Attribute<LabelData> labelsKey, EvaluatorData data) {
         final IssueData issueToProcess = data.getAttributeValue(issueKey);
         if (issueToProcess.isDefined()) {
             LabelData labelData = super.getLabelData(labelsKey, data);
@@ -79,14 +78,6 @@ public class IssueACKFlagsLabelEvaluator extends AbstractLabelEvaluator {
             labelData.addLabelItem(li);
             return false;
         }
-    }
-
-    @Override
-    public boolean support(ProcessorPhase processorPhase) {
-        if (processorPhase == ProcessorPhase.OPEN) {
-            return true;
-        }
-        return false;
     }
 
 }

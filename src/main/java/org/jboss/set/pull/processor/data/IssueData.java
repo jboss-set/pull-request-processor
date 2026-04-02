@@ -110,7 +110,7 @@ public class IssueData {
 
     @Override
     public String toString() {
-        return "IssueData [issue=" + (issue != null ? issue.getURL() : "NA") + ", streamsAckedInIssue=" + streamsAckedInIssue
+        return "IssueData [issue=" + (issue != null ? issue.getURI() : "NA") + ", streamsAckedInIssue=" + streamsAckedInIssue
                 + ", required=" + required + ", devAckStatus=" + devAckStatus + ", qeAckStatus=" + qeAckStatus
                 + ", pmAckStatus=" + pmAckStatus + "]";
     }

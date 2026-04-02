@@ -1,5 +1,6 @@
-org.jboss.set.pull.processor.impl.evaluator.TriviaEvaluator
-org.jboss.set.pull.processor.impl.evaluator.LinkedIssuesEvaluator
+org.jboss.set.pull.processor.impl.evaluator.CurrentIssuesLinkEvaluator
+org.jboss.set.pull.processor.impl.evaluator.RelatedIssuesLinkEvaluator
+org.jboss.set.pull.processor.impl.evaluator.UpstreamIssuesLinkEvaluator
 org.jboss.set.pull.processor.impl.evaluator.LinkedPullRequestEvaluator
 org.jboss.set.pull.processor.impl.evaluator.IssueACKFlagsLabelEvaluator
 org.jboss.set.pull.processor.impl.evaluator.IssuePresentLabelEvaluator

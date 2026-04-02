@@ -33,7 +33,7 @@ public class LabelData {
     private Set<LabelItem<?>> labels = new TreeSet<>(new Comparator<LabelItem<?>>() {
 
         @Override
-        public int compare(LabelItem o1, LabelItem o2) {
+        public int compare(LabelItem<?> o1, LabelItem<?> o2) {
             if (o1 == null) {
                 return -1;
             }
