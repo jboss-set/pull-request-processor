@@ -63,7 +63,7 @@ public abstract class AbstractIssuesLinkEvaluator implements Evaluator {
             for (URI issueURL : issuesURI) {
                 // The Jira rate limit currently imposed is 1 call per 2 seconds per node per user.
                 TimeUnit.SECONDS.sleep(2);
-                Issue issue = context.getAphrodite().getIssue(issueURL);
+                Issue issue = findIssue(context, issueURL);
                 IssueData issueData = convert(issue);
                 if (issue == null && !context.getPullRequest().isIssueRequired()) {
                     issueData.notRequired();
@@ -72,14 +72,23 @@ public abstract class AbstractIssuesLinkEvaluator implements Evaluator {
             }
             setIssueData(data, issuesData);
 
-        } catch (URISyntaxException | NotFoundException e) {
+        } catch (URISyntaxException e) {
             LOG.error("find issue uri", e);
         }
     }
 
-    abstract public List<URI> findIssueURI(PullRequest pullRequest) throws URISyntaxException;
+    private Issue findIssue(EvaluatorContext context, URI issueURL) {
+        try {
+            return context.getAphrodite().getIssue(issueURL);
+        } catch (NotFoundException e) {
+            LOG.error("find issue uri", e);
+            return null;
+        }
+    }
 
-    abstract public void setIssueData(EvaluatorData data, List<IssueData> issueData);
+    public abstract List<URI> findIssueURI(PullRequest pullRequest) throws URISyntaxException;
+
+    public abstract void setIssueData(EvaluatorData data, List<IssueData> issueData);
 
     protected IssueData convert(final Issue issue) {
         if (issue == null) {

@@ -22,7 +22,6 @@
 package org.jboss.set.pull.processor.impl.action;
 
 import java.net.URI;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -53,37 +52,42 @@ public class SetLabelsAction implements Action {
     private static final String Request_Changes_Comment = "According to [pull-request-review-criteria-for-merge](https://source.redhat.com/groups/public/jboss-sustaining-engineering-team/jboss_sustaining_engineering_team_wiki/pull_request_review_criteria_for_merge) document，this pull request does not satisfy all review criteria for merge. Please check the associated pull request labels to revise.";
 
     @Override
-    public void execute(ActionContext actionContext, EvaluatorData data) {
-//        try {
-//        setLabels(actionContext, data);
-//        } catch(Exception e) {
-//            LOG.error("Error !", e);
-//        }
+    public ReportItem execute(ActionContext actionContext, EvaluatorData data) {
+        try {
+            return setLabels(actionContext, data);
+        } catch(Exception e) {
+            LOG.error("Error !", e);
+            return null;
+        }
     }
 
-    private void setLabels(ActionContext actionContext, EvaluatorData data) throws Exception {
+    private ReportItem setLabels(ActionContext actionContext, EvaluatorData data) throws Exception {
         // TODO: XXX cross check REMOVE list vs CURRENT list to avoid mute removal
-        final PullRequestData pullRequestData = data.getAttributeValue(Attributes.PULL_REQUEST_CURRENT);
-        final IssueData issueData = data.getAttributeValue(Attributes.ISSUE_CURRENT);
-        final LabelData labelsData = data.getAttributeValue(Attributes.LABELS_CURRENT);
-        final PullRequestData upstreamPullRequestData = data.getAttributeValue(Attributes.PULL_REQUEST_UPSTREAM);
-        final IssueData upstreamIssueData = data.getAttributeValue(Attributes.ISSUE_UPSTREAM);
-        final LabelData upstreamLabelsData = data.getAttributeValue(Attributes.LABELS_UPSTREAM);
-        final Set<Label> currentLabels = new TreeSet<>(new LabelComparator());
-        final PullRequest pullRequest = pullRequestData.getPullRequest();
+        PullRequestData pullRequestData = data.getAttributeValue(Attributes.PULL_REQUEST_CURRENT);
+        if (!data.hasAttribute(Attributes.ISSUE_CURRENT)) {
+            return null;
+        }
+        IssueData issueData = data.getAttributeValue(Attributes.ISSUE_CURRENT);
+        LabelData labelsData = data.getAttributeValue(Attributes.LABELS_CURRENT);
+
+        PullRequestData upstreamPullRequestData = data.getAttributeValue(Attributes.PULL_REQUEST_UPSTREAM);
+        IssueData upstreamIssueData = data.getAttributeValue(Attributes.ISSUE_UPSTREAM);
+        LabelData upstreamLabelsData = data.getAttributeValue(Attributes.LABELS_UPSTREAM);
+        Set<Label> currentLabels = new TreeSet<>();
+        PullRequest pullRequest = pullRequestData.getPullRequest();
         currentLabels.addAll(pullRequest.getLabels());
 
-        final List<LabelItem<?>> addList = labelsData.getLabels(LabelAction.SET);
-        final List<LabelItem<?>> removeList = labelsData.getLabels(LabelAction.REMOVE);
+        List<LabelItem<?>> addList = labelsData.getLabels(LabelAction.SET);
+        List<LabelItem<?>> removeList = labelsData.getLabels(LabelAction.REMOVE);
         // TODO: XXX make this part of super class, "AbstractConsoleReporting" or something.
         // or something more generic avavilable for whole tool/s
-        final StringBuilder logBuilder = new StringBuilder();
+        StringBuilder logBuilder = new StringBuilder();
 
-        final URI url = pullRequest.getURI();
-        final String issue = issueData.isDefined() ? issueData.getIssue().getURI().toString() : "n/a";
-        final List<String> currentLabelsNames = currentLabels.stream().map(l -> l.getName()).collect(Collectors.toList());
-        final List<String> addLabelsNames = addList.stream().map(l -> l.getLabel()).collect(Collectors.toList());
-        final List<String> removeLabelsNames = removeList.stream().map(l -> l.getLabel()).collect(Collectors.toList());
+        URI url = pullRequest.getURI();
+        String issue = issueData.isDefined() ? issueData.getIssue().getURI().toString() : "n/a";
+        List<String> currentLabelsNames = currentLabels.stream().map(l -> l.getName()).collect(Collectors.toList());
+        List<String> addLabelsNames = addList.stream().map(l -> l.getLabel()).collect(Collectors.toList());
+        List<String> removeLabelsNames = removeList.stream().map(l -> l.getLabel()).collect(Collectors.toList());
         logBuilder.append("\n... ").append(url);
         logBuilder.append("\n   |... ").append(issue);
         logBuilder.append("\n   |... C:").append(currentLabelsNames);
@@ -92,19 +96,17 @@ public class SetLabelsAction implements Action {
 
         // For the HTML report file
         ReportItem ri = new ReportItem(url.toString(), issue, currentLabelsNames, addLabelsNames, removeLabelsNames);
-        ReportAction.addItemToReport(ri);
-
-        if (upstreamPullRequestData.isDefined()) {
-            final Set<Label> upstreamLabels = new TreeSet<>(new LabelComparator());
+        if (upstreamPullRequestData != null) {
+            final Set<Label> upstreamLabels = new TreeSet<>();
             upstreamLabels.addAll(pullRequest.getLabels());
 
             // just for info ?
             logBuilder.append("\n   |... Upstream ");
-            logBuilder.append("\n       |... ").append((upstreamIssueData.isDefined() ? upstreamIssueData.getIssue().getURI() : "n/a"));
+            logBuilder.append("\n       |... ").append((upstreamIssueData != null ? upstreamIssueData.getIssue().getURI() : "n/a"));
             logBuilder.append("\n       |... C:").append(upstreamLabels.stream().map(l -> l.getName()).collect(Collectors.toList()));
-            if (upstreamIssueData.isDefined()) {
-                final List<LabelItem<?>> upstreamAddList = upstreamLabelsData.getLabels(LabelAction.SET);
-                final List<LabelItem<?>> upstreamRemoveList = upstreamLabelsData.getLabels(LabelAction.REMOVE);
+            if (upstreamIssueData != null) {
+                List<LabelItem<?>> upstreamAddList = upstreamLabelsData.getLabels(LabelAction.SET);
+                List<LabelItem<?>> upstreamRemoveList = upstreamLabelsData.getLabels(LabelAction.REMOVE);
                 logBuilder.append("\n       |... A:").append(upstreamAddList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
                 logBuilder.append("\n       |... R:").append(upstreamRemoveList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
             }
@@ -121,7 +123,7 @@ public class SetLabelsAction implements Action {
         if (!actionContext.isWritePermitted() || !actionContext.isWritePermitedOn(pullRequest)) {
             logBuilder.append("\n   |... Write: <<Skipped>>");
             LOG.info(logBuilder.toString());
-            return;
+            return ri;
         }
 
         LOG.info(logBuilder.toString());
@@ -143,7 +145,7 @@ public class SetLabelsAction implements Action {
         actionItems.forEach(label -> {
             try {
                 pullRequest.addLabel(label);
-            } catch(NameNotFoundException e) {
+            } catch (NameNotFoundException e) {
                 LOG.error("label not found", e);
             }
         });
@@ -157,6 +159,7 @@ public class SetLabelsAction implements Action {
                 pullRequest.approveOnPullRequest();
             }
         }
+        return ri;
     }
 
     // TODO: XXX change those once aphrodite has been updated. #142
@@ -178,20 +181,4 @@ public class SetLabelsAction implements Action {
         return repoLabels;
     }
 
-    private static class LabelComparator implements Comparator<Label> {
-        // Label comparator - to have it neat and possible, if Git retain order, to have it always the same way?
-        @Override
-        public int compare(Label o1, Label o2) {
-            if (o1 == null) {
-                return -1;
-            }
-            if (o2 == null) {
-                return 1;
-            }
-            if (o1.equals(o2)) {
-                return 0;
-            }
-            return o1.getName().compareTo(o2.getName());
-        }
-    }
 }

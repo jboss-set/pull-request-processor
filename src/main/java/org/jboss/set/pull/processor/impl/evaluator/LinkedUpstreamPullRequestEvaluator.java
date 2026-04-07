@@ -21,24 +21,43 @@
  */
 package org.jboss.set.pull.processor.impl.evaluator;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
+import org.jboss.set.aphrodite.domain.PullRequest;
+import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.pull.processor.EvaluatorContext;
 import org.jboss.set.pull.processor.data.Attribute;
 import org.jboss.set.pull.processor.data.Attributes;
 import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.PullRequestData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class LinkedPullRequestEvaluator extends AbstractPullRequestLinkEvaluator {
+public class LinkedUpstreamPullRequestEvaluator extends AbstractPullRequestLinkEvaluator {
+
+    private static final Logger LOG = LoggerFactory.getLogger(LinkedUpstreamPullRequestEvaluator.class);
 
     @Override
     public void eval(EvaluatorContext context, EvaluatorData data) {
-            PullRequestData currentPullRequestData = convert(context.getPullRequest(), context.getStreamComponentDefinition());
-            data.setAttributeValue(Attributes.PULL_REQUEST_CURRENT, currentPullRequestData);
+        try {
+            URI upstreamPullRequestURL = context.getPullRequest().findUpstreamPullRequestURI();
+            if (upstreamPullRequestURL == null) {
+                LOG.info("did not find any upstream pull request for {}", context.getPullRequest().getURI());
+                return;
+            }
+            PullRequest upstreamPullRequest = context.getAphrodite().getPullRequest(upstreamPullRequestURL);
+            PullRequestData upstreamPullRequestData = convert(upstreamPullRequest, determineUpstreamStreamComponentDefinition(context));
+            data.setAttributeValue(Attributes.PULL_REQUEST_UPSTREAM, upstreamPullRequestData);
+        } catch (URISyntaxException | NotFoundException e) {
+            LOG.error("Failed during evaluation of linked pull request", e);
+        }
     }
 
     @Override
     public List<Attribute<?>> getProducedAttributes() {
-        return List.of(Attributes.PULL_REQUEST_CURRENT);
+        return List.of(Attributes.PULL_REQUEST_UPSTREAM);
     }
+
 }

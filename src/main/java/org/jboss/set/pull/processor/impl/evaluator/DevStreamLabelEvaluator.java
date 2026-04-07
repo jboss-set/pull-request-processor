@@ -21,11 +21,13 @@
  */
 package org.jboss.set.pull.processor.impl.evaluator;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.pull.processor.EvaluatorContext;
+import org.jboss.set.pull.processor.data.Attribute;
 import org.jboss.set.pull.processor.data.Attributes;
 import org.jboss.set.pull.processor.data.CodeBaseLabelItem;
 import org.jboss.set.pull.processor.data.EvaluatorData;
@@ -45,24 +47,20 @@ public class DevStreamLabelEvaluator extends AbstractLabelEvaluator {
 
     @Override
     public void eval(EvaluatorContext context, EvaluatorData data) {
-        final LabelData labelData = super.getLabelData(Attributes.LABELS_CURRENT, data);
-        final CodeBaseLabelItem branchLabel = new CodeBaseLabelItem(context.getPullRequest().getCodebase(), LabelAction.SET,
+        LabelData labelData = super.getLabelData(Attributes.LABELS_CURRENT, data);
+        CodeBaseLabelItem branchLabel = new CodeBaseLabelItem(context.getPullRequest().getCodebase(), LabelAction.SET,
                 LabelSeverity.OK);
         labelData.addLabelItem(branchLabel);
-        final Matcher matcher = STREAM_PATTERN
-                .matcher(context.getStreamComponentDefinition().getStreamDefinition().getStream().getName());
+        Matcher matcher = STREAM_PATTERN .matcher(context.getStreamComponentDefinition().getStreamDefinition().getStream().getName());
         if (matcher.find()) {
             // example "jboss-eap-7.z.0" --> "7.z.0.GA"
-            final CodeBaseLabelItem streamLabel = new CodeBaseLabelItem(new Codebase(matcher.group() + ".GA"), LabelAction.SET,
-                    LabelSeverity.OK);
+            CodeBaseLabelItem streamLabel = new CodeBaseLabelItem(new Codebase(matcher.group() + ".GA"), LabelAction.SET, LabelSeverity.OK);
             labelData.addLabelItem(streamLabel);
-        } else {
-            // TODO: complain?
         }
-        // TODO: do we need upstream dev labels as well?
-        // TODO: figure out remove action? (as is, we dont remove every label and reset them)
-        // TODO: add regex match and remove any other codebase like label?
-        // TODO: add check PR codebase vs stream codebase component codebase?
     }
 
+    @Override
+    public List<Attribute<?>> getRequiredAttributes() {
+        return List.of(Attributes.LABELS_CURRENT);
+    }
 }

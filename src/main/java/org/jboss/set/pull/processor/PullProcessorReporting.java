@@ -1,16 +1,12 @@
-package org.jboss.set.pull.processor.impl.action;
+package org.jboss.set.pull.processor;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.set.pull.processor.Action;
-import org.jboss.set.pull.processor.ActionContext;
-import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.ReportItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,27 +18,15 @@ import org.slf4j.LoggerFactory;
  * @author wangc
  *
  */
-public class ReportAction implements Action {
+public class PullProcessorReporting {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ReportAction.class.getName());
-    private static final List<ReportItem> reportItems = new ArrayList<ReportItem>();
-
-    @Override
-    public void execute(ActionContext actionContext, EvaluatorData data) {
-        final File reportFile = actionContext.getReportFile();
-        writeReport(reportFile);
-    }
-
-    public static synchronized void addItemToReport(ReportItem ri) {
-        reportItems.add(ri);
-    }
-
+    private static final Logger LOG = LoggerFactory.getLogger(PullProcessorReporting.class.getName());
     /**
      * @param reportFile
      * @param reportItems
      */
-    private void writeReport(File reportFile) {
-        LOG.info("Start writing report to file: {}", reportFile);
+    public void writeReport(List<ReportItem> reportItems, File reportFile) {
+        LOG.info("Start writing report to file: {} a total of {} records", reportFile, reportItems.size());
         try (PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(reportFile)))) {
             writer.write("<!DOCTYPE html>\n" +
                 "<html>\n" +

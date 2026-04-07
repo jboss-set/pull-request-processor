@@ -23,14 +23,13 @@ import java.util.List;
  *
  */
 public class ReportItem {
-
     private String url;
     private String issue;
     private List<String> currentLabels;
     private List<String> addLabels;
     private List<String> removeLabels;
 
-    public ReportItem(final String url, final String issue, List<String> currentLabels, List<String> addLabels, List<String> removeLabels) {
+    public ReportItem(String url, String issue, List<String> currentLabels, List<String> addLabels, List<String> removeLabels) {
         this.url = url;
         this.issue = issue;
         this.currentLabels = currentLabels;

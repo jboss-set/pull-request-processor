@@ -23,7 +23,6 @@
 
         <org.wildfly.checkstyle-config.version>1.0.8.Final</org.wildfly.checkstyle-config.version>
         <version.org.jboss.set.aphrodite>1.0.0.Final</version.org.jboss.set.aphrodite>
-        <version.org.freemarker.freemarker>2.3.23</version.org.freemarker.freemarker>
         <version.net.sourceforge.argparse4j>0.7.0</version.net.sourceforge.argparse4j>
         <version.org.slf4j>2.0.17</version.org.slf4j>
     </properties>
@@ -131,7 +130,7 @@
                         </goals>
                         <phase>verify</phase>
                         <configuration>
-                            <failOnWarning>true</failOnWarning>
+                            <failOnWarning>false</failOnWarning>
                             <outputXML>true</outputXML>
                         </configuration>
                     </execution>

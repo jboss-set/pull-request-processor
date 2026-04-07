@@ -21,12 +21,24 @@
  */
 package org.jboss.set.pull.processor;
 
+import java.util.Collections;
+import java.util.List;
+
+import org.jboss.set.pull.processor.data.Attribute;
 import org.jboss.set.pull.processor.data.EvaluatorData;
 
 public interface Evaluator {
 
     default String name() {
         return this.getClass().getSimpleName();
+    }
+
+    default List<Attribute<?>> getRequiredAttributes() {
+        return Collections.emptyList();
+    }
+
+    default List<Attribute<?>> getProducedAttributes() {
+        return Collections.emptyList();
     }
 
     void eval(EvaluatorContext context, EvaluatorData data) throws Exception;

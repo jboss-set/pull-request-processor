@@ -22,6 +22,7 @@
 package org.jboss.set.pull.processor;
 
 import org.jboss.set.pull.processor.data.EvaluatorData;
+import org.jboss.set.pull.processor.data.ReportItem;
 
 /**
  * Action which will be executed once evaluators are done with preping all the data.
@@ -31,6 +32,6 @@ import org.jboss.set.pull.processor.data.EvaluatorData;
  */
 public interface Action {
 
-    void execute(ActionContext actionContext, EvaluatorData data);
+    ReportItem execute(ActionContext actionContext, EvaluatorData data);
 
 }

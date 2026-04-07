@@ -60,7 +60,7 @@ public class StreamDefinitionUtil {
                 StreamComponent streamComponent = stream.getComponent(streamComponentDefinition.getName());
                 if (streamComponent == null) {
                     logger.warn("No component for stream '{}' under '{}', ignoring", streamDefinition.getName(), streamComponentDefinition);
-                    componentIterator.remove();;
+                    componentIterator.remove();
                     continue;
                 }
                 streamComponentDefinition.setStreamComponent(streamComponent);

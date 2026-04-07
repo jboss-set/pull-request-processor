@@ -21,9 +21,7 @@
  */
 package org.jboss.set.pull.processor.impl.evaluator;
 
-import org.jboss.set.pull.processor.EvaluatorContext;
 import org.jboss.set.pull.processor.data.Attribute;
-import org.jboss.set.pull.processor.data.Attributes;
 import org.jboss.set.pull.processor.data.DefinedLabelItem;
 import org.jboss.set.pull.processor.data.DefinedLabelItem.LabelContent;
 import org.jboss.set.pull.processor.data.EvaluatorData;
@@ -37,15 +35,7 @@ import org.jboss.set.pull.processor.data.LabelItem;
  * @author baranowb
  *
  */
-public class IssuePresentLabelEvaluator extends AbstractLabelEvaluator {
-
-    @Override
-    public void eval(EvaluatorContext context, EvaluatorData data) {
-        processPresenceLabel(Attributes.ISSUE_CURRENT, Attributes.LABELS_CURRENT,
-                LabelContent.Missing_issue, data);
-        processPresenceLabel(Attributes.ISSUE_UPSTREAM, Attributes.LABELS_CURRENT,
-                LabelContent.Missing_upstream_issue, data);
-    }
+public abstract class AbstractIssuePresentLabelEvaluator extends AbstractLabelEvaluator {
 
     protected void processPresenceLabel(Attribute<IssueData> issueKey, Attribute<LabelData> labelsKey, LabelContent expectoPatronum, EvaluatorData data) {
         LabelData labelData = super.getLabelData(labelsKey, data);

@@ -22,9 +22,11 @@
 package org.jboss.set.pull.processor.impl.evaluator;
 
 import java.net.URI;
+import java.util.List;
 
 import org.jboss.set.aphrodite.domain.Codebase;
 import org.jboss.set.pull.processor.EvaluatorContext;
+import org.jboss.set.pull.processor.data.Attribute;
 import org.jboss.set.pull.processor.data.Attributes;
 import org.jboss.set.pull.processor.data.DefinedLabelItem;
 import org.jboss.set.pull.processor.data.DefinedLabelItem.LabelContent;
@@ -42,9 +44,14 @@ import org.jboss.set.pull.processor.data.PullRequestData;
 public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
 
     @Override
+    public List<Attribute<?>> getRequiredAttributes() {
+        return List.of(Attributes.PULL_REQUEST_UPSTREAM, Attributes.LABELS_CURRENT);
+    }
+
+    @Override
     public void eval(EvaluatorContext context, EvaluatorData data) {
-        final PullRequestData upstreamPullRequestData = data.getAttributeValue(Attributes.PULL_REQUEST_UPSTREAM);
-        final LabelData labelData = super.getLabelData(Attributes.LABELS_CURRENT, data);
+        PullRequestData upstreamPullRequestData = data.getAttributeValue(Attributes.PULL_REQUEST_UPSTREAM);
+        LabelData labelData = super.getLabelData(Attributes.LABELS_CURRENT, data);
 
         boolean isMismatched = isUpsreamPRMismatched(labelData, upstreamPullRequestData);
 
@@ -61,14 +68,11 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
         } else {
             // not defined, check if it is required
             if (upstreamPullRequestData.isRequired()) {
-                labelData.addLabelItem(new DefinedLabelItem(LabelContent.Missing_upstream_PR, LabelItem.LabelAction.SET,
-                        LabelItem.LabelSeverity.BAD));
+                labelData.addLabelItem(new DefinedLabelItem(LabelContent.Missing_upstream_PR, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.BAD));
             } else {
                 // not defined and not required, remove both.
-                labelData.addLabelItem(new DefinedLabelItem(LabelContent.Missing_upstream_PR, LabelItem.LabelAction.REMOVE,
-                        LabelItem.LabelSeverity.OK));
-                labelData.addLabelItem(new DefinedLabelItem(LabelContent.Upstream_merged, LabelItem.LabelAction.REMOVE,
-                        LabelItem.LabelSeverity.BAD));
+                labelData.addLabelItem(new DefinedLabelItem(LabelContent.Missing_upstream_PR, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.OK));
+                labelData.addLabelItem(new DefinedLabelItem(LabelContent.Upstream_merged, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.BAD));
             }
         }
     }
