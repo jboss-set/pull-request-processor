@@ -1,10 +1,11 @@
 package org.jboss.set.pull.processor;
 
+import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.ServiceLoader;
-import java.util.stream.Collectors;
 
 import org.jboss.set.aphrodite.Aphrodite;
 import org.jboss.set.aphrodite.container.Container;
@@ -16,6 +17,7 @@ import org.jboss.set.aphrodite.domain.spi.PullRequestHome;
 import org.jboss.set.aphrodite.repository.services.github.GithubPullRequestHomeService;
 import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.pull.processor.data.PullRequestReference;
+import org.jboss.set.pull.processor.data.ReportItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,16 +64,16 @@ public class PullProcessor {
 
             LOG.info("Loading actions");
             ServiceLoader<Action> actionServiceLoader = ServiceLoader.load(Action.class);
-            List<Action> actionServices = new ArrayList<Action>();
+            List<Action> actions = new ArrayList<Action>();
             for (Action action : actionServiceLoader) {
-                actionServices.add(action);
+                actions.add(action);
                 LOG.info("Loading action: {}", action.getClass().getSimpleName());
             }
 
             ProcessorConfig processorConfig = ProcessorConfig.newProcessConfigBuilder()
                     .aphrodite(aphrodite)
                     .evaluators(evaluatorServices)
-                    .actions(actionServices)
+                    .actions(actions)
                     .parsedStreams(parsedStreams)
                     .writePermittedStreams(writePermittedStreams)
                     .performWriteOperations(performWriteAction)
@@ -94,14 +96,17 @@ public class PullProcessor {
     }
 
     public void start() {
-//        fetchPullRequestReferences().forEach(this::process);
-        fetchSingle().forEach(this::process);
+//        List<PullRequestReference> references = fetchSingle();
+        List<PullRequestReference> references = fetchPullRequestReferences();
+        List<ReportItem> items = references.stream().map(this::process).flatMap(Collection::stream).toList();
+        PullProcessorReporting reporting = new PullProcessorReporting();
+        reporting.writeReport(items, new File(this.reportFile));
     }
 
     private List<PullRequestReference> fetchSingle() {
         try {
-            String prURI = "https://github.com/wildfly/wildfly/pull/19827";
-            String streamDefinitionName = "wildfly";
+            String prURI = "https://github.com/jbossas/jboss-eap8/pull/697";
+            String streamDefinitionName = "eap8";
             String componentDefinitionName = "wildfly-wildlfy";
             PullRequest pullRequest = aphrodite.getPullRequest(URI.create(prURI));
             StreamDefinition streamDefinition = new StreamDefinition(streamDefinitionName);
@@ -115,15 +120,17 @@ public class PullProcessor {
         }
     }
 
-    private void process(PullRequestReference pullRequestReferences) {
+    private List<ReportItem> process(PullRequestReference pullRequestReferences) {
+        List<ReportItem> reportItems = new ArrayList<>();
         for (Processor processor : processors) {
             try {
                 LOG.info("Executing processors: {} for pull request {}", processor.getClass().getName(), pullRequestReferences);
-                processor.process(pullRequestReferences);
+                reportItems.addAll(processor.process(pullRequestReferences));
             } catch (ProcessorException e) {
                 LOG.error("Executing processors", e);
             }
         }
+        return reportItems;
     }
 
     private List<PullRequestReference> fetchPullRequestReferences() {
@@ -136,12 +143,15 @@ public class PullProcessor {
                         LOG.warn("Did not find repository: {}", streamComponentDefinition.getStreamComponent().getRepositoryURI());
                         continue;
                     }
-
+                    Codebase currentCodebase = streamComponentDefinition.getStreamComponent().getCodebase();
                     List<PullRequest> componentPullRequests = aphrodite.getPullRequestsByState(repository, PullRequestState.OPEN);
-                    // translate it into refs, add to ret val
-                    pullRequests.addAll(componentPullRequests.stream().map(p -> {
-                        return new PullRequestReference(p, streamComponentDefinition);
-                    }).collect(Collectors.toList()));
+                    for (PullRequest p : componentPullRequests) {
+                        if(!currentCodebase.isIn(p.getCodebase())) {
+                            LOG.info("pull request {} in codebase {} does not belong to codebase {}", p.getURI(), p.getCodebase(), currentCodebase);
+                            continue;
+                        }
+                        pullRequests.add(new PullRequestReference(p, streamComponentDefinition));
+                    }
 
                 } catch (NotFoundException e) {
                     LOG.warn("Did not find repo", e);

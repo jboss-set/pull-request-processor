@@ -22,15 +22,14 @@
 package org.jboss.set.pull.processor.impl.evaluator;
 
 import org.jboss.set.aphrodite.domain.FlagStatus;
-import org.jboss.set.pull.processor.EvaluatorContext;
 import org.jboss.set.pull.processor.data.Attribute;
-import org.jboss.set.pull.processor.data.Attributes;
 import org.jboss.set.pull.processor.data.DefinedLabelItem;
 import org.jboss.set.pull.processor.data.DefinedLabelItem.LabelContent;
 import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.IssueData;
 import org.jboss.set.pull.processor.data.LabelData;
 import org.jboss.set.pull.processor.data.LabelItem;
+import org.jboss.set.pull.processor.data.LabelItem.LabelSeverity;
 
 /**
  * Check what ACK flags we have and set up labels accordingly(or clear).
@@ -38,33 +37,25 @@ import org.jboss.set.pull.processor.data.LabelItem;
  * @author baranowb
  *
  */
-public class IssueACKFlagsLabelEvaluator extends AbstractLabelEvaluator {
-
-    @Override
-    public void eval(EvaluatorContext context, EvaluatorData data) {
-        processAckLabels(Attributes.ISSUE_CURRENT, Attributes.LABELS_CURRENT, data);
-        processAckLabels(Attributes.ISSUE_UPSTREAM, Attributes.LABELS_UPSTREAM, data);
-    }
+public abstract class AbstractIssueACKFlagsLabelEvaluator extends AbstractLabelEvaluator {
 
     protected void processAckLabels(Attribute<IssueData> issueKey, Attribute<LabelData> labelsKey, EvaluatorData data) {
-        final IssueData issueToProcess = data.getAttributeValue(issueKey);
-        if (issueToProcess.isDefined()) {
-            LabelData labelData = super.getLabelData(labelsKey, data);
-            boolean hasAllAcks = true;
-            hasAllAcks = hasAllAcks & processFlagStatus(labelData, issueToProcess.getPmAckStatus(), LabelContent.Needs_pm_ack);
-            hasAllAcks = hasAllAcks
-                    & processFlagStatus(labelData, issueToProcess.getDevAckStatus(), LabelContent.Needs_devel_ack);
-            hasAllAcks = hasAllAcks & processFlagStatus(labelData, issueToProcess.getQeAckStatus(), LabelContent.Needs_qa_ack);
+        IssueData issueToProcess = data.getAttributeValue(issueKey);
+        if (!issueToProcess.isDefined()) {
+            return;
+        }
+        LabelData labelData = super.getLabelData(labelsKey, data);
+        boolean hasAllAcks = true;
+        hasAllAcks = hasAllAcks & processFlagStatus(labelData, issueToProcess.getPmAckStatus(), LabelContent.Needs_pm_ack);
+        hasAllAcks = hasAllAcks & processFlagStatus(labelData, issueToProcess.getDevAckStatus(), LabelContent.Needs_devel_ack);
+        hasAllAcks = hasAllAcks & processFlagStatus(labelData, issueToProcess.getQeAckStatus(), LabelContent.Needs_qa_ack);
 
-            if (hasAllAcks) {
-                LabelItem<?> li = new DefinedLabelItem(LabelContent.Has_All_Acks, LabelItem.LabelAction.SET,
-                        LabelItem.LabelSeverity.OK);
-                labelData.addLabelItem(li);
-            } else {
-                LabelItem<?> li = new DefinedLabelItem(LabelContent.Has_All_Acks, LabelItem.LabelAction.REMOVE,
-                        LabelItem.LabelSeverity.BAD);
-                labelData.addLabelItem(li);
-            }
+        if (hasAllAcks) {
+            LabelItem<?> li = new DefinedLabelItem(LabelContent.Has_All_Acks, LabelItem.LabelAction.SET, LabelSeverity.OK);
+            labelData.addLabelItem(li);
+        } else {
+            LabelItem<?> li = new DefinedLabelItem(LabelContent.Has_All_Acks, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.BAD);
+            labelData.addLabelItem(li);
         }
     }
 
@@ -79,5 +70,6 @@ public class IssueACKFlagsLabelEvaluator extends AbstractLabelEvaluator {
             return false;
         }
     }
+
 
 }

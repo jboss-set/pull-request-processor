@@ -28,33 +28,29 @@ import java.util.Map;
 
 public class EvaluatorData {
 
-    private Map<String, Object> data;
+    private Map<Attribute<?>, Object> data;
 
     public EvaluatorData() {
         this(new HashMap<>());
     }
 
-    public EvaluatorData(Map<String, Object> data) {
+    public EvaluatorData(Map<Attribute<?>, Object> data) {
         this.data = data;
     }
 
-    public Map<String, Object> getData() {
-        return data;
-    }
-
     public boolean hasAttribute(Attribute<?> attr) {
-        return data.containsKey(attr.name());
+        return data.containsKey(attr);
     }
 
     public <T> T getAttributeValue(Attribute<T> attr) {
-        return (T) data.get(attr.name());
+        return (T) data.get(attr);
     }
 
     public <T> void setAttributeValue(Attribute<T> attr, T value) {
-        data.put(attr.name(), value);
+        data.put(attr, value);
     }
 
-    public List<String> getAttributes() {
+    public List<Attribute<?>> getAttributes() {
         return new ArrayList<>(data.keySet());
     }
 

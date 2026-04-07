@@ -21,7 +21,10 @@
  */
 package org.jboss.set.pull.processor;
 
+import java.util.List;
+
 import org.jboss.set.pull.processor.data.PullRequestReference;
+import org.jboss.set.pull.processor.data.ReportItem;
 
 /**
  * Pull request processor derived from Jason's pull-player. It checks all the open PRs whether they are merge-able and schedule
@@ -36,7 +39,7 @@ public interface Processor {
 
     void init(ProcessorConfig config) throws Exception;
 
-    void process(PullRequestReference pullRequestReferneces) throws ProcessorException;
+    List<ReportItem> process(PullRequestReference pullRequestReferneces) throws ProcessorException;
 
     default String getName() {
         return this.getClass().getSimpleName();
