@@ -27,8 +27,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
-import javax.naming.NameNotFoundException;
-
 import org.jboss.set.aphrodite.domain.Label;
 import org.jboss.set.aphrodite.domain.PullRequest;
 import org.jboss.set.aphrodite.spi.NotFoundException;
@@ -128,9 +126,10 @@ public class SetLabelsAction implements Action {
 
         LOG.info(logBuilder.toString());
         List<Label> actionItems = convertLabels(actionContext, removeList, pullRequest);
-        for (Label l : actionItems.stream().filter(currentLabels::contains).toList()) {
-            // remove only if it is present, else skip
-            pullRequest.removeLabel(l);
+        List<Label> labelsToBeRemoved = actionItems.stream().filter(currentLabels::contains).toList();
+        // remove only if it is present, else skip
+        if (!labelsToBeRemoved.isEmpty()) {
+            pullRequest.removeLabels(labelsToBeRemoved);
         }
         currentLabels.removeAll(actionItems); // remove also from currentLabels, as we need to set current labels in below.
         actionItems = convertLabels(actionContext, addList, pullRequest);
@@ -142,13 +141,9 @@ public class SetLabelsAction implements Action {
             }
         }
         actionItems.addAll(currentLabels);
-        actionItems.forEach(label -> {
-            try {
-                pullRequest.addLabel(label);
-            } catch (NameNotFoundException e) {
-                LOG.error("label not found", e);
-            }
-        });
+        if (!actionItems.isEmpty()) {
+            pullRequest.addLabels(actionItems);
+        }
 
         // update pull request review
         // SET-464 Disable pull request review action by default, turn on by option "-r true".
