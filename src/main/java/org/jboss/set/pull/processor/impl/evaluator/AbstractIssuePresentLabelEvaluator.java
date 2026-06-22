@@ -29,6 +29,7 @@ import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.IssueData;
 import org.jboss.set.pull.processor.data.LabelData;
 import org.jboss.set.pull.processor.data.LabelItem;
+import org.jboss.set.pull.processor.data.EvaluatorReportEntry;
 import org.jboss.set.pull.processor.impl.evaluator.util.LogUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,6 +64,12 @@ public abstract class AbstractIssuePresentLabelEvaluator extends AbstractLabelEv
         LOG.info("{} | {} | defined={}, required={} | {} {}",
                 pr, eval, issueToProcess.isDefined(), issueToProcess.isRequired(),
                 action, expectoPatronum);
+
+        EvaluatorReportEntry entry = new EvaluatorReportEntry(evaluatorLabel());
+        entry.addField("defined", String.valueOf(issueToProcess.isDefined()), "read");
+        entry.addField("required", String.valueOf(issueToProcess.isRequired()), "read");
+        entry.addField("action", action + " " + expectoPatronum, "computed");
+        EvaluatorReportEntry.addTo(data, entry);
     }
 
 }

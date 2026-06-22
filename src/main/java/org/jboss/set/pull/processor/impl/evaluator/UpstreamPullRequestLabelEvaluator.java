@@ -34,6 +34,7 @@ import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.LabelData;
 import org.jboss.set.pull.processor.data.LabelItem;
 import org.jboss.set.pull.processor.data.PullRequestData;
+import org.jboss.set.pull.processor.data.EvaluatorReportEntry;
 import org.jboss.set.pull.processor.impl.evaluator.util.LogUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +62,8 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
         PullRequestData upstreamPullRequestData = data.getAttributeValue(Attributes.PULL_REQUEST_UPSTREAM);
         LabelData labelData = super.getLabelData(Attributes.LABELS_CURRENT, data);
 
-        boolean isMismatched = isUpsreamPRMismatched(pr, labelData, upstreamPullRequestData);
+        EvaluatorReportEntry entry = new EvaluatorReportEntry("UpstreamPRStatus");
+        boolean isMismatched = isUpsreamPRMismatched(pr, entry, labelData, upstreamPullRequestData);
 
         if (upstreamPullRequestData.isDefined()) {
             String upstreamRef = LogUtil.prRef(upstreamPullRequestData.getPullRequest().getURI());
@@ -74,9 +76,14 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
                 labelData.addLabelItem(new DefinedLabelItem(LabelContent.Upstream_merged, LabelItem.LabelAction.REMOVE,
                         LabelItem.LabelSeverity.BAD));
             }
+            entry.addField("upstream", upstreamRef, "read");
+            entry.addField("merged", String.valueOf(upstreamPullRequestData.isMerged()), "read");
+            entry.addField("mismatched", String.valueOf(isMismatched), "computed");
             LOG.info("{} | {} | upstream={} | merged={}, mismatched={}", pr, EVAL, upstreamRef,
                     upstreamPullRequestData.isMerged(), isMismatched);
         } else {
+            entry.addField("defined", "false", "read");
+            entry.addField("required", String.valueOf(upstreamPullRequestData.isRequired()), "read");
             if (upstreamPullRequestData.isRequired()) {
                 labelData.addLabelItem(new DefinedLabelItem(LabelContent.Missing_upstream_PR, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.BAD));
                 LOG.info("{} | {} | upstream PR missing, required=true", pr, EVAL);
@@ -86,9 +93,10 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
                 LOG.info("{} | {} | upstream PR not defined, required=false", pr, EVAL);
             }
         }
+        EvaluatorReportEntry.addTo(data, entry);
     }
 
-    protected boolean isUpsreamPRMismatched(String pr, final LabelData labelData, final PullRequestData pullRequestData) {
+    protected boolean isUpsreamPRMismatched(String pr, EvaluatorReportEntry entry, final LabelData labelData, final PullRequestData pullRequestData) {
         if (!pullRequestData.isRequired() || !pullRequestData.isDefined()) {
             LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Repository_Mismatch, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.OK);
             labelData.addLabelItem(li);
@@ -107,6 +115,7 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
             LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Repository_Mismatch, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.BAD);
             labelData.addLabelItem(li);
             isMismatched = true;
+            entry.addField("repo_mismatch", pullRequestRepositoryURI + " vs " + componentRepositoryURI, "computed");
             LOG.info("{} | {} | repo mismatch: actual={} expected={}", pr, EVAL, pullRequestRepositoryURI, componentRepositoryURI);
         }
 
@@ -119,6 +128,7 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
             LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Branch_Mismatch, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.BAD);
             labelData.addLabelItem(li);
             isMismatched = true;
+            entry.addField("branch_mismatch", prCodeBase + " vs " + codeBase, "computed");
             LOG.info("{} | {} | branch mismatch: actual={} expected={}", pr, EVAL, prCodeBase, codeBase);
         }
         return isMismatched;

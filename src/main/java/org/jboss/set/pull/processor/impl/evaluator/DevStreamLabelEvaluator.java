@@ -34,6 +34,7 @@ import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.LabelData;
 import org.jboss.set.pull.processor.data.LabelItem.LabelAction;
 import org.jboss.set.pull.processor.data.LabelItem.LabelSeverity;
+import org.jboss.set.pull.processor.data.EvaluatorReportEntry;
 import org.jboss.set.pull.processor.impl.evaluator.util.LogUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,9 +65,18 @@ public class DevStreamLabelEvaluator extends AbstractLabelEvaluator {
             String streamVersion = matcher.group() + ".GA";
             CodeBaseLabelItem streamLabel = new CodeBaseLabelItem(new Codebase(streamVersion), LabelAction.SET, LabelSeverity.OK);
             labelData.addLabelItem(streamLabel);
+            EvaluatorReportEntry entry = new EvaluatorReportEntry("DevStream");
+            entry.addField("stream", streamName, "read");
+            entry.addField("branch", String.valueOf(context.getPullRequest().getCodebase()), "read");
+            entry.addField("version", streamVersion, "computed");
+            EvaluatorReportEntry.addTo(data, entry);
             LOG.info("{} | {} | stream={} | branch={}, version={}",
                     pr, EVAL, streamName, context.getPullRequest().getCodebase(), streamVersion);
         } else {
+            EvaluatorReportEntry entry = new EvaluatorReportEntry("DevStream");
+            entry.addField("stream", streamName, "read");
+            entry.addField("branch", String.valueOf(context.getPullRequest().getCodebase()), "read");
+            EvaluatorReportEntry.addTo(data, entry);
             LOG.info("{} | {} | stream={} | branch={}, no version matched",
                     pr, EVAL, streamName, context.getPullRequest().getCodebase());
         }

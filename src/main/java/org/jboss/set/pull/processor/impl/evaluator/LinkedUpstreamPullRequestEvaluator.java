@@ -32,6 +32,7 @@ import org.jboss.set.pull.processor.data.Attribute;
 import org.jboss.set.pull.processor.data.Attributes;
 import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.PullRequestData;
+import org.jboss.set.pull.processor.data.EvaluatorReportEntry;
 import org.jboss.set.pull.processor.impl.evaluator.util.LogUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +55,10 @@ public class LinkedUpstreamPullRequestEvaluator extends AbstractPullRequestLinkE
             PullRequestData upstreamPullRequestData = convert(upstreamPullRequest, determineUpstreamStreamComponentDefinition(context));
             data.setAttributeValue(Attributes.PULL_REQUEST_UPSTREAM, upstreamPullRequestData);
             String upstreamRef = LogUtil.prRef(upstreamPullRequestURL);
+            EvaluatorReportEntry entry = new EvaluatorReportEntry("LinkedUpstreamPR");
+            entry.addField("upstream", upstreamRef, "computed");
+            entry.addField("merged", String.valueOf(upstreamPullRequest.isMerged()), "read");
+            EvaluatorReportEntry.addTo(data, entry);
             LOG.info("{} | {} | upstream={} | merged={}", pr, EVAL, upstreamRef, upstreamPullRequest.isMerged());
         } catch (URISyntaxException | NotFoundException e) {
             LOG.error("{} | {} | failed to evaluate upstream PR", pr, EVAL, e);

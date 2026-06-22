@@ -34,6 +34,7 @@ import org.jboss.set.pull.processor.Action;
 import org.jboss.set.pull.processor.ActionContext;
 import org.jboss.set.pull.processor.data.Attributes;
 import org.jboss.set.pull.processor.data.EvaluatorData;
+import org.jboss.set.pull.processor.data.EvaluatorReportEntry;
 import org.jboss.set.pull.processor.data.IssueData;
 import org.jboss.set.pull.processor.data.LabelData;
 import org.jboss.set.pull.processor.data.LabelItem;
@@ -93,6 +94,8 @@ public class SetLabelsAction implements Action {
 
         // For the HTML report file
         ReportItem ri = new ReportItem(url.toString(), issue, currentLabelsNames, addLabelsNames, removeLabelsNames);
+        List<EvaluatorReportEntry> evalEntries = data.getAttributeValue(Attributes.EVALUATOR_REPORT);
+        ri.setEvaluatorEntries(evalEntries != null ? evalEntries : List.of());
 
         if (!hasChanges) {
             logBuilder.append("\n... ").append(url).append(" — no label changes needed.");

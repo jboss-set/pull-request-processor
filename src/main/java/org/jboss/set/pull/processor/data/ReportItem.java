@@ -28,6 +28,7 @@ public class ReportItem {
     private List<String> currentLabels;
     private List<String> addLabels;
     private List<String> removeLabels;
+    private List<EvaluatorReportEntry> evaluatorEntries;
 
     public ReportItem(String url, String issue, List<String> currentLabels, List<String> addLabels, List<String> removeLabels) {
         this.url = url;
@@ -105,6 +106,14 @@ public class ReportItem {
      */
     public void setRemoveLabels(List<String> removeLabels) {
         this.removeLabels = removeLabels;
+    }
+
+    public List<EvaluatorReportEntry> getEvaluatorEntries() {
+        return evaluatorEntries;
+    }
+
+    public void setEvaluatorEntries(List<EvaluatorReportEntry> evaluatorEntries) {
+        this.evaluatorEntries = evaluatorEntries;
     }
 
 }

@@ -14,4 +14,6 @@ public final class Attributes {
 
     public static final Attribute<PullRequestData> PULL_REQUEST_CURRENT = new Attribute<>("pr_current");
     public static final Attribute<PullRequestData> PULL_REQUEST_UPSTREAM = new Attribute<>("pr_upstream");
+
+    public static final Attribute<List<EvaluatorReportEntry>> EVALUATOR_REPORT = new Attribute<>("evaluator_report");
 }

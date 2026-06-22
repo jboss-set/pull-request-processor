@@ -31,6 +31,7 @@ import org.jboss.set.pull.processor.data.IssueData;
 import org.jboss.set.pull.processor.data.LabelData;
 import org.jboss.set.pull.processor.data.LabelItem;
 import org.jboss.set.pull.processor.data.LabelItem.LabelSeverity;
+import org.jboss.set.pull.processor.data.EvaluatorReportEntry;
 import org.jboss.set.pull.processor.impl.evaluator.util.LogUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +67,14 @@ public abstract class AbstractIssueACKFlagsLabelEvaluator extends AbstractLabelE
                 pr, eval, issueRef,
                 issueToProcess.getPmAckStatus(), issueToProcess.getDevAckStatus(),
                 issueToProcess.getQeAckStatus(), hasAllAcks);
+
+        EvaluatorReportEntry entry = new EvaluatorReportEntry(evaluatorLabel());
+        entry.addField("issue", issueRef, "read");
+        entry.addField("pm_ack", String.valueOf(issueToProcess.getPmAckStatus()), "read");
+        entry.addField("dev_ack", String.valueOf(issueToProcess.getDevAckStatus()), "read");
+        entry.addField("qa_ack", String.valueOf(issueToProcess.getQeAckStatus()), "read");
+        entry.addField("hasAllAcks", String.valueOf(hasAllAcks), "computed");
+        EvaluatorReportEntry.addTo(data, entry);
 
         if (hasAllAcks) {
             LabelItem<?> li = new DefinedLabelItem(LabelContent.Has_All_Acks, LabelItem.LabelAction.SET, LabelSeverity.OK);
