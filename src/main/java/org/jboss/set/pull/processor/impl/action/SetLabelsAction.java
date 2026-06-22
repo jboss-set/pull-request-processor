@@ -99,7 +99,7 @@ public class SetLabelsAction implements Action {
         ReportItem ri = new ReportItem(url.toString(), issue, currentLabelsNames, addLabelsNames, removeLabelsNames);
         if (upstreamPullRequestData != null) {
             final Set<Label> upstreamLabels = new TreeSet<>();
-            upstreamLabels.addAll(pullRequest.getLabels());
+            upstreamLabels.addAll(upstreamPullRequestData.getPullRequest().getLabels());
 
             // just for info ?
             logBuilder.append("\n   |... Upstream ");
