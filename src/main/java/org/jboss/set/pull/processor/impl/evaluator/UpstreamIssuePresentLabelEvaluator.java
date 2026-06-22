@@ -11,8 +11,13 @@ import org.jboss.set.pull.processor.data.EvaluatorData;
 public class UpstreamIssuePresentLabelEvaluator extends AbstractIssuePresentLabelEvaluator {
 
     @Override
+    protected String evaluatorLabel() {
+        return "UpstreamIssue";
+    }
+
+    @Override
     public void eval(EvaluatorContext context, EvaluatorData data) throws Exception {
-        processPresenceLabel(Attributes.ISSUE_UPSTREAM, Attributes.LABELS_CURRENT, LabelContent.Missing_upstream_issue, data);
+        processPresenceLabel(context, Attributes.ISSUE_UPSTREAM, Attributes.LABELS_CURRENT, LabelContent.Missing_upstream_issue, data);
     }
 
     @Override

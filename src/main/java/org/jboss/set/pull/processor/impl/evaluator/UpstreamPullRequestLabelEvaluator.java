@@ -34,6 +34,9 @@ import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.LabelData;
 import org.jboss.set.pull.processor.data.LabelItem;
 import org.jboss.set.pull.processor.data.PullRequestData;
+import org.jboss.set.pull.processor.impl.evaluator.util.LogUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Check status of PR and if we need it.
@@ -43,19 +46,25 @@ import org.jboss.set.pull.processor.data.PullRequestData;
  */
 public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
 
+    private static final Logger LOG = LoggerFactory.getLogger(UpstreamPullRequestLabelEvaluator.class);
+
     @Override
     public List<Attribute<?>> getRequiredAttributes() {
         return List.of(Attributes.PULL_REQUEST_UPSTREAM, Attributes.LABELS_CURRENT);
     }
 
+    private static final String EVAL = LogUtil.pad("UpstreamPRStatus");
+
     @Override
     public void eval(EvaluatorContext context, EvaluatorData data) {
+        String pr = LogUtil.prRef(context.getPullRequest().getURI());
         PullRequestData upstreamPullRequestData = data.getAttributeValue(Attributes.PULL_REQUEST_UPSTREAM);
         LabelData labelData = super.getLabelData(Attributes.LABELS_CURRENT, data);
 
-        boolean isMismatched = isUpsreamPRMismatched(labelData, upstreamPullRequestData);
+        boolean isMismatched = isUpsreamPRMismatched(pr, labelData, upstreamPullRequestData);
 
         if (upstreamPullRequestData.isDefined()) {
+            String upstreamRef = LogUtil.prRef(upstreamPullRequestData.getPullRequest().getURI());
             labelData.addLabelItem(new DefinedLabelItem(LabelContent.Missing_upstream_PR, LabelItem.LabelAction.REMOVE,
                     LabelItem.LabelSeverity.OK));
             if (upstreamPullRequestData.isMerged() && !isMismatched) {
@@ -65,21 +74,22 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
                 labelData.addLabelItem(new DefinedLabelItem(LabelContent.Upstream_merged, LabelItem.LabelAction.REMOVE,
                         LabelItem.LabelSeverity.BAD));
             }
+            LOG.info("{} | {} | upstream={} | merged={}, mismatched={}", pr, EVAL, upstreamRef,
+                    upstreamPullRequestData.isMerged(), isMismatched);
         } else {
-            // not defined, check if it is required
             if (upstreamPullRequestData.isRequired()) {
                 labelData.addLabelItem(new DefinedLabelItem(LabelContent.Missing_upstream_PR, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.BAD));
+                LOG.info("{} | {} | upstream PR missing, required=true", pr, EVAL);
             } else {
-                // not defined and not required, remove both.
                 labelData.addLabelItem(new DefinedLabelItem(LabelContent.Missing_upstream_PR, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.OK));
                 labelData.addLabelItem(new DefinedLabelItem(LabelContent.Upstream_merged, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.BAD));
+                LOG.info("{} | {} | upstream PR not defined, required=false", pr, EVAL);
             }
         }
     }
 
-    protected boolean isUpsreamPRMismatched(final LabelData labelData, final PullRequestData pullRequestData) {
+    protected boolean isUpsreamPRMismatched(String pr, final LabelData labelData, final PullRequestData pullRequestData) {
         if (!pullRequestData.isRequired() || !pullRequestData.isDefined()) {
-            // it's not defined or not required, just remove and return
             LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Repository_Mismatch, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.OK);
             labelData.addLabelItem(li);
             li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Branch_Mismatch, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.OK);
@@ -97,11 +107,11 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
             LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Repository_Mismatch, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.BAD);
             labelData.addLabelItem(li);
             isMismatched = true;
+            LOG.info("{} | {} | repo mismatch: actual={} expected={}", pr, EVAL, pullRequestRepositoryURI, componentRepositoryURI);
         }
 
         Codebase prCodeBase = pullRequestData.getPullRequest().getCodebase();
         Codebase codeBase = pullRequestData.getStreamComponentDefinition().getStreamComponent().getCodebase();
-        // This hack for upstream branch rename from "master" to "main", add an ability to check codebase like "master|main"
         if (prCodeBase.isIn(codeBase)) {
             LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Branch_Mismatch, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.OK);
             labelData.addLabelItem(li);
@@ -109,6 +119,7 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
             LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Branch_Mismatch, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.BAD);
             labelData.addLabelItem(li);
             isMismatched = true;
+            LOG.info("{} | {} | branch mismatch: actual={} expected={}", pr, EVAL, prCodeBase, codeBase);
         }
         return isMismatched;
     }

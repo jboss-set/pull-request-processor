@@ -21,6 +21,7 @@
  */
 package org.jboss.set.pull.processor.impl.evaluator;
 
+import org.jboss.set.pull.processor.EvaluatorContext;
 import org.jboss.set.pull.processor.data.Attribute;
 import org.jboss.set.pull.processor.data.DefinedLabelItem;
 import org.jboss.set.pull.processor.data.DefinedLabelItem.LabelContent;
@@ -28,6 +29,9 @@ import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.IssueData;
 import org.jboss.set.pull.processor.data.LabelData;
 import org.jboss.set.pull.processor.data.LabelItem;
+import org.jboss.set.pull.processor.impl.evaluator.util.LogUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Set labels based on presence of issues.
@@ -37,16 +41,28 @@ import org.jboss.set.pull.processor.data.LabelItem;
  */
 public abstract class AbstractIssuePresentLabelEvaluator extends AbstractLabelEvaluator {
 
-    protected void processPresenceLabel(Attribute<IssueData> issueKey, Attribute<LabelData> labelsKey, LabelContent expectoPatronum, EvaluatorData data) {
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractIssuePresentLabelEvaluator.class);
+
+    protected abstract String evaluatorLabel();
+
+    protected void processPresenceLabel(EvaluatorContext context, Attribute<IssueData> issueKey, Attribute<LabelData> labelsKey, LabelContent expectoPatronum, EvaluatorData data) {
+        String pr = LogUtil.prRef(context.getPullRequest().getURI());
+        String eval = LogUtil.pad(evaluatorLabel());
         LabelData labelData = super.getLabelData(labelsKey, data);
         final IssueData issueToProcess = data.getAttributeValue(issueKey);
+        String action;
         if (issueToProcess.isDefined() || !issueToProcess.isRequired()) {
             LabelItem<?> li = new DefinedLabelItem(expectoPatronum, LabelItem.LabelAction.REMOVE, LabelItem.LabelSeverity.OK);
             labelData.addLabelItem(li);
+            action = "REMOVE";
         } else {
             LabelItem<?> li = new DefinedLabelItem(expectoPatronum, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.BAD);
             labelData.addLabelItem(li);
+            action = "SET";
         }
+        LOG.info("{} | {} | defined={}, required={} | {} {}",
+                pr, eval, issueToProcess.isDefined(), issueToProcess.isRequired(),
+                action, expectoPatronum);
     }
 
 }

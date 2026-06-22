@@ -34,6 +34,9 @@ import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.LabelData;
 import org.jboss.set.pull.processor.data.LabelItem.LabelAction;
 import org.jboss.set.pull.processor.data.LabelItem.LabelSeverity;
+import org.jboss.set.pull.processor.impl.evaluator.util.LogUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Set dev labels PR. This include branch of PR and label derived from stream name.
@@ -42,20 +45,30 @@ import org.jboss.set.pull.processor.data.LabelItem.LabelSeverity;
  *
  */
 public class DevStreamLabelEvaluator extends AbstractLabelEvaluator {
+
+    private static final Logger LOG = LoggerFactory.getLogger(DevStreamLabelEvaluator.class);
+    private static final String EVAL = LogUtil.pad("DevStream");
     // digit.digit|lowercase.digit|lowercase
     private static final Pattern STREAM_PATTERN = Pattern.compile("[\\d]\\.[\\d\\w]\\.[\\d\\w]");
 
     @Override
     public void eval(EvaluatorContext context, EvaluatorData data) {
+        String pr = LogUtil.prRef(context.getPullRequest().getURI());
         LabelData labelData = super.getLabelData(Attributes.LABELS_CURRENT, data);
         CodeBaseLabelItem branchLabel = new CodeBaseLabelItem(context.getPullRequest().getCodebase(), LabelAction.SET,
                 LabelSeverity.OK);
         labelData.addLabelItem(branchLabel);
-        Matcher matcher = STREAM_PATTERN .matcher(context.getStreamComponentDefinition().getStreamDefinition().getStream().getName());
+        String streamName = context.getStreamComponentDefinition().getStreamDefinition().getStream().getName();
+        Matcher matcher = STREAM_PATTERN.matcher(streamName);
         if (matcher.find()) {
-            // example "jboss-eap-7.z.0" --> "7.z.0.GA"
-            CodeBaseLabelItem streamLabel = new CodeBaseLabelItem(new Codebase(matcher.group() + ".GA"), LabelAction.SET, LabelSeverity.OK);
+            String streamVersion = matcher.group() + ".GA";
+            CodeBaseLabelItem streamLabel = new CodeBaseLabelItem(new Codebase(streamVersion), LabelAction.SET, LabelSeverity.OK);
             labelData.addLabelItem(streamLabel);
+            LOG.info("{} | {} | stream={} | branch={}, version={}",
+                    pr, EVAL, streamName, context.getPullRequest().getCodebase(), streamVersion);
+        } else {
+            LOG.info("{} | {} | stream={} | branch={}, no version matched",
+                    pr, EVAL, streamName, context.getPullRequest().getCodebase());
         }
     }
 

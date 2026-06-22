@@ -32,26 +32,31 @@ import org.jboss.set.pull.processor.data.Attribute;
 import org.jboss.set.pull.processor.data.Attributes;
 import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.PullRequestData;
+import org.jboss.set.pull.processor.impl.evaluator.util.LogUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class LinkedUpstreamPullRequestEvaluator extends AbstractPullRequestLinkEvaluator {
 
     private static final Logger LOG = LoggerFactory.getLogger(LinkedUpstreamPullRequestEvaluator.class);
+    private static final String EVAL = LogUtil.pad("LinkedUpstreamPR");
 
     @Override
     public void eval(EvaluatorContext context, EvaluatorData data) {
+        String pr = LogUtil.prRef(context.getPullRequest().getURI());
         try {
             URI upstreamPullRequestURL = context.getPullRequest().findUpstreamPullRequestURI();
             if (upstreamPullRequestURL == null) {
-                LOG.info("did not find any upstream pull request for {}", context.getPullRequest().getURI());
+                LOG.info("{} | {} | no upstream PR found", pr, EVAL);
                 return;
             }
             PullRequest upstreamPullRequest = context.getAphrodite().getPullRequest(upstreamPullRequestURL);
             PullRequestData upstreamPullRequestData = convert(upstreamPullRequest, determineUpstreamStreamComponentDefinition(context));
             data.setAttributeValue(Attributes.PULL_REQUEST_UPSTREAM, upstreamPullRequestData);
+            String upstreamRef = LogUtil.prRef(upstreamPullRequestURL);
+            LOG.info("{} | {} | upstream={} | merged={}", pr, EVAL, upstreamRef, upstreamPullRequest.isMerged());
         } catch (URISyntaxException | NotFoundException e) {
-            LOG.error("Failed during evaluation of linked pull request", e);
+            LOG.error("{} | {} | failed to evaluate upstream PR", pr, EVAL, e);
         }
     }
 

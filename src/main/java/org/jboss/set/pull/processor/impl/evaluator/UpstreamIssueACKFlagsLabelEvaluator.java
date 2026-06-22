@@ -10,8 +10,13 @@ import org.jboss.set.pull.processor.data.EvaluatorData;
 public class UpstreamIssueACKFlagsLabelEvaluator extends AbstractIssueACKFlagsLabelEvaluator {
 
     @Override
+    protected String evaluatorLabel() {
+        return "UpstreamACKFlags";
+    }
+
+    @Override
     public void eval(EvaluatorContext context, EvaluatorData data) {
-        processAckLabels(Attributes.ISSUE_UPSTREAM, Attributes.LABELS_UPSTREAM, data);
+        processAckLabels(context, Attributes.ISSUE_UPSTREAM, Attributes.LABELS_UPSTREAM, data);
     }
 
     @Override

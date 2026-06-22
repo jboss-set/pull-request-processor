@@ -10,8 +10,13 @@ import org.jboss.set.pull.processor.data.EvaluatorData;
 public class CurrentIssueACKFlagsLabelEvaluator extends AbstractIssueACKFlagsLabelEvaluator {
 
     @Override
+    protected String evaluatorLabel() {
+        return "CurrentACKFlags";
+    }
+
+    @Override
     public void eval(EvaluatorContext context, EvaluatorData data) {
-        processAckLabels(Attributes.ISSUE_CURRENT, Attributes.LABELS_CURRENT, data);
+        processAckLabels(context, Attributes.ISSUE_CURRENT, Attributes.LABELS_CURRENT, data);
     }
 
     @Override

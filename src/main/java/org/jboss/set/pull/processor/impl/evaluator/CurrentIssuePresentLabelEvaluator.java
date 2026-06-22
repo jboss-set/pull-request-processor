@@ -9,9 +9,15 @@ import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.DefinedLabelItem.LabelContent;
 
 public class CurrentIssuePresentLabelEvaluator extends AbstractIssuePresentLabelEvaluator {
+
+    @Override
+    protected String evaluatorLabel() {
+        return "CurrentIssue";
+    }
+
     @Override
     public void eval(EvaluatorContext context, EvaluatorData data) {
-        processPresenceLabel(Attributes.ISSUE_CURRENT, Attributes.LABELS_CURRENT, LabelContent.Missing_issue, data);
+        processPresenceLabel(context, Attributes.ISSUE_CURRENT, Attributes.LABELS_CURRENT, LabelContent.Missing_issue, data);
     }
 
     @Override

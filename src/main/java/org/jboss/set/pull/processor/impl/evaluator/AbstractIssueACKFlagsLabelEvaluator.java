@@ -22,6 +22,7 @@
 package org.jboss.set.pull.processor.impl.evaluator;
 
 import org.jboss.set.aphrodite.domain.FlagStatus;
+import org.jboss.set.pull.processor.EvaluatorContext;
 import org.jboss.set.pull.processor.data.Attribute;
 import org.jboss.set.pull.processor.data.DefinedLabelItem;
 import org.jboss.set.pull.processor.data.DefinedLabelItem.LabelContent;
@@ -30,6 +31,9 @@ import org.jboss.set.pull.processor.data.IssueData;
 import org.jboss.set.pull.processor.data.LabelData;
 import org.jboss.set.pull.processor.data.LabelItem;
 import org.jboss.set.pull.processor.data.LabelItem.LabelSeverity;
+import org.jboss.set.pull.processor.impl.evaluator.util.LogUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Check what ACK flags we have and set up labels accordingly(or clear).
@@ -39,9 +43,16 @@ import org.jboss.set.pull.processor.data.LabelItem.LabelSeverity;
  */
 public abstract class AbstractIssueACKFlagsLabelEvaluator extends AbstractLabelEvaluator {
 
-    protected void processAckLabels(Attribute<IssueData> issueKey, Attribute<LabelData> labelsKey, EvaluatorData data) {
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractIssueACKFlagsLabelEvaluator.class);
+
+    protected abstract String evaluatorLabel();
+
+    protected void processAckLabels(EvaluatorContext context, Attribute<IssueData> issueKey, Attribute<LabelData> labelsKey, EvaluatorData data) {
+        String pr = LogUtil.prRef(context.getPullRequest().getURI());
+        String eval = LogUtil.pad(evaluatorLabel());
         IssueData issueToProcess = data.getAttributeValue(issueKey);
         if (!issueToProcess.isDefined()) {
+            LOG.info("{} | {} | issue not defined, skipping", pr, eval);
             return;
         }
         LabelData labelData = super.getLabelData(labelsKey, data);
@@ -49,6 +60,12 @@ public abstract class AbstractIssueACKFlagsLabelEvaluator extends AbstractLabelE
         hasAllAcks = hasAllAcks & processFlagStatus(labelData, issueToProcess.getPmAckStatus(), LabelContent.Needs_pm_ack);
         hasAllAcks = hasAllAcks & processFlagStatus(labelData, issueToProcess.getDevAckStatus(), LabelContent.Needs_devel_ack);
         hasAllAcks = hasAllAcks & processFlagStatus(labelData, issueToProcess.getQeAckStatus(), LabelContent.Needs_qa_ack);
+
+        String issueRef = issueToProcess.getIssue().getURI().getPath().replaceFirst(".*/browse/", "");
+        LOG.info("{} | {} | issue={} | pm_ack={}, dev_ack={}, qa_ack={} | hasAllAcks={}",
+                pr, eval, issueRef,
+                issueToProcess.getPmAckStatus(), issueToProcess.getDevAckStatus(),
+                issueToProcess.getQeAckStatus(), hasAllAcks);
 
         if (hasAllAcks) {
             LabelItem<?> li = new DefinedLabelItem(LabelContent.Has_All_Acks, LabelItem.LabelAction.SET, LabelSeverity.OK);
