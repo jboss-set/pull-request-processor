@@ -37,6 +37,8 @@ classes
 src/main/resources/users.properties
 
 
+CLAUDE.md
+
 /bin
 
 #shade leftovers?
