@@ -74,34 +74,44 @@ public class SetLabelsAction implements Action {
         PullRequest pullRequest = pullRequestData.getPullRequest();
         currentLabels.addAll(pullRequest.getLabels());
 
-        List<LabelItem<?>> addList = labelsData.getLabels(LabelAction.SET);
-        List<LabelItem<?>> removeList = labelsData.getLabels(LabelAction.REMOVE);
+        List<LabelItem<?>> evaluatedAddList = labelsData.getLabels(LabelAction.SET);
+        List<LabelItem<?>> evaluatedRemoveList = labelsData.getLabels(LabelAction.REMOVE);
         // Reconcile against current labels: only add labels not already present, only remove labels that are present
         Set<String> currentLabelNames = currentLabels.stream().map(Label::getName).collect(Collectors.toSet());
-        addList = addList.stream().filter(item -> !currentLabelNames.contains(item.getLabel())).collect(Collectors.toList());
-        removeList = removeList.stream().filter(item -> currentLabelNames.contains(item.getLabel())).collect(Collectors.toList());
-        // TODO: XXX make this part of super class, "AbstractConsoleReporting" or something.
-        // or something more generic avavilable for whole tool/s
-        StringBuilder logBuilder = new StringBuilder();
+        List<LabelItem<?>> addList = evaluatedAddList.stream().filter(item -> !currentLabelNames.contains(item.getLabel())).collect(Collectors.toList());
+        List<LabelItem<?>> removeList = evaluatedRemoveList.stream().filter(item -> currentLabelNames.contains(item.getLabel())).collect(Collectors.toList());
 
+        StringBuilder logBuilder = new StringBuilder();
         URI url = pullRequest.getURI();
         String issue = issueData.isDefined() ? issueData.getIssue().getURI().toString() : "n/a";
         List<String> currentLabelsNames = currentLabels.stream().map(l -> l.getName()).collect(Collectors.toList());
         List<String> addLabelsNames = addList.stream().map(l -> l.getLabel()).collect(Collectors.toList());
         List<String> removeLabelsNames = removeList.stream().map(l -> l.getLabel()).collect(Collectors.toList());
-        logBuilder.append("\n... ").append(url);
-        logBuilder.append("\n   |... ").append(issue);
-        logBuilder.append("\n   |... C:").append(currentLabelsNames);
-        logBuilder.append("\n   |... A:").append(addLabelsNames);
-        logBuilder.append("\n   |... R:").append(removeLabelsNames);
+
+        boolean hasChanges = !addList.isEmpty() || !removeList.isEmpty();
+        boolean requestChanges = hasChanges && addList.stream().filter(l -> l.getSeverity() == LabelSeverity.BAD).findAny().isPresent();
 
         // For the HTML report file
         ReportItem ri = new ReportItem(url.toString(), issue, currentLabelsNames, addLabelsNames, removeLabelsNames);
+
+        if (!hasChanges) {
+            logBuilder.append("\n... ").append(url).append(" — no label changes needed.");
+            LOG.info(logBuilder.toString());
+            return ri;
+        }
+
+        logBuilder.append("\n... ").append(url);
+        logBuilder.append("\n   |... ").append(issue);
+        logBuilder.append("\n   |... C:").append(currentLabelsNames);
+        logBuilder.append("\n   |... E+:").append(evaluatedAddList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
+        logBuilder.append("\n   |... E-:").append(evaluatedRemoveList.stream().map(l -> l.getLabel()).collect(Collectors.toList()));
+        logBuilder.append("\n   |... A:").append(addLabelsNames);
+        logBuilder.append("\n   |... R:").append(removeLabelsNames);
+
         if (upstreamPullRequestData != null) {
             final Set<Label> upstreamLabels = new TreeSet<>();
             upstreamLabels.addAll(upstreamPullRequestData.getPullRequest().getLabels());
 
-            // just for info ?
             logBuilder.append("\n   |... Upstream ");
             logBuilder.append("\n       |... ").append((upstreamIssueData != null ? upstreamIssueData.getIssue().getURI() : "n/a"));
             logBuilder.append("\n       |... C:").append(upstreamLabels.stream().map(l -> l.getName()).collect(Collectors.toList()));
@@ -113,28 +123,15 @@ public class SetLabelsAction implements Action {
             }
         }
 
-        boolean hasChanges = !addList.isEmpty() || !removeList.isEmpty();
-        boolean requestChanges = hasChanges && addList.stream().filter(l -> l.getSeverity() == LabelSeverity.BAD).findAny().isPresent();
-
-        if (!hasChanges) {
-            logBuilder.append("\n   |... No label changes needed.");
-        } else if (requestChanges) {
-            logBuilder.append("\n   |... Request changes on Pull Request.");
-        } else {
-            logBuilder.append("\n   |... Approve on Pull Request.");
-        }
-
         if (!actionContext.isWritePermitted() || !actionContext.isWritePermitedOn(pullRequest)) {
-            logBuilder.append("\n   |... Write: <<Skipped>>");
+            String action = requestChanges ? "Request changes" : "Approve";
+            logBuilder.append("\n   |... ").append(action).append(" — skipped (write not permitted)");
             LOG.info(logBuilder.toString());
             return ri;
         }
 
+        logBuilder.append("\n   |... ").append(requestChanges ? "Request changes on Pull Request." : "Approve on Pull Request.");
         LOG.info(logBuilder.toString());
-
-        if (!hasChanges) {
-            return ri;
-        }
         List<Label> actionItems = convertLabels(actionContext, removeList, pullRequest);
         List<Label> labelsToBeRemoved = actionItems.stream().filter(currentLabels::contains).toList();
         // remove only if it is present, else skip
