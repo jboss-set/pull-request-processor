@@ -60,7 +60,6 @@ public class SetLabelsAction implements Action {
     }
 
     private ReportItem setLabels(ActionContext actionContext, EvaluatorData data) throws Exception {
-        // TODO: XXX cross check REMOVE list vs CURRENT list to avoid mute removal
         PullRequestData pullRequestData = data.getAttributeValue(Attributes.PULL_REQUEST_CURRENT);
         if (!data.hasAttribute(Attributes.ISSUE_CURRENT)) {
             return null;
@@ -77,6 +76,10 @@ public class SetLabelsAction implements Action {
 
         List<LabelItem<?>> addList = labelsData.getLabels(LabelAction.SET);
         List<LabelItem<?>> removeList = labelsData.getLabels(LabelAction.REMOVE);
+        // Reconcile against current labels: only add labels not already present, only remove labels that are present
+        Set<String> currentLabelNames = currentLabels.stream().map(Label::getName).collect(Collectors.toSet());
+        addList = addList.stream().filter(item -> !currentLabelNames.contains(item.getLabel())).collect(Collectors.toList());
+        removeList = removeList.stream().filter(item -> currentLabelNames.contains(item.getLabel())).collect(Collectors.toList());
         // TODO: XXX make this part of super class, "AbstractConsoleReporting" or something.
         // or something more generic avavilable for whole tool/s
         StringBuilder logBuilder = new StringBuilder();
@@ -110,12 +113,15 @@ public class SetLabelsAction implements Action {
             }
         }
 
-        boolean requestChanges = addList.stream().filter(l -> l.getSeverity() == LabelSeverity.BAD).findAny().isPresent();
+        boolean hasChanges = !addList.isEmpty() || !removeList.isEmpty();
+        boolean requestChanges = hasChanges && addList.stream().filter(l -> l.getSeverity() == LabelSeverity.BAD).findAny().isPresent();
 
-        if (requestChanges) {
-            logBuilder.append(("\n|... Request changes on Pull Request."));
+        if (!hasChanges) {
+            logBuilder.append("\n   |... No label changes needed.");
+        } else if (requestChanges) {
+            logBuilder.append("\n   |... Request changes on Pull Request.");
         } else {
-            logBuilder.append(("\n|... Approve on Pull Request."));
+            logBuilder.append("\n   |... Approve on Pull Request.");
         }
 
         if (!actionContext.isWritePermitted() || !actionContext.isWritePermitedOn(pullRequest)) {
@@ -125,6 +131,10 @@ public class SetLabelsAction implements Action {
         }
 
         LOG.info(logBuilder.toString());
+
+        if (!hasChanges) {
+            return ri;
+        }
         List<Label> actionItems = convertLabels(actionContext, removeList, pullRequest);
         List<Label> labelsToBeRemoved = actionItems.stream().filter(currentLabels::contains).toList();
         // remove only if it is present, else skip

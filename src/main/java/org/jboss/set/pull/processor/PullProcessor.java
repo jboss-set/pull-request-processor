@@ -147,9 +147,9 @@ public class PullProcessor {
                     List<PullRequest> componentPullRequests = aphrodite.getPullRequestsByState(repository, PullRequestState.OPEN);
                     for (PullRequest p : componentPullRequests) {
                         if(!currentCodebase.isIn(p.getCodebase())) {
-                            LOG.info("pull request {} in codebase {} does not belong to codebase {}", p.getURI(), p.getCodebase(), currentCodebase);
                             continue;
                         }
+                        LOG.info("pull request {} in codebase {} can be proccessed with current codebase {}", p.getURI(), p.getCodebase(), currentCodebase);
                         pullRequests.add(new PullRequestReference(p, streamComponentDefinition));
                     }
 

@@ -86,7 +86,7 @@ public class OpenPRProcessor implements Processor {
                     } else {
                         List<Attribute<?>> missingAttributes = new ArrayList<>(rule.getRequiredAttributes());
                         missingAttributes.removeAll(data.getAttributes());
-                        LOGGER.info("repository {} skipping evaluator {} to {} because of missing attributes {}", pullRequest.getRepository().getURI(), rule.name(), pullRequestReference);
+                        LOGGER.info("repository {} skipping evaluator {} to {} because of missing attributes {}", pullRequest.getRepository().getURI(), rule.name(), pullRequestReference, missingAttributes);
                     }
                 }
             }
