@@ -66,8 +66,8 @@ public abstract class AbstractIssuePresentLabelEvaluator extends AbstractLabelEv
                 action, expectoPatronum);
 
         EvaluatorReportEntry entry = new EvaluatorReportEntry(evaluatorLabel());
-        entry.addField("defined", String.valueOf(issueToProcess.isDefined()), "read");
-        entry.addField("required", String.valueOf(issueToProcess.isRequired()), "read");
+        entry.addField(issueKey.name() + ".defined", String.valueOf(issueToProcess.isDefined()), "read");
+        entry.addField(issueKey.name() + ".required", String.valueOf(issueToProcess.isRequired()), "read");
         entry.addField("action", action + " " + expectoPatronum, "computed");
         EvaluatorReportEntry.addTo(data, entry);
     }

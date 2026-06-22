@@ -76,14 +76,14 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
                 labelData.addLabelItem(new DefinedLabelItem(LabelContent.Upstream_merged, LabelItem.LabelAction.REMOVE,
                         LabelItem.LabelSeverity.BAD));
             }
-            entry.addField("upstream", upstreamRef, "read");
-            entry.addField("merged", String.valueOf(upstreamPullRequestData.isMerged()), "read");
-            entry.addField("mismatched", String.valueOf(isMismatched), "computed");
+            entry.addField(Attributes.PULL_REQUEST_UPSTREAM.name(), upstreamRef, "read");
+            entry.addField(Attributes.PULL_REQUEST_UPSTREAM.name() + ".merged", String.valueOf(upstreamPullRequestData.isMerged()), "read");
+            entry.addField(Attributes.PULL_REQUEST_UPSTREAM.name() + ".mismatched", String.valueOf(isMismatched), "computed");
             LOG.info("{} | {} | upstream={} | merged={}, mismatched={}", pr, EVAL, upstreamRef,
                     upstreamPullRequestData.isMerged(), isMismatched);
         } else {
-            entry.addField("defined", "false", "read");
-            entry.addField("required", String.valueOf(upstreamPullRequestData.isRequired()), "read");
+            entry.addField(Attributes.PULL_REQUEST_UPSTREAM.name() + ".defined", "false", "read");
+            entry.addField(Attributes.PULL_REQUEST_UPSTREAM.name() + ".required", String.valueOf(upstreamPullRequestData.isRequired()), "read");
             if (upstreamPullRequestData.isRequired()) {
                 labelData.addLabelItem(new DefinedLabelItem(LabelContent.Missing_upstream_PR, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.BAD));
                 LOG.info("{} | {} | upstream PR missing, required=true", pr, EVAL);
@@ -115,7 +115,7 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
             LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Repository_Mismatch, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.BAD);
             labelData.addLabelItem(li);
             isMismatched = true;
-            entry.addField("repo_mismatch", pullRequestRepositoryURI + " vs " + componentRepositoryURI, "computed");
+            entry.addField(Attributes.PULL_REQUEST_UPSTREAM.name() + ".repo_mismatch", pullRequestRepositoryURI + " vs " + componentRepositoryURI, "computed");
             LOG.info("{} | {} | repo mismatch: actual={} expected={}", pr, EVAL, pullRequestRepositoryURI, componentRepositoryURI);
         }
 
@@ -128,7 +128,7 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
             LabelItem<?> li = new DefinedLabelItem(DefinedLabelItem.LabelContent.Upstream_PR_Branch_Mismatch, LabelItem.LabelAction.SET, LabelItem.LabelSeverity.BAD);
             labelData.addLabelItem(li);
             isMismatched = true;
-            entry.addField("branch_mismatch", prCodeBase + " vs " + codeBase, "computed");
+            entry.addField(Attributes.PULL_REQUEST_UPSTREAM.name() + ".branch_mismatch", prCodeBase + " vs " + codeBase, "computed");
             LOG.info("{} | {} | branch mismatch: actual={} expected={}", pr, EVAL, prCodeBase, codeBase);
         }
         return isMismatched;

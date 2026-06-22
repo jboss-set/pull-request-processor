@@ -35,6 +35,7 @@ import org.jboss.set.pull.processor.ActionContext;
 import org.jboss.set.pull.processor.data.Attributes;
 import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.EvaluatorReportEntry;
+import org.jboss.set.pull.processor.data.SkippedEvaluator;
 import org.jboss.set.pull.processor.data.IssueData;
 import org.jboss.set.pull.processor.data.LabelData;
 import org.jboss.set.pull.processor.data.LabelItem;
@@ -96,6 +97,8 @@ public class SetLabelsAction implements Action {
         ReportItem ri = new ReportItem(url.toString(), issue, currentLabelsNames, addLabelsNames, removeLabelsNames);
         List<EvaluatorReportEntry> evalEntries = data.getAttributeValue(Attributes.EVALUATOR_REPORT);
         ri.setEvaluatorEntries(evalEntries != null ? evalEntries : List.of());
+        List<SkippedEvaluator> skipped = data.getAttributeValue(Attributes.SKIPPED_EVALUATORS);
+        ri.setSkippedEvaluators(skipped != null ? skipped : List.of());
 
         if (!hasChanges) {
             logBuilder.append("\n... ").append(url).append(" — no label changes needed.");

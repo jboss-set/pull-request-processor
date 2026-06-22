@@ -14,6 +14,16 @@ import org.jboss.set.pull.processor.data.IssueData;
 public class CurrentIssuesLinkEvaluator extends AbstractIssuesLinkEvaluator {
 
     @Override
+    protected String evaluatorLabel() {
+        return "CurrentIssueLink";
+    }
+
+    @Override
+    protected String producedAttributeName() {
+        return Attributes.ISSUE_CURRENT.name();
+    }
+
+    @Override
     public List<URI> findIssueURI(PullRequest pullRequest) throws URISyntaxException {
         URI uri = pullRequest.findIssueURI();
         return uri != null ? List.of(uri) : Collections.emptyList();

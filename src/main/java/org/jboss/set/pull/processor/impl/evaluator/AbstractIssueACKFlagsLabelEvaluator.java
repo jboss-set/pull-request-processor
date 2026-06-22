@@ -53,6 +53,9 @@ public abstract class AbstractIssueACKFlagsLabelEvaluator extends AbstractLabelE
         String eval = LogUtil.pad(evaluatorLabel());
         IssueData issueToProcess = data.getAttributeValue(issueKey);
         if (!issueToProcess.isDefined()) {
+            EvaluatorReportEntry entry = new EvaluatorReportEntry(evaluatorLabel());
+            entry.addField(issueKey.name(), "not defined", "failed");
+            EvaluatorReportEntry.addTo(data, entry);
             LOG.info("{} | {} | issue not defined, skipping", pr, eval);
             return;
         }
@@ -69,10 +72,10 @@ public abstract class AbstractIssueACKFlagsLabelEvaluator extends AbstractLabelE
                 issueToProcess.getQeAckStatus(), hasAllAcks);
 
         EvaluatorReportEntry entry = new EvaluatorReportEntry(evaluatorLabel());
-        entry.addField("issue", issueRef, "read");
-        entry.addField("pm_ack", String.valueOf(issueToProcess.getPmAckStatus()), "read");
-        entry.addField("dev_ack", String.valueOf(issueToProcess.getDevAckStatus()), "read");
-        entry.addField("qa_ack", String.valueOf(issueToProcess.getQeAckStatus()), "read");
+        entry.addField(issueKey.name(), issueRef, "read");
+        entry.addField(issueKey.name() + ".pm_ack", String.valueOf(issueToProcess.getPmAckStatus()), "read");
+        entry.addField(issueKey.name() + ".dev_ack", String.valueOf(issueToProcess.getDevAckStatus()), "read");
+        entry.addField(issueKey.name() + ".qa_ack", String.valueOf(issueToProcess.getQeAckStatus()), "read");
         entry.addField("hasAllAcks", String.valueOf(hasAllAcks), "computed");
         EvaluatorReportEntry.addTo(data, entry);
 

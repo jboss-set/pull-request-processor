@@ -31,8 +31,8 @@ import org.jboss.set.pull.processor.EvaluatorContext;
 import org.jboss.set.pull.processor.data.Attribute;
 import org.jboss.set.pull.processor.data.Attributes;
 import org.jboss.set.pull.processor.data.EvaluatorData;
-import org.jboss.set.pull.processor.data.PullRequestData;
 import org.jboss.set.pull.processor.data.EvaluatorReportEntry;
+import org.jboss.set.pull.processor.data.PullRequestData;
 import org.jboss.set.pull.processor.impl.evaluator.util.LogUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +48,9 @@ public class LinkedUpstreamPullRequestEvaluator extends AbstractPullRequestLinkE
         try {
             URI upstreamPullRequestURL = context.getPullRequest().findUpstreamPullRequestURI();
             if (upstreamPullRequestURL == null) {
+                EvaluatorReportEntry entry = new EvaluatorReportEntry("LinkedUpstreamPR");
+                entry.addField(Attributes.PULL_REQUEST_UPSTREAM.name(), "not found", "failed");
+                EvaluatorReportEntry.addTo(data, entry);
                 LOG.info("{} | {} | no upstream PR found", pr, EVAL);
                 return;
             }
@@ -56,11 +59,14 @@ public class LinkedUpstreamPullRequestEvaluator extends AbstractPullRequestLinkE
             data.setAttributeValue(Attributes.PULL_REQUEST_UPSTREAM, upstreamPullRequestData);
             String upstreamRef = LogUtil.prRef(upstreamPullRequestURL);
             EvaluatorReportEntry entry = new EvaluatorReportEntry("LinkedUpstreamPR");
-            entry.addField("upstream", upstreamRef, "computed");
-            entry.addField("merged", String.valueOf(upstreamPullRequest.isMerged()), "read");
+            entry.addField(Attributes.PULL_REQUEST_UPSTREAM.name(), upstreamRef, "computed");
+            entry.addField(Attributes.PULL_REQUEST_UPSTREAM.name() + ".merged", String.valueOf(upstreamPullRequest.isMerged()), "read");
             EvaluatorReportEntry.addTo(data, entry);
             LOG.info("{} | {} | upstream={} | merged={}", pr, EVAL, upstreamRef, upstreamPullRequest.isMerged());
         } catch (URISyntaxException | NotFoundException e) {
+            EvaluatorReportEntry entry = new EvaluatorReportEntry("LinkedUpstreamPR");
+            entry.addField(Attributes.PULL_REQUEST_UPSTREAM.name(), e.getMessage(), "failed");
+            EvaluatorReportEntry.addTo(data, entry);
             LOG.error("{} | {} | failed to evaluate upstream PR", pr, EVAL, e);
         }
     }

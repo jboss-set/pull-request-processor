@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.jboss.set.pull.processor.data.EvaluatorReportEntry;
 import org.jboss.set.pull.processor.data.ReportItem;
+import org.jboss.set.pull.processor.data.SkippedEvaluator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +47,11 @@ public class PullProcessorReporting {
             w.write(".eval-name { vertical-align: top; font-weight: 600; background: #f6f8fa; }\n");
             w.write(".type-read { color: #6a737d; }\n");
             w.write(".type-computed { color: #0366d6; font-weight: 600; }\n");
+            w.write(".type-failed { color: #cb2431; font-style: italic; }\n");
+            w.write(".skipped { margin-top: 12px; }\n");
+            w.write(".skipped h4 { font-size: 13px; color: #cb2431; margin-bottom: 6px; }\n");
+            w.write(".skipped table { width: auto; }\n");
+            w.write(".skipped td.missing { color: #cb2431; font-style: italic; }\n");
             w.write("</style>\n</head>\n<body>\n");
             w.write("<h1>Pull Request Processor Report</h1>\n");
 
@@ -87,6 +93,19 @@ public class PullProcessorReporting {
                     }
                     w.write("</table>\n");
                 }
+                List<SkippedEvaluator> skipped = ri.getSkippedEvaluators();
+                if (skipped != null && !skipped.isEmpty()) {
+                    w.write("<div class=\"skipped\">\n");
+                    w.write("<h4>Skipped Evaluators</h4>\n");
+                    w.write("<table>\n<tr><th>Evaluator</th><th>Missing Attributes</th><th>Would Produce</th></tr>\n");
+                    for (SkippedEvaluator se : skipped) {
+                        w.write("<tr><td>" + se.getEvaluator() + "</td>");
+                        w.write("<td class=\"missing\">" + String.join(", ", se.getMissingAttributes()) + "</td>");
+                        w.write("<td>" + String.join(", ", se.getProducedAttributes()) + "</td></tr>\n");
+                    }
+                    w.write("</table>\n</div>\n");
+                }
+
                 w.write("</div>\n");
             }
 

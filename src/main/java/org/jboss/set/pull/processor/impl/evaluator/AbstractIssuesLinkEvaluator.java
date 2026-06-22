@@ -33,8 +33,10 @@ import org.jboss.set.aphrodite.spi.NotFoundException;
 import org.jboss.set.pull.processor.Evaluator;
 import org.jboss.set.pull.processor.EvaluatorContext;
 import org.jboss.set.pull.processor.data.EvaluatorData;
+import org.jboss.set.pull.processor.data.EvaluatorReportEntry;
 import org.jboss.set.pull.processor.data.IssueData;
 import org.jboss.set.pull.processor.impl.evaluator.util.IssueStreamLabelsUtil;
+import org.jboss.set.pull.processor.impl.evaluator.util.LogUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,16 +51,24 @@ public abstract class AbstractIssuesLinkEvaluator implements Evaluator {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractIssuesLinkEvaluator.class);
 
+    protected abstract String evaluatorLabel();
+
+    protected abstract String producedAttributeName();
+
     @Override
     public void eval(EvaluatorContext context, EvaluatorData data) throws Exception {
+        String pr = LogUtil.prRef(context.getPullRequest().getURI());
         try {
             List<URI> issuesURI = findIssueURI(context.getPullRequest());
             if (issuesURI.isEmpty()) {
-                LOG.info("Pull request has no links", issuesURI);
+                EvaluatorReportEntry entry = new EvaluatorReportEntry(evaluatorLabel());
+                entry.addField(producedAttributeName(), "no links found", "failed");
+                EvaluatorReportEntry.addTo(data, entry);
+                LOG.info("{} | {} | no links found", pr, LogUtil.pad(evaluatorLabel()));
                 return;
             }
 
-            LOG.info("Pull request has links: {}", issuesURI);
+            LOG.info("{} | {} | links={}", pr, LogUtil.pad(evaluatorLabel()), issuesURI);
             List<IssueData> issuesData = new ArrayList<>();
             for (URI issueURL : issuesURI) {
                 // The Jira rate limit currently imposed is 1 call per 2 seconds per node per user.
@@ -72,8 +82,22 @@ public abstract class AbstractIssuesLinkEvaluator implements Evaluator {
             }
             setIssueData(data, issuesData);
 
+            EvaluatorReportEntry entry = new EvaluatorReportEntry(evaluatorLabel());
+            for (IssueData id : issuesData) {
+                if (id.isDefined()) {
+                    String issueRef = id.getIssue().getURI().getPath().replaceFirst(".*/browse/", "");
+                    entry.addField(producedAttributeName(), issueRef, "computed");
+                } else {
+                    entry.addField(producedAttributeName(), "not resolved", "failed");
+                }
+            }
+            EvaluatorReportEntry.addTo(data, entry);
+
         } catch (URISyntaxException e) {
-            LOG.error("find issue uri", e);
+            EvaluatorReportEntry entry = new EvaluatorReportEntry(evaluatorLabel());
+            entry.addField(producedAttributeName(), e.getMessage(), "failed");
+            EvaluatorReportEntry.addTo(data, entry);
+            LOG.error("{} | {} | error: {}", pr, LogUtil.pad(evaluatorLabel()), e.getMessage(), e);
         }
     }
 

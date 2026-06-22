@@ -27,7 +27,9 @@ import org.jboss.set.pull.processor.EvaluatorContext;
 import org.jboss.set.pull.processor.data.Attribute;
 import org.jboss.set.pull.processor.data.Attributes;
 import org.jboss.set.pull.processor.data.EvaluatorData;
+import org.jboss.set.pull.processor.data.EvaluatorReportEntry;
 import org.jboss.set.pull.processor.data.PullRequestData;
+import org.jboss.set.pull.processor.impl.evaluator.util.LogUtil;
 
 public class LinkedPullRequestEvaluator extends AbstractPullRequestLinkEvaluator {
 
@@ -35,6 +37,10 @@ public class LinkedPullRequestEvaluator extends AbstractPullRequestLinkEvaluator
     public void eval(EvaluatorContext context, EvaluatorData data) {
             PullRequestData currentPullRequestData = convert(context.getPullRequest(), context.getStreamComponentDefinition());
             data.setAttributeValue(Attributes.PULL_REQUEST_CURRENT, currentPullRequestData);
+            String prRef = LogUtil.prRef(context.getPullRequest().getURI());
+            EvaluatorReportEntry entry = new EvaluatorReportEntry("LinkedCurrentPR");
+            entry.addField(Attributes.PULL_REQUEST_CURRENT.name(), prRef, "computed");
+            EvaluatorReportEntry.addTo(data, entry);
     }
 
     @Override

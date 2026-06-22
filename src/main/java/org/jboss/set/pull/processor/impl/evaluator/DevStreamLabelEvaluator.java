@@ -66,16 +66,16 @@ public class DevStreamLabelEvaluator extends AbstractLabelEvaluator {
             CodeBaseLabelItem streamLabel = new CodeBaseLabelItem(new Codebase(streamVersion), LabelAction.SET, LabelSeverity.OK);
             labelData.addLabelItem(streamLabel);
             EvaluatorReportEntry entry = new EvaluatorReportEntry("DevStream");
-            entry.addField("stream", streamName, "read");
-            entry.addField("branch", String.valueOf(context.getPullRequest().getCodebase()), "read");
-            entry.addField("version", streamVersion, "computed");
+            entry.addField(Attributes.LABELS_CURRENT.name() + ".stream", streamName, "read");
+            entry.addField(Attributes.LABELS_CURRENT.name() + ".branch", String.valueOf(context.getPullRequest().getCodebase()), "read");
+            entry.addField(Attributes.LABELS_CURRENT.name() + ".version", streamVersion, "computed");
             EvaluatorReportEntry.addTo(data, entry);
             LOG.info("{} | {} | stream={} | branch={}, version={}",
                     pr, EVAL, streamName, context.getPullRequest().getCodebase(), streamVersion);
         } else {
             EvaluatorReportEntry entry = new EvaluatorReportEntry("DevStream");
-            entry.addField("stream", streamName, "read");
-            entry.addField("branch", String.valueOf(context.getPullRequest().getCodebase()), "read");
+            entry.addField(Attributes.LABELS_CURRENT.name() + ".stream", streamName, "read");
+            entry.addField(Attributes.LABELS_CURRENT.name() + ".branch", String.valueOf(context.getPullRequest().getCodebase()), "read");
             EvaluatorReportEntry.addTo(data, entry);
             LOG.info("{} | {} | stream={} | branch={}, no version matched",
                     pr, EVAL, streamName, context.getPullRequest().getCodebase());

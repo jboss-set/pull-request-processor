@@ -36,6 +36,7 @@ import org.jboss.set.pull.processor.data.Attribute;
 import org.jboss.set.pull.processor.data.EvaluatorData;
 import org.jboss.set.pull.processor.data.PullRequestReference;
 import org.jboss.set.pull.processor.data.ReportItem;
+import org.jboss.set.pull.processor.data.SkippedEvaluator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,6 +87,9 @@ public class OpenPRProcessor implements Processor {
                     } else {
                         List<Attribute<?>> missingAttributes = new ArrayList<>(rule.getRequiredAttributes());
                         missingAttributes.removeAll(data.getAttributes());
+                        List<String> missingNames = missingAttributes.stream().map(Attribute::toString).collect(java.util.stream.Collectors.toList());
+                        List<String> producedNames = rule.getProducedAttributes().stream().map(Attribute::toString).collect(java.util.stream.Collectors.toList());
+                        SkippedEvaluator.addTo(data, new SkippedEvaluator(rule.name(), missingNames, producedNames));
                         LOGGER.info("repository {} skipping evaluator {} to {} because of missing attributes {}", pullRequest.getRepository().getURI(), rule.name(), pullRequestReference, missingAttributes);
                     }
                 }

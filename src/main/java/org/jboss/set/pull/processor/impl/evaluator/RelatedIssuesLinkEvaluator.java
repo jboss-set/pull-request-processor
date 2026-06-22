@@ -13,6 +13,16 @@ import org.jboss.set.pull.processor.data.IssueData;
 public class RelatedIssuesLinkEvaluator extends AbstractIssuesLinkEvaluator {
 
     @Override
+    protected String evaluatorLabel() {
+        return "RelatedIssueLink";
+    }
+
+    @Override
+    protected String producedAttributeName() {
+        return Attributes.ISSUES_RELATED.name();
+    }
+
+    @Override
     public List<URI> findIssueURI(PullRequest pullRequest) throws URISyntaxException {
         return pullRequest.findRelatedIssuesURI();
     }

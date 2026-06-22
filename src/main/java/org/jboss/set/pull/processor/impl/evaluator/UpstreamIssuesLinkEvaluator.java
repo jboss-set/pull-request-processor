@@ -14,6 +14,16 @@ import org.jboss.set.pull.processor.data.IssueData;
 public class UpstreamIssuesLinkEvaluator extends AbstractIssuesLinkEvaluator {
 
     @Override
+    protected String evaluatorLabel() {
+        return "UpstreamIssueLink";
+    }
+
+    @Override
+    protected String producedAttributeName() {
+        return Attributes.ISSUE_UPSTREAM.name();
+    }
+
+    @Override
     public List<URI> findIssueURI(PullRequest pullRequest) throws URISyntaxException {
         URI uri = pullRequest.findUpstreamIssueURI();
         return uri != null ? List.of(uri) : Collections.emptyList();
