@@ -97,9 +97,29 @@
                 <executions>
                     <execution>
                         <id>nexus-deploy</id>
-                        <phase>none</phase> 
+                        <phase>none</phase>
                         <goals>
                             <goal>staging-deploy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- deploy to GitHub Packages, not JBoss Nexus -->
+            <plugin>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <releaseProfiles />
+                    <goals>deploy</goals>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-deploy</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>deploy</goal>
                         </goals>
                     </execution>
                 </executions>
