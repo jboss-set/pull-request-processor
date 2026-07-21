@@ -9,19 +9,6 @@
 
     <!-- Bootstrap -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
-    <
-    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
-    <style>
-        .streams {
-             padding: 5px;
-             width: 280px;
-        }
-    </style>
   </head>
   <body>
   
@@ -45,7 +32,7 @@
                                     <#list data.issuesRelated as issue>
                                           <a href="${issue.link}">#${issue.label} ${issue.stream} </a> 
                                           <#assign streams = data.labels>
-                                        <span class="streams">
+                                        <span class="col-xs-4">
                                             <#list streams[issue.label] as label>
                                                   <span class="label <#if label.isOk()>label-success<#else>label-danger</#if> ">${label.name}</span>
                                             </#list>
@@ -60,8 +47,5 @@
             </div>
         </div>
     </div>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-
   </body>
 </html>
