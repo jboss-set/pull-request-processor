@@ -19,6 +19,8 @@ public abstract class AbstractPullRequestLinkEvaluator implements Evaluator {
             return null;
         StreamDefinition upstreamStreamDef = new StreamDefinition(assumedDownstreamToMatch.getStreamDefinition().getStream().getUpstream().getName(), assumedDownstreamToMatch.getName());
         StreamDefinitionUtil.matchStreams(context.getAphrodite(), Arrays.asList(upstreamStreamDef));
+        if (upstreamStreamDef.getStreamComponents().isEmpty())
+            return null;
         return upstreamStreamDef.getStreamComponents().get(0);
     }
 

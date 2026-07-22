@@ -68,6 +68,9 @@ public class SetLabelsAction implements Action {
         }
         IssueData issueData = data.getAttributeValue(Attributes.ISSUE_CURRENT);
         LabelData labelsData = data.getAttributeValue(Attributes.LABELS_CURRENT);
+        if (labelsData == null) {
+            return null;
+        }
 
         PullRequestData upstreamPullRequestData = data.getAttributeValue(Attributes.PULL_REQUEST_UPSTREAM);
         IssueData upstreamIssueData = data.getAttributeValue(Attributes.ISSUE_UPSTREAM);

@@ -106,6 +106,9 @@ public class UpstreamPullRequestLabelEvaluator extends AbstractLabelEvaluator {
         }
 
         boolean isMismatched = false;
+        if (pullRequestData.getStreamComponentDefinition() == null) {
+            return false;
+        }
         final URI pullRequestRepositoryURI = pullRequestData.getPullRequest().getRepository().getURI();
         final URI componentRepositoryURI =  pullRequestData.getStreamComponentDefinition().getStreamComponent().getRepositoryURI();
         if(pullRequestRepositoryURI.equals(componentRepositoryURI)) {
