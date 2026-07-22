@@ -4,7 +4,9 @@ import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 
 import org.jboss.set.aphrodite.Aphrodite;
@@ -134,28 +136,37 @@ public class PullProcessor {
     }
 
     private List<PullRequestReference> fetchPullRequestReferences() {
-        List<PullRequestReference> pullRequests = new ArrayList<>();
+        Map<URI, List<StreamComponentDefinition>> componentsByRepo = new HashMap<>();
         for (StreamDefinition streamDefinition : this.parsedStreams) {
             for (StreamComponentDefinition streamComponentDefinition : streamDefinition.getStreamComponents()) {
-                try {
-                    Repository repository = aphrodite.getRepository(streamComponentDefinition.getStreamComponent().getRepositoryURI());
-                    if (repository == null) {
-                        LOG.warn("Did not find repository: {}", streamComponentDefinition.getStreamComponent().getRepositoryURI());
-                        continue;
-                    }
-                    Codebase currentCodebase = streamComponentDefinition.getStreamComponent().getCodebase();
-                    List<PullRequest> componentPullRequests = aphrodite.getPullRequestsByState(repository, PullRequestState.OPEN);
-                    for (PullRequest p : componentPullRequests) {
-                        if(!currentCodebase.isIn(p.getCodebase())) {
+                URI repoURI = streamComponentDefinition.getStreamComponent().getRepositoryURI();
+                componentsByRepo.computeIfAbsent(repoURI, k -> new ArrayList<>()).add(streamComponentDefinition);
+            }
+        }
+
+        List<PullRequestReference> pullRequests = new ArrayList<>();
+        for (Map.Entry<URI, List<StreamComponentDefinition>> entry : componentsByRepo.entrySet()) {
+            URI repoURI = entry.getKey();
+            List<StreamComponentDefinition> components = entry.getValue();
+            try {
+                Repository repository = aphrodite.getRepository(repoURI);
+                if (repository == null) {
+                    LOG.warn("Did not find repository: {}", repoURI);
+                    continue;
+                }
+                List<PullRequest> repoPullRequests = aphrodite.getPullRequestsByState(repository, PullRequestState.OPEN);
+                for (PullRequest p : repoPullRequests) {
+                    for (StreamComponentDefinition streamComponentDefinition : components) {
+                        Codebase currentCodebase = streamComponentDefinition.getStreamComponent().getCodebase();
+                        if (!currentCodebase.isIn(p.getCodebase())) {
                             continue;
                         }
                         LOG.info("pull request {} in codebase {} can be proccessed with current codebase {}", p.getURI(), p.getCodebase(), currentCodebase);
                         pullRequests.add(new PullRequestReference(p, streamComponentDefinition));
                     }
-
-                } catch (NotFoundException e) {
-                    LOG.warn("Did not find repo", e);
                 }
+            } catch (NotFoundException e) {
+                LOG.warn("Did not find repo", e);
             }
         }
         return pullRequests.stream().filter(this::validPullRequest).toList();
